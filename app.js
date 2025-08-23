@@ -2271,30 +2271,15 @@ function createSingleTaskEditFlexMessage(task, userId, baseUrl) {
 function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
   const taskCount = todayTasks.length;
   
-  // 創建精簡任務列表（最多顯示3個）
-  const limitedTasks = todayTasks.slice(0, 3);
-  const hasMore = todayTasks.length > 3;
-  
-  const taskContents = limitedTasks.map((task, index) => ({
+  // 顯示所有任務，使用更緊湊的格式
+  const taskContents = todayTasks.map((task, index) => ({
     type: 'text',
     text: `${index + 1}. ${task.text}`,
-    size: 'sm',
+    size: 'xs',  // 使用更小的字體
     color: '#333333',
     wrap: true,
-    margin: 'xs'
+    margin: 'none'  // 移除 margin 使更緊湊
   }));
-
-  // 如果有更多任務，添加提示
-  if (hasMore) {
-    taskContents.push({
-      type: 'text',
-      text: `...還有 ${todayTasks.length - 3} 個任務`,
-      size: 'xs',
-      color: '#666666',
-      align: 'center',
-      margin: 'sm'
-    });
-  }
 
   return {
     type: 'flex',
@@ -2308,17 +2293,24 @@ function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
         contents: [
           {
             type: 'text',
-            text: `📋 今日 ${taskCount} 項任務`,
+            text: `📋 今日 ${taskCount} 項`,
             weight: 'bold',
-            size: 'md',
+            size: 'sm',  // 標題也縮小
             color: '#2196F3',
             align: 'center',
             margin: 'none'
           },
-          ...taskContents
+          // 任務列表區域
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: taskContents,
+            spacing: 'none',  // 移除間距使更緊湊
+            margin: 'xs'
+          }
         ],
         spacing: 'xs',
-        paddingAll: '10px'
+        paddingAll: '6px'  // 進一步縮小 padding
       }
     }
   };
