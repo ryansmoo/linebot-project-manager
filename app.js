@@ -3400,16 +3400,25 @@ app.get('/liff/tasks', (req, res) => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 10px;
+            margin: 0;
+            padding: 0;
+            /* 針對 LIFF Full 模式優化 */
+            width: 100vw;
+            overflow-x: hidden;
         }
         
         .liff-container {
-            max-width: 600px;
-            margin: 0 auto;
+            /* LIFF Full 模式：使用全螢幕寬度 */
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
+            /* Full 模式不需要圓角和陰影 */
+            border-radius: 0;
+            box-shadow: none;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .header {
@@ -3433,7 +3442,10 @@ app.get('/liff/tasks', (req, res) => {
         }
         
         .content {
-            padding: 20px;
+            padding: 15px;
+            flex: 1;
+            /* LIFF Full 模式：確保內容可滾動 */
+            overflow-y: auto;
         }
         
         .add-task-section {
@@ -3704,6 +3716,34 @@ app.get('/liff/tasks', (req, res) => {
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
+        }
+        
+        /* LIFF Full 模式專用樣式 */
+        @media screen and (max-width: 768px) {
+            .liff-container {
+                border-radius: 0;
+            }
+            
+            .header {
+                border-radius: 0;
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 10px 15px;
+            }
+            
+            .task-list {
+                max-height: none; /* Full 模式不限制高度 */
+            }
+        }
+        
+        /* 確保 LIFF 在 LINE App 中正確顯示 */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
     </style>
 </head>
