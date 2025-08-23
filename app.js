@@ -2642,15 +2642,30 @@ async function handleEvent(event, baseUrl) {
         } else {
           // 刪除指定的任務
           const deletedTask = todayTasks[taskNumber - 1];
+          console.log(`正在刪除任務:`, deletedTask);
           
           // 從記憶體中刪除任務
-          if (!userTasks[userId]) userTasks[userId] = [];
-          const taskIndex = userTasks[userId].findIndex(task => 
-            task.text === deletedTask.text && task.timestamp === deletedTask.timestamp
+          if (!userTasks.has(userId)) {
+            userTasks.set(userId, []);
+          }
+          
+          const userTaskList = userTasks.get(userId);
+          console.log(`刪除前用戶任務數量: ${userTaskList.length}`);
+          
+          // 使用更精確的匹配方式
+          const taskIndex = userTaskList.findIndex(task => 
+            task.text === deletedTask.text && 
+            task.date === deletedTask.date
           );
           
+          console.log(`找到任務索引: ${taskIndex}`);
+          
           if (taskIndex !== -1) {
-            userTasks[userId].splice(taskIndex, 1);
+            userTaskList.splice(taskIndex, 1);
+            userTasks.set(userId, userTaskList);
+            console.log(`刪除後用戶任務數量: ${userTaskList.length}`);
+          } else {
+            console.log(`未找到要刪除的任務`);
           }
           
           // 從資料庫中刪除任務
