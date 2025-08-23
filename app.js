@@ -2682,9 +2682,9 @@ async function handleEvent(event, baseUrl) {
             {
               type: 'action',
               action: {
-                type: 'message',
+                type: 'uri',
                 label: '查看全部',
-                text: '今天我的任務有哪些？'
+                uri: `${baseUrl}/liff/tasks`
               }
             },
             {
@@ -3635,6 +3635,76 @@ app.get('/liff/tasks', (req, res) => {
             color: #856404;
             text-align: center;
         }
+        
+        .filter-section {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 2px solid #e1e5e9;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .filter-btn:hover {
+            border-color: #00B900;
+            color: #00B900;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #00B900, #06C755);
+            border-color: #00B900;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .task-date-group {
+            margin-bottom: 25px;
+        }
+        
+        .date-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .date-count {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -3667,10 +3737,20 @@ app.get('/liff/tasks', (req, res) => {
             <!-- 訊息顯示區域 -->
             <div id="messageArea"></div>
             
+            <!-- 任務篩選區域 -->
+            <div class="filter-section">
+                <div class="filter-title">🔍 篩選任務</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterTasks('all')">全部任務</button>
+                    <button class="filter-btn" onclick="filterTasks('today')">今日任務</button>
+                    <button class="filter-btn" onclick="filterTasks('week')">本週任務</button>
+                </div>
+            </div>
+
             <!-- 任務列表區域 -->
             <div class="tasks-section">
                 <div class="tasks-title">
-                    <span>📋 今日任務</span>
+                    <span id="taskSectionTitle">📋 全部任務</span>
                     <span class="task-count" id="taskCount">0 項</span>
                 </div>
                 <div id="taskList" class="task-list">
@@ -3779,34 +3859,120 @@ app.get('/liff/tasks', (req, res) => {
             localStorage.setItem('demo-tasks', JSON.stringify(tasks));
         }
         
-        function renderTasks() {
+        let currentFilter = 'all';
+        
+        function renderTasks(filter = currentFilter) {
             const taskList = document.getElementById('taskList');
             const taskCount = document.getElementById('taskCount');
+            const taskSectionTitle = document.getElementById('taskSectionTitle');
             
-            taskCount.textContent = \`\${tasks.length} 項\`;
+            // 根據篩選條件過濾任務
+            let filteredTasks = tasks;
+            let titleText = '📋 全部任務';
             
-            if (tasks.length === 0) {
+            if (filter === 'today') {
+                const today = new Date().toLocaleDateString('zh-TW');
+                filteredTasks = tasks.filter(task => task.date === today);
+                titleText = '📋 今日任務';
+            } else if (filter === 'week') {
+                const now = new Date();
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filteredTasks = tasks.filter(task => new Date(task.timestamp) >= weekAgo);
+                titleText = '📋 本週任務';
+            }
+            
+            taskSectionTitle.textContent = titleText;
+            taskCount.textContent = \`\${filteredTasks.length} 項\`;
+            
+            if (filteredTasks.length === 0) {
+                const emptyMessage = filter === 'today' ? '今天還沒有任何待辦事項' : 
+                                   filter === 'week' ? '本週還沒有任何待辦事項' : 
+                                   '還沒有任何任務';
                 taskList.innerHTML = \`
                     <div class="empty-state">
                         <div class="emoji">🎉</div>
-                        <div>今日任務全部完成！</div>
-                        <div>您今天還沒有任何待辦事項</div>
+                        <div>\${filter === 'today' ? '今日任務全部完成！' : '暫無任務'}</div>
+                        <div>\${emptyMessage}</div>
                     </div>
                 \`;
                 return;
             }
             
-            const taskHTML = tasks.map((task, index) => \`
-                <div class="task-item">
-                    <div class="task-content">\${task.text}</div>
-                    <div class="task-meta">
-                        <span class="task-time">新增於 \${new Date(task.timestamp).toLocaleTimeString('zh-TW')}</span>
-                        <button class="delete-btn" onclick="deleteTask(\${index})">🗑️ 刪除</button>
+            // 按日期分組顯示任務
+            const tasksByDate = groupTasksByDate(filteredTasks);
+            let taskHTML = '';
+            
+            for (const [date, dateTasks] of Object.entries(tasksByDate)) {
+                taskHTML += \`
+                    <div class="task-date-group">
+                        <div class="date-header">
+                            <span>\${formatDate(date)}</span>
+                            <span class="date-count">\${dateTasks.length} 項</span>
+                        </div>
+                        <div class="date-tasks">
+                            \${dateTasks.map((task, index) => \`
+                                <div class="task-item">
+                                    <div class="task-content">\${task.text}</div>
+                                    <div class="task-meta">
+                                        <span class="task-time">\${new Date(task.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <button class="delete-btn" onclick="deleteTaskById('\${task.id}')">🗑️ 刪除</button>
+                                    </div>
+                                </div>
+                            \`).join('')}
+                        </div>
                     </div>
-                </div>
-            \`).join('');
+                \`;
+            }
             
             taskList.innerHTML = taskHTML;
+        }
+        
+        function groupTasksByDate(tasks) {
+            const grouped = {};
+            
+            tasks.forEach(task => {
+                const date = task.date || new Date(task.timestamp).toLocaleDateString('zh-TW');
+                if (!grouped[date]) {
+                    grouped[date] = [];
+                }
+                grouped[date].push(task);
+            });
+            
+            // 按日期排序（最新的在前）
+            const sortedEntries = Object.entries(grouped).sort((a, b) => {
+                return new Date(b[0]) - new Date(a[0]);
+            });
+            
+            return Object.fromEntries(sortedEntries);
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return '📅 今天 ' + dateStr;
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return '📅 昨天 ' + dateStr;
+            } else {
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                const weekday = weekdays[date.getDay()];
+                return \`📅 \${dateStr} (週\${weekday})\`;
+            }
+        }
+        
+        function filterTasks(filter) {
+            currentFilter = filter;
+            
+            // 更新篩選按鈕的狀態
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderTasks(filter);
         }
         
         async function addTask() {
@@ -3858,14 +4024,19 @@ app.get('/liff/tasks', (req, res) => {
             }
         }
         
-        async function deleteTask(index) {
+        async function deleteTaskById(taskId) {
             if (!confirm('確定要刪除這個任務嗎？')) {
                 return;
             }
             
             try {
                 const userId = liffProfile ? liffProfile.userId : 'demo-user';
-                const task = tasks[index];
+                const taskIndex = tasks.findIndex(task => task.id == taskId);
+                if (taskIndex === -1) {
+                    showError('找不到該任務');
+                    return;
+                }
+                const task = tasks[taskIndex];
                 
                 const response = await fetch('/api/tasks/delete', {
                     method: 'POST',
@@ -3889,7 +4060,7 @@ app.get('/liff/tasks', (req, res) => {
             } catch (error) {
                 console.error('刪除任務錯誤:', error);
                 // Demo 模式本地處理
-                tasks.splice(index, 1);
+                tasks.splice(taskIndex, 1);
                 saveTasksToStorage();
                 showSuccess('任務已刪除（Demo 模式）');
                 renderTasks();
