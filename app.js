@@ -2217,103 +2217,52 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
 }
 
 // 累積任務 Flex Message - 顯示今天所有任務
-// 創建單個任務編輯 Flex Message
+// 創建單個任務編輯 Flex Message（精簡版）
 function createSingleTaskEditFlexMessage(task, userId, baseUrl) {
   return {
     type: 'flex',
     altText: `✅ 任務已新增：${task.text}`,
     contents: {
       type: 'bubble',
-      size: 'kilo',
-      header: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: '✅ 任務已建立',
-            weight: 'bold',
-            color: '#00B900',
-            size: 'lg',
-            align: 'center'
-          }
-        ],
-        backgroundColor: '#F0F8F0',
-        paddingAll: '12px'
-      },
+      size: 'nano',
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '📝 任務內容',
-                size: 'sm',
-                color: '#666666',
-                margin: 'none'
-              },
-              {
-                type: 'text',
-                text: task.text,
-                size: 'lg',
-                weight: 'bold',
-                color: '#333333',
-                wrap: true,
-                margin: 'xs'
-              }
-            ],
-            backgroundColor: '#FAFAFA',
-            cornerRadius: '8px',
-            paddingAll: '12px',
-            margin: 'md'
+            type: 'text',
+            text: '✅ 已建立',
+            weight: 'bold',
+            color: '#00B900',
+            size: 'sm',
+            align: 'center',
+            margin: 'none'
           },
           {
-            type: 'box',
-            layout: 'horizontal',
-            contents: [
-              {
-                type: 'text',
-                text: '⏰',
-                size: 'sm',
-                flex: 0
-              },
-              {
-                type: 'text',
-                text: '點擊編輯按鈕設定時間和類型',
-                size: 'sm',
-                color: '#666666',
-                flex: 1,
-                margin: 'sm'
-              }
-            ],
-            margin: 'md'
-          }
-        ],
-        spacing: 'sm',
-        paddingAll: '16px'
-      },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
+            type: 'text',
+            text: task.text,
+            size: 'md',
+            weight: 'bold',
+            color: '#333333',
+            wrap: true,
+            align: 'center',
+            margin: 'sm'
+          },
           {
             type: 'button',
             style: 'primary',
             height: 'sm',
             action: {
               type: 'uri',
-              label: '✏️ 編輯任務',
+              label: '✏️ 編輯',
               uri: `${baseUrl}/liff/edit-task?taskId=${task.id}&userId=${userId}`
             },
-            color: '#00B900'
+            color: '#00B900',
+            margin: 'sm'
           }
         ],
-        spacing: 'sm',
-        paddingAll: '16px'
+        spacing: 'xs',
+        paddingAll: '12px'
       }
     }
   };
@@ -2322,111 +2271,54 @@ function createSingleTaskEditFlexMessage(task, userId, baseUrl) {
 function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
   const taskCount = todayTasks.length;
   
-  // 創建任務列表內容
-  const taskContents = todayTasks.map((task, index) => ({
-    type: 'box',
-    layout: 'horizontal',
-    contents: [
-      {
-        type: 'text',
-        text: `${index + 1}.`,
-        size: 'sm',
-        color: '#666666',
-        flex: 0,
-        margin: 'sm'
-      },
-      {
-        type: 'text',
-        text: task.text,
-        size: 'md',
-        color: '#333333',
-        margin: 'sm',
-        flex: 5,
-        wrap: true,
-        weight: 'bold'
-      }
-    ],
-    margin: 'md',
-    paddingAll: 'sm',
-    backgroundColor: '#f8f9fa',
-    cornerRadius: '8px'
+  // 創建精簡任務列表（最多顯示3個）
+  const limitedTasks = todayTasks.slice(0, 3);
+  const hasMore = todayTasks.length > 3;
+  
+  const taskContents = limitedTasks.map((task, index) => ({
+    type: 'text',
+    text: `${index + 1}. ${task.text}`,
+    size: 'sm',
+    color: '#333333',
+    wrap: true,
+    margin: 'xs'
   }));
+
+  // 如果有更多任務，添加提示
+  if (hasMore) {
+    taskContents.push({
+      type: 'text',
+      text: `...還有 ${todayTasks.length - 3} 個任務`,
+      size: 'xs',
+      color: '#666666',
+      align: 'center',
+      margin: 'sm'
+    });
+  }
 
   return {
     type: 'flex',
     altText: `今日任務清單 (${taskCount}項)`,
     contents: {
       type: 'bubble',
+      size: 'kilo',
       body: {
         type: 'box',
         layout: 'vertical',
         contents: [
           {
             type: 'text',
-            text: '📋 今日任務清單',
+            text: `📋 今日 ${taskCount} 項任務`,
             weight: 'bold',
-            size: 'xl',
+            size: 'md',
             color: '#2196F3',
             align: 'center',
-            margin: 'md'
+            margin: 'none'
           },
-          {
-            type: 'separator',
-            margin: 'md'
-          },
-          {
-            type: 'text',
-            text: `共 ${taskCount} 項任務`,
-            size: 'sm',
-            color: '#666666',
-            margin: 'lg',
-            align: 'center'
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            contents: taskContents,
-            margin: 'lg'
-          },
-          {
-            type: 'separator',
-            margin: 'lg'
-          },
-          {
-            type: 'text',
-            text: '✨ 繼續加油！',
-            size: 'sm',
-            color: '#2196F3',
-            align: 'center',
-            margin: 'md'
-          }
+          ...taskContents
         ],
-        paddingAll: 'lg'
-      },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'button',
-            action: {
-              type: 'uri',
-              label: '管理所有任務',
-              uri: `${baseUrl}/liff/tasks?userId=${userId}`
-            },
-            style: 'primary',
-            color: '#2196F3'
-          },
-          {
-            type: 'text',
-            text: '點擊進入 LIFF 應用管理任務',
-            size: 'xs',
-            color: '#888888',
-            align: 'center',
-            margin: 'sm'
-          }
-        ],
-        paddingAll: 'lg'
+        spacing: 'xs',
+        paddingAll: '10px'
       }
     }
   };
