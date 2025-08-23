@@ -2217,6 +2217,108 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
 }
 
 // 累積任務 Flex Message - 顯示今天所有任務
+// 創建單個任務編輯 Flex Message
+function createSingleTaskEditFlexMessage(task, userId, baseUrl) {
+  return {
+    type: 'flex',
+    altText: `✅ 任務已新增：${task.text}`,
+    contents: {
+      type: 'bubble',
+      size: 'kilo',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ 任務已建立',
+            weight: 'bold',
+            color: '#00B900',
+            size: 'lg',
+            align: 'center'
+          }
+        ],
+        backgroundColor: '#F0F8F0',
+        paddingAll: '12px'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '📝 任務內容',
+                size: 'sm',
+                color: '#666666',
+                margin: 'none'
+              },
+              {
+                type: 'text',
+                text: task.text,
+                size: 'lg',
+                weight: 'bold',
+                color: '#333333',
+                wrap: true,
+                margin: 'xs'
+              }
+            ],
+            backgroundColor: '#FAFAFA',
+            cornerRadius: '8px',
+            paddingAll: '12px',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
+                text: '⏰',
+                size: 'sm',
+                flex: 0
+              },
+              {
+                type: 'text',
+                text: '點擊編輯按鈕設定時間和類型',
+                size: 'sm',
+                color: '#666666',
+                flex: 1,
+                margin: 'sm'
+              }
+            ],
+            margin: 'md'
+          }
+        ],
+        spacing: 'sm',
+        paddingAll: '16px'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'sm',
+            action: {
+              type: 'uri',
+              label: '✏️ 編輯任務',
+              uri: `${baseUrl}/liff/edit-task?taskId=${task.id}&userId=${userId}`
+            },
+            color: '#00B900'
+          }
+        ],
+        spacing: 'sm',
+        paddingAll: '16px'
+      }
+    }
+  };
+}
+
 function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
   const taskCount = todayTasks.length;
   
@@ -2771,12 +2873,15 @@ async function handleEvent(event, baseUrl) {
           }
         }
         
+        // 創建單個任務編輯訊息
+        const singleTaskMessage = createSingleTaskEditFlexMessage(task, userId, baseUrl);
+        
         // 獲取今天所有任務（包含剛新增的）
         const todayTasks = getTodayTasks(userId);
         
-        // 使用累積任務顯示函數
-        const flexMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
-        flexMessage.quickReply = {
+        // 創建累積任務列表訊息
+        const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
+        cumulativeTasksMessage.quickReply = {
           items: [
             {
               type: 'action',
@@ -2797,7 +2902,20 @@ async function handleEvent(event, baseUrl) {
           ]
         };
         
-        return client.replyMessage(event.replyToken, flexMessage);
+        // 發送兩則訊息：1.單個任務編輯 2.累積任務列表
+        try {
+          // 先回覆單個任務訊息
+          await client.replyMessage(event.replyToken, singleTaskMessage);
+          
+          // 再推送累積任務訊息
+          await client.pushMessage(userId, cumulativeTasksMessage);
+          
+          return Promise.resolve();
+        } catch (pushError) {
+          console.error('Error sending multiple messages:', pushError);
+          // 如果推送失敗，至少確保單個任務訊息已發送
+          return Promise.resolve();
+        }
         
       } else {
         // 其他訊息使用ChatGPT回覆
@@ -3756,6 +3874,410 @@ app.get('/liff/tasks', (req, res) => {
             \`).join('');
             
             taskList.innerHTML = taskHTML;
+        }
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(html);
+});
+
+// LINE LIFF 任務編輯頁面
+app.get('/liff/edit-task', (req, res) => {
+  const taskId = req.query.taskId || 'unknown';
+  const userId = req.query.userId || 'unknown';
+  
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✏️ 編輯任務 - LIFF Compact</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #00B900, #06C755);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #00B900;
+            box-shadow: 0 0 0 3px rgba(0, 185, 0, 0.1);
+        }
+        
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .time-inputs .form-input {
+            flex: 1;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .category-button {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .category-button:hover {
+            border-color: #00B900;
+            background: #f8fff8;
+        }
+        
+        .category-button.selected {
+            background: #00B900;
+            border-color: #00B900;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .category-emoji {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+        
+        .save-button {
+            width: 100%;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 185, 0, 0.3);
+        }
+        
+        .save-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .task-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .task-preview-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .task-preview-content {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .message.error {
+            background: #fecaca;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✏️ 編輯任務</h1>
+            <p>設定任務時間和類型</p>
+        </div>
+        
+        <div class="content">
+            <div id="messageArea"></div>
+            
+            <div class="task-preview">
+                <div class="task-preview-title">📝 任務內容</div>
+                <div class="task-preview-content" id="taskContent">載入中...</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">⏰ 任務時間</label>
+                <div class="time-inputs">
+                    <input type="date" id="taskDate" class="form-input">
+                    <input type="time" id="taskTime" class="form-input">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">📂 任務類型</label>
+                <div class="category-grid">
+                    <div class="category-button" data-category="work" onclick="selectCategory('work', this)">
+                        <div class="category-emoji">💼</div>
+                        <div>工作</div>
+                    </div>
+                    <div class="category-button" data-category="family" onclick="selectCategory('family', this)">
+                        <div class="category-emoji">👨‍👩‍👧‍👦</div>
+                        <div>家庭</div>
+                    </div>
+                    <div class="category-button" data-category="travel" onclick="selectCategory('travel', this)">
+                        <div class="category-emoji">✈️</div>
+                        <div>旅遊</div>
+                    </div>
+                    <div class="category-button" data-category="health" onclick="selectCategory('health', this)">
+                        <div class="category-emoji">🏥</div>
+                        <div>健康</div>
+                    </div>
+                    <div class="category-button" data-category="study" onclick="selectCategory('study', this)">
+                        <div class="category-emoji">📚</div>
+                        <div>學習</div>
+                    </div>
+                    <div class="category-button" data-category="shopping" onclick="selectCategory('shopping', this)">
+                        <div class="category-emoji">🛒</div>
+                        <div>購物</div>
+                    </div>
+                    <div class="category-button" data-category="social" onclick="selectCategory('social', this)">
+                        <div class="category-emoji">👥</div>
+                        <div>社交</div>
+                    </div>
+                    <div class="category-button" data-category="exercise" onclick="selectCategory('exercise', this)">
+                        <div class="category-emoji">🏃</div>
+                        <div>運動</div>
+                    </div>
+                    <div class="category-button" data-category="other" onclick="selectCategory('other', this)">
+                        <div class="category-emoji">📝</div>
+                        <div>其他</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="save-button" onclick="saveTask()">💾 儲存任務</button>
+        </div>
+    </div>
+    
+    <script>
+        let selectedCategory = '';
+        let taskData = null;
+        let liffProfile = null;
+        
+        window.onload = function() {
+            if (typeof liff !== 'undefined') {
+                liff.init({
+                    liffId: '${process.env.LINE_LIFF_ID || '2007976732-Ye2k35eo'}'
+                }).then(() => {
+                    if (liff.isLoggedIn()) {
+                        liff.getProfile().then(profile => {
+                            liffProfile = profile;
+                            loadTaskData();
+                        });
+                    } else {
+                        liff.login();
+                    }
+                }).catch(err => {
+                    console.error('LIFF 初始化失敗:', err);
+                    loadTaskData(); // Demo 模式
+                });
+            } else {
+                loadTaskData(); // Demo 模式
+            }
+            
+            // 設定預設日期為今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('taskDate').value = today;
+        };
+        
+        function loadTaskData() {
+            // 從 URL 參數獲取任務資料
+            const urlParams = new URLSearchParams(window.location.search);
+            const taskId = urlParams.get('taskId');
+            const userId = urlParams.get('userId');
+            
+            // 這裡可以從後端 API 獲取任務詳細資料
+            // 暫時顯示基本資訊
+            fetch(\`/api/task/\${taskId}\`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.task) {
+                        taskData = data.task;
+                        document.getElementById('taskContent').textContent = data.task.text;
+                    } else {
+                        document.getElementById('taskContent').textContent = '無法載入任務資料';
+                    }
+                })
+                .catch(error => {
+                    console.error('載入任務失敗:', error);
+                    document.getElementById('taskContent').textContent = '載入任務時發生錯誤';
+                });
+        }
+        
+        function selectCategory(category, element) {
+            // 移除所有選中狀態
+            document.querySelectorAll('.category-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // 添加選中狀態
+            element.classList.add('selected');
+            selectedCategory = category;
+        }
+        
+        function saveTask() {
+            const date = document.getElementById('taskDate').value;
+            const time = document.getElementById('taskTime').value;
+            
+            if (!date) {
+                showMessage('請選擇日期', 'error');
+                return;
+            }
+            
+            if (!selectedCategory) {
+                showMessage('請選擇任務類型', 'error');
+                return;
+            }
+            
+            const saveData = {
+                taskId: '${taskId}',
+                userId: '${userId}',
+                date: date,
+                time: time,
+                category: selectedCategory,
+                liffUserId: liffProfile ? liffProfile.userId : null
+            };
+            
+            // 儲存到後端
+            fetch('/api/task/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(saveData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('✅ 任務已更新！', 'success');
+                    
+                    // 關閉 LIFF 頁面
+                    setTimeout(() => {
+                        if (liff.isInClient()) {
+                            liff.closeWindow();
+                        }
+                    }, 1500);
+                } else {
+                    showMessage('❌ 儲存失敗：' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('儲存錯誤:', error);
+                showMessage('❌ 儲存時發生錯誤', 'error');
+            });
+        }
+        
+        function showMessage(text, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = \`<div class="message \${type}">\${text}</div>\`;
+            
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 3000);
         }
     </script>
 </body>
@@ -4899,6 +5421,122 @@ app.post('/api/tasks/delete', express.json(), (req, res) => {
       message: '找不到指定任務'
     });
   }
+});
+
+// API: 獲取單個任務資訊（用於 LIFF 編輯頁面）
+app.get('/api/task/:taskId', (req, res) => {
+  const { taskId } = req.params;
+  
+  if (!taskId) {
+    return res.json({
+      success: false,
+      message: '缺少任務 ID'
+    });
+  }
+  
+  // 從所有用戶的任務中尋找指定的任務
+  let foundTask = null;
+  let foundUserId = null;
+  
+  for (const [userId, userTaskList] of userTasks) {
+    const task = userTaskList.find(t => t.id.toString() === taskId.toString());
+    if (task) {
+      foundTask = task;
+      foundUserId = userId;
+      break;
+    }
+  }
+  
+  if (foundTask) {
+    res.json({
+      success: true,
+      task: foundTask,
+      userId: foundUserId
+    });
+  } else {
+    res.json({
+      success: false,
+      message: '找不到指定任務'
+    });
+  }
+});
+
+// API: 更新任務（用於 LIFF 編輯頁面）
+app.post('/api/task/update', express.json(), (req, res) => {
+  const { taskId, userId, date, time, category, liffUserId } = req.body;
+  
+  if (!taskId || !userId) {
+    return res.json({
+      success: false,
+      message: '缺少必要參數'
+    });
+  }
+  
+  console.log(`更新任務: taskId=${taskId}, userId=${userId}, date=${date}, time=${time}, category=${category}`);
+  
+  let userTaskList = userTasks.get(userId) || [];
+  const taskIndex = userTaskList.findIndex(task => task.id.toString() === taskId.toString());
+  
+  if (taskIndex === -1) {
+    return res.json({
+      success: false,
+      message: '找不到指定任務'
+    });
+  }
+  
+  // 更新任務資訊
+  const updatedTask = {
+    ...userTaskList[taskIndex],
+    date: date || userTaskList[taskIndex].date,
+    time: time || userTaskList[taskIndex].time,
+    category: category || userTaskList[taskIndex].category,
+    lastModified: new Date().toISOString()
+  };
+  
+  // 如果有時間，則更新任務文字以包含時間
+  if (time) {
+    const originalText = userTaskList[taskIndex].text;
+    const timePattern = /^\d{1,2}[:：]\d{2}/;
+    
+    if (timePattern.test(originalText)) {
+      // 如果已經有時間，則替換
+      updatedTask.text = originalText.replace(timePattern, time);
+    } else {
+      // 如果沒有時間，則添加到前面
+      updatedTask.text = `${time} ${originalText}`;
+    }
+  }
+  
+  userTaskList[taskIndex] = updatedTask;
+  userTasks.set(userId, userTaskList);
+  
+  console.log(`任務已更新:`, updatedTask);
+  
+  // 同時更新資料庫
+  if (database.isInitialized) {
+    try {
+      database.updateTask(taskId, {
+        title: updatedTask.text,
+        dueDate: date ? `${date} ${time || '00:00'}` : null,
+        tags: category || '',
+        metadata: { 
+          category: category,
+          time: time,
+          lastModified: updatedTask.lastModified
+        }
+      }).catch(dbError => {
+        console.error('更新資料庫任務失敗:', dbError);
+      });
+    } catch (dbError) {
+      console.error('資料庫更新錯誤:', dbError);
+    }
+  }
+  
+  res.json({
+    success: true,
+    message: '任務已更新',
+    task: updatedTask
+  });
 });
 
 // 初始化資料庫
