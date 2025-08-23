@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 LINE 註冊並綁定好友</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 50%, #00D000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            padding: 50px;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .register-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(6, 199, 85, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        .features {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #00B900;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .line-login-btn {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 18px 40px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 185, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .line-login-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transition: all 0.5s ease;
+            transform: translate(-50%, -50%);
+        }
+        
+        .line-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 185, 0, 0.4);
+        }
+        
+        .line-login-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .line-login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .line-icon {
+            display: inline-block;
+            margin-right: 12px;
+            font-size: 24px;
+            vertical-align: middle;
+        }
+        
+        .security-info {
+            background: #e8f4fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .security-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .security-title::before {
+            content: '🔒';
+            margin-right: 8px;
+        }
+        
+        .security-list {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 185, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .demo-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        @media (max-width: 600px) {
+            .register-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="content">
+            <!-- Logo -->
+            <div class="logo">📱</div>
+            
+            <!-- 標題 -->
+            <h1>LINE 註冊綁定</h1>
+            <p class="subtitle">一鍵註冊並自動成為記事機器人好友</p>
+            
+            <!-- 功能特色 -->
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <div>快速註冊，無需填寫表單</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <div>自動綁定您的 LINE 帳號</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <div>立即成為機器人好友</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">✓</div>
+                    <div>開始使用智能任務管理</div>
+                </div>
+            </div>
+            
+            <!-- LINE 登入按鈕 -->
+            <button id="lineLoginBtn" class="line-login-btn" onclick="startLineLogin()">
+                <span class="line-icon">💚</span>
+                <span>使用 LINE 註冊並綁定</span>
+            </button>
+            
+            <!-- 安全性說明 -->
+            <div class="security-info">
+                <div class="security-title">安全性保障</div>
+                <div class="security-list">
+                    • 使用 LINE 官方 OAuth 2.0 認證<br>
+                    • 僅存取必要的個人資訊<br>
+                    • 所有資料均經過加密處理<br>
+                    • 隨時可以取消綁定
+                </div>
+            </div>
+            
+            <!-- Demo 說明 -->
+            <div class="demo-note">
+                <strong>📝 注意：</strong>這是示範系統，請確保已在 LINE Developers 中正確配置 OAuth 設定。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 載入中遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div style="font-size: 18px; margin-bottom: 10px;">正在跳轉到 LINE...</div>
+        <div style="font-size: 14px; opacity: 0.8;">請稍候，即將開啟 LINE 授權頁面</div>
+    </div>
+
+    <script>
+        // 生成隨機狀態值用於 CSRF 保護
+        function generateState() {
+            try {
+                // 嘗試使用 Web Crypto API
+                if (window.crypto && window.crypto.getRandomValues) {
+                    const array = new Uint8Array(32);
+                    window.crypto.getRandomValues(array);
+                    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+                } else {
+                    // 備用方案：使用 Math.random()
+                    let result = '';
+                    for (let i = 0; i < 64; i++) {
+                        result += Math.floor(Math.random() * 16).toString(16);
+                    }
+                    return result;
+                }
+            } catch (error) {
+                console.error('生成隨機狀態失敗:', error);
+                // 最終備用方案
+                let result = '';
+                for (let i = 0; i < 64; i++) {
+                    result += Math.floor(Math.random() * 16).toString(16);
+                }
+                return result;
+            }
+        }
+        
+        // 開始 LINE 登入流程
+        async function startLineLogin() {
+            try {
+                // 顯示載入動畫
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('lineLoginBtn').disabled = true;
+                
+                // 生成狀態參數
+                const state = generateState();
+                
+                // 儲存狀態到 sessionStorage (用於驗證)
+                sessionStorage.setItem('line_oauth_state', state);
+                
+                // 發送狀態到後端進行註冊
+                const response = await fetch('/api/line-oauth/prepare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        state: state,
+                        referrer: window.location.href 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('準備登入流程失敗');
+                }
+                
+                const data = await response.json();
+                
+                // 構建 LINE Login URL
+                const lineLoginUrl = buildLineLoginUrl(state);
+                
+                // 延遲跳轉，讓用戶看到載入動畫
+                setTimeout(() => {
+                    window.location.href = lineLoginUrl;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('LINE 登入錯誤:', error);
+                alert('登入過程中發生錯誤，請稍後再試。');
+                
+                // 隱藏載入動畫
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('lineLoginBtn').disabled = false;
+            }
+        }
+        
+        // 構建 LINE Login URL
+        function buildLineLoginUrl(state) {
+            // 這些參數需要在 LINE Developers Console 中配置
+            const CLIENT_ID = '2007976732';  // 您的 LINE Login Channel ID
+            const REDIRECT_URI = encodeURIComponent(window.location.origin + '/auth/line/callback');
+            const SCOPE = encodeURIComponent('profile openid email');
+            
+            return `https://access.line.me/oauth2/v2.1/authorize?` +
+                   `response_type=code&` +
+                   `client_id=${CLIENT_ID}&` +
+                   `redirect_uri=${REDIRECT_URI}&` +
+                   `state=${state}&` +
+                   `scope=${SCOPE}&` +
+                   `nonce=${generateState()}`;
+        }
+        
+        // 頁面載入完成後的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否有錯誤參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            
+            if (error) {
+                let errorMessage = '登入失敗';
+                switch(error) {
+                    case 'access_denied':
+                        errorMessage = '您取消了授權，無法完成註冊。';
+                        break;
+                    case 'invalid_request':
+                        errorMessage = '登入請求無效，請重新嘗試。';
+                        break;
+                    default:
+                        errorMessage = `登入失敗：${error}`;
+                }
+                alert(errorMessage);
+                
+                // 清理 URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+        
+        // 防止重複提交
+        let isSubmitting = false;
+        document.getElementById('lineLoginBtn').addEventListener('click', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+            isSubmitting = true;
+        });
+    </script>
+</body>
+</html>

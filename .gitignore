@@ -1,0 +1,67 @@
+# 依賴套件
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 環境變數檔案
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 資料庫檔案
+*.db
+*.sqlite
+*.sqlite3
+linebot.db
+
+# 日誌檔案
+*.log
+bot.log
+tunnel.log
+ngrok.log
+
+# 暫存檔案
+.tmp/
+.cache/
+.DS_Store
+Thumbs.db
+
+# IDE 設定檔
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 本地執行檔案
+tunnel.pid
+*.pid
+
+# 備份檔案
+*.backup
+*.bak
+*_backup.*
+
+# OS 生成檔案
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 雲端特定檔案
+.vercel
+.railway
+
+# 測試覆蓋率報告
+coverage/
+.nyc_output/
+
+# 執行時暫存檔
+*.tmp
+*.temp
