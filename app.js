@@ -3471,6 +3471,50 @@ app.get('/liff/tasks', (req, res) => {
             padding: 20px;
             color: #666;
         }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,185,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00B900;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .user-id {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .liff-status {
+            font-size: 10px;
+            color: #00B900;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -3480,8 +3524,17 @@ app.get('/liff/tasks', (req, res) => {
             <div class="subtitle">LIFF Compact 模式</div>
         </div>
         
-        <div id="user-info" style="text-align: center; margin-bottom: 15px; font-size: 12px; color: #666;">
-            載入用戶資訊中...
+        <div id="user-info" class="user-profile" style="display: none;">
+            <img id="user-avatar" class="user-avatar" src="" alt="用戶頭像">
+            <div class="user-details">
+                <div id="user-name" class="user-name">載入中...</div>
+                <div id="user-id" class="user-id">User ID: 載入中...</div>
+                <div class="liff-status">📱 LIFF Compact 模式</div>
+            </div>
+        </div>
+        
+        <div id="loading-info" style="text-align: center; margin-bottom: 15px; font-size: 12px; color: #666;">
+            🔄 載入用戶資訊中...
         </div>
         
         <div class="task-section">
@@ -3504,8 +3557,7 @@ app.get('/liff/tasks', (req, res) => {
                     if (liff.isLoggedIn()) {
                         liff.getProfile().then(profile => {
                             liffProfile = profile;
-                            document.getElementById('user-info').innerHTML = 
-                                \`👤 \${profile.displayName} | 📱 LIFF Compact\`;
+                            displayUserProfile(profile);
                             loadTasks();
                         });
                     } else {
@@ -3521,8 +3573,22 @@ app.get('/liff/tasks', (req, res) => {
         };
         
         function initDemo() {
-            document.getElementById('user-info').innerHTML = '👤 Demo 用戶 | 🌐 Demo 模式';
+            displayUserProfile({
+                displayName: 'Demo 用戶',
+                userId: 'demo-user-123',
+                pictureUrl: 'https://via.placeholder.com/50x50/00B900/white?text=👤'
+            });
             loadTasks();
+        }
+        
+        function displayUserProfile(profile) {
+            document.getElementById('user-name').textContent = profile.displayName;
+            document.getElementById('user-id').textContent = 'User ID: ' + profile.userId;
+            document.getElementById('user-avatar').src = profile.pictureUrl || 'https://via.placeholder.com/50x50/00B900/white?text=👤';
+            
+            // 隱藏載入訊息，顯示用戶資料
+            document.getElementById('loading-info').style.display = 'none';
+            document.getElementById('user-info').style.display = 'flex';
         }
         
         function loadTasks() {
@@ -4094,10 +4160,16 @@ app.get('/liff/profile', (req, res) => {
         
         function updateUserInfo() {
             if (liffProfile) {
+                const avatarUrl = liffProfile.pictureUrl || 'https://via.placeholder.com/60x60/00B900/white?text=👤';
                 document.getElementById('userInfo').innerHTML = \`
-                    <div>👋 歡迎，\${liffProfile.displayName}!</div>
-                    <div>🆔 USER ID: \${liffProfile.userId}</div>
-                    <div>\${isLiffAvailable ? '📱 LIFF 模式' : '🌐 Demo 模式'}</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="\${avatarUrl}" alt="用戶頭像" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+                        <div>
+                            <div>👋 \${liffProfile.displayName}</div>
+                            <div style="font-size: 10px; opacity: 0.8;">ID: \${liffProfile.userId}</div>
+                            <div style="font-size: 10px; opacity: 0.8;">\${isLiffAvailable ? '📱 LIFF 模式' : '🌐 Demo 模式'}</div>
+                        </div>
+                    </div>
                 \`;
             }
         }
