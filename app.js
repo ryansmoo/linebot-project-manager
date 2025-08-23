@@ -4386,8 +4386,6 @@ app.get('/liff/profile', (req, res) => {
   res.send(html);
 });
 
-});
-
 // LINE LIFF 帳號管理頁面 (簡潔版)
 app.get('/liff/profile', (req, res) => {
   const html = `
