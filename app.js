@@ -3399,78 +3399,86 @@ app.get('/liff/tasks', (req, res) => {
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            /* LIFF Compact 模式：適應50%高度 */
+            height: 100%;
             margin: 0;
-            padding: 0;
-            /* 針對 LIFF Full 模式優化 */
-            width: 100vw;
+            padding: 5px;
+            width: 100%;
             overflow-x: hidden;
         }
         
         .liff-container {
-            /* LIFF Full 模式：使用全螢幕寬度 */
+            /* LIFF Compact 模式：適配50%高度的小視窗 */
             width: 100%;
-            max-width: 100vw;
             margin: 0;
             background: white;
-            /* Full 模式不需要圓角和陰影 */
-            border-radius: 0;
-            box-shadow: none;
-            min-height: 100vh;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+            height: 100%;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .header {
             background: linear-gradient(135deg, #00B900, #06C755);
             color: white;
-            padding: 20px;
+            /* Compact 模式：縮減 header 高度 */
+            padding: 12px 15px;
             text-align: center;
+            flex-shrink: 0;
         }
         
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
+            /* Compact 模式：縮小標題字體 */
+            font-size: 18px;
+            margin-bottom: 3px;
         }
         
         .user-info {
             background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 15px;
-            font-size: 14px;
+            border-radius: 8px;
+            /* Compact 模式：縮減用戶資訊區域 */
+            padding: 6px 8px;
+            margin-top: 8px;
+            font-size: 12px;
         }
         
         .content {
-            padding: 15px;
+            /* Compact 模式：優化有限空間的內容區域 */
+            padding: 10px 12px;
             flex: 1;
-            /* LIFF Full 模式：確保內容可滾動 */
             overflow-y: auto;
+            min-height: 0; /* 確保在 flex 容器中可以正確滾動 */
         }
         
         .add-task-section {
             background: #f8f9ff;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            /* Compact 模式：縮減區域間距 */
+            padding: 12px;
+            margin-bottom: 12px;
         }
         
         .add-task-title {
             color: #333;
             font-weight: bold;
-            margin-bottom: 15px;
+            /* Compact 模式：縮減間距 */
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+            font-size: 14px;
         }
         
         .task-input {
             width: 100%;
-            padding: 15px;
+            /* Compact 模式：縮減輸入框高度 */
+            padding: 10px 12px;
             border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            margin-bottom: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
             transition: border-color 0.3s;
         }
         
@@ -3484,9 +3492,10 @@ app.get('/liff/tasks', (req, res) => {
             background: linear-gradient(135deg, #00B900, #06C755);
             color: white;
             border: none;
-            border-radius: 10px;
-            padding: 15px;
-            font-size: 16px;
+            border-radius: 8px;
+            /* Compact 模式：縮減按鈕高度 */
+            padding: 10px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -3650,37 +3659,42 @@ app.get('/liff/tasks', (req, res) => {
         
         .filter-section {
             background: #f8f9ff;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            /* Compact 模式：縮減篩選區域 */
+            padding: 10px;
+            margin-bottom: 10px;
         }
         
         .filter-title {
             color: #333;
             font-weight: bold;
-            margin-bottom: 15px;
+            /* Compact 模式：縮減標題間距 */
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+            font-size: 14px;
         }
         
         .filter-buttons {
             display: flex;
-            gap: 10px;
+            /* Compact 模式：縮減按鈕間距 */
+            gap: 6px;
             flex-wrap: wrap;
         }
         
         .filter-btn {
             background: white;
-            border: 2px solid #e1e5e9;
+            border: 1px solid #e1e5e9;
             color: #666;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
+            /* Compact 模式：縮小篩選按鈕 */
+            padding: 6px 12px;
+            border-radius: 18px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
             flex: 1;
-            min-width: 100px;
+            min-width: 80px;
         }
         
         .filter-btn:hover {
@@ -3696,16 +3710,19 @@ app.get('/liff/tasks', (req, res) => {
         }
         
         .task-date-group {
-            margin-bottom: 25px;
+            /* Compact 模式：縮減日期分組間距 */
+            margin-bottom: 15px;
         }
         
         .date-header {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
+            /* Compact 模式：縮減日期標題 */
+            padding: 8px 12px;
+            border-radius: 8px;
             font-weight: bold;
-            margin-bottom: 15px;
+            font-size: 13px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -3713,32 +3730,42 @@ app.get('/liff/tasks', (req, res) => {
         
         .date-count {
             background: rgba(255,255,255,0.2);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            /* Compact 模式：縮小數量標籤 */
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 11px;
         }
         
-        /* LIFF Full 模式專用樣式 */
+        /* LIFF Compact 模式專用樣式 */
         @media screen and (max-width: 768px) {
-            .liff-container {
-                border-radius: 0;
+            .task-item {
+                /* Compact 模式：縮減任務項目間距 */
+                padding: 10px;
+                margin-bottom: 6px;
             }
             
-            .header {
-                border-radius: 0;
-                padding: 20px 15px;
+            .task-content {
+                font-size: 14px;
+                margin-bottom: 6px;
             }
             
-            .content {
-                padding: 10px 15px;
+            .task-meta {
+                font-size: 11px;
+            }
+            
+            .delete-btn {
+                padding: 3px 6px;
+                font-size: 10px;
             }
             
             .task-list {
-                max-height: none; /* Full 模式不限制高度 */
+                /* Compact 模式：限制最大高度並允許滾動 */
+                max-height: 200px;
+                overflow-y: auto;
             }
         }
         
-        /* 確保 LIFF 在 LINE App 中正確顯示 */
+        /* 確保 LIFF Compact 模式在 LINE App 中正確顯示 */
         html, body {
             height: 100%;
             width: 100%;
@@ -3760,8 +3787,8 @@ app.get('/liff/tasks', (req, res) => {
         <div class="content">
             <!-- Demo 模式說明 -->
             <div class="liff-demo-mode">
-                <strong>📱 LIFF App Demo 模式</strong><br>
-                此為展示版本，實際使用需要在 LINE Developers Console 中設定 LIFF App
+                <strong>📱 LIFF Compact 模式</strong><br>
+                50% 螢幕高度，保留上方聊天室內容
             </div>
             
             <!-- 新增任務區域 -->
