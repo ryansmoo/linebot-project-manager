@@ -2577,7 +2577,7 @@ async function handleEvent(event, baseUrl) {
             type: 'action',
             action: {
               type: 'uri',
-              label: '今天',
+              label: '全部任務',
               uri: `${baseUrl}/liff/tasks`
             }
           },
@@ -2585,16 +2585,8 @@ async function handleEvent(event, baseUrl) {
             type: 'action',
             action: {
               type: 'uri',
-              label: '全部',
-              uri: `${baseUrl}/liff/tasks`
-            }
-          },
-          {
-            type: 'action',
-            action: {
-              type: 'uri',
-              label: '個人',
-              uri: `${baseUrl}/profile/${userId}`
+              label: '帳號管理',
+              uri: `${baseUrl}/liff/profile`
             }
           }
         ]
@@ -2675,7 +2667,7 @@ async function handleEvent(event, baseUrl) {
               type: 'action',
               action: {
                 type: 'uri',
-                label: '管理任務',
+                label: '全部任務',
                 uri: `${baseUrl}/liff/tasks`
               }
             },
@@ -2683,16 +2675,8 @@ async function handleEvent(event, baseUrl) {
               type: 'action',
               action: {
                 type: 'uri',
-                label: '查看全部',
-                uri: `${baseUrl}/liff/tasks`
-              }
-            },
-            {
-              type: 'action',
-              action: {
-                type: 'uri',
-                label: '個人設定',
-                uri: `${baseUrl}/profile/${userId}`
+                label: '帳號管理',
+                uri: `${baseUrl}/liff/profile`
               }
             }
           ]
@@ -3379,7 +3363,7 @@ app.get('/admin/chats', async (req, res) => {
 // LINE LIFF App 功能
 // ================================
 
-// LINE LIFF 任務管理頁面
+// LINE LIFF 全部任務頁面 (簡潔版)
 app.get('/liff/tasks', (req, res) => {
   const html = `
 <!DOCTYPE html>
@@ -3387,7 +3371,228 @@ app.get('/liff/tasks', (req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📝 LINE 任務管理 - LIFF App</title>
+    <title>📋 全部任務 - LIFF Compact</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            height: 100%;
+            padding: 0;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            height: 100%;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .task-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .task-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .task-content {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+        
+        .task-time {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">📋 全部任務</div>
+            <div class="subtitle">LIFF Compact 模式</div>
+        </div>
+        
+        <div id="user-info" style="text-align: center; margin-bottom: 15px; font-size: 12px; color: #666;">
+            載入用戶資訊中...
+        </div>
+        
+        <div class="task-section">
+            <div class="section-title">📅 我的任務清單</div>
+            <div id="task-list" class="task-list">
+                <div class="loading">載入任務中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let liffProfile = null;
+        
+        // 初始化 LIFF
+        window.onload = function() {
+            if (typeof liff !== 'undefined') {
+                liff.init({
+                    liffId: '${process.env.LINE_LIFF_ID || '2007976732-Ye2k35eo'}'
+                }).then(() => {
+                    if (liff.isLoggedIn()) {
+                        liff.getProfile().then(profile => {
+                            liffProfile = profile;
+                            document.getElementById('user-info').innerHTML = 
+                                \`👤 \${profile.displayName} | 📱 LIFF Compact\`;
+                            loadTasks();
+                        });
+                    } else {
+                        liff.login();
+                    }
+                }).catch(err => {
+                    console.error('LIFF 初始化失敗:', err);
+                    initDemo();
+                });
+            } else {
+                initDemo();
+            }
+        };
+        
+        function initDemo() {
+            document.getElementById('user-info').innerHTML = '👤 Demo 用戶 | 🌐 Demo 模式';
+            loadTasks();
+        }
+        
+        function loadTasks() {
+            const userId = liffProfile ? liffProfile.userId : 'demo-user';
+            
+            fetch(\`/api/tasks/\${userId}\`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.tasks) {
+                        renderTasks(data.tasks);
+                    } else {
+                        renderTasks([]);
+                    }
+                })
+                .catch(error => {
+                    console.error('載入任務錯誤:', error);
+                    // 顯示 demo 任務
+                    renderTasks([
+                        { text: '13:00 遛小狗', timestamp: new Date().toISOString() },
+                        { text: '14:00 回家', timestamp: new Date().toISOString() },
+                        { text: '15:00 買菜', timestamp: new Date().toISOString() }
+                    ]);
+                });
+        }
+        
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('task-list');
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = \`
+                    <div class="empty-message">
+                        <div class="empty-icon">🎉</div>
+                        <div>暫無任務</div>
+                        <div style="font-size: 12px; margin-top: 5px;">在聊天室中發送任務給我吧！</div>
+                    </div>
+                \`;
+                return;
+            }
+            
+            const taskHTML = tasks.map(task => \`
+                <div class="task-item">
+                    <div class="task-content">\${task.text}</div>
+                    <div class="task-time">\${new Date(task.timestamp).toLocaleString('zh-TW', { 
+                        month: 'numeric', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })}</div>
+                </div>
+            \`).join('');
+            
+            taskList.innerHTML = taskHTML;
+        }
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(html);
+});
+
+// LINE LIFF 帳號管理頁面
+app.get('/liff/profile', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👤 帳號管理 - LIFF Compact</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -4173,6 +4378,262 @@ app.get('/liff/tasks', (req, res) => {
                 addTask();
             }
         });
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(html);
+});
+
+});
+
+// LINE LIFF 帳號管理頁面 (簡潔版)
+app.get('/liff/profile', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👤 帳號管理 - LIFF Compact</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100%;
+            padding: 0;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            height: 100%;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .profile-section {
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00B900;
+            margin-bottom: 3px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">👤 帳號管理</div>
+            <div class="subtitle">LIFF Compact 模式</div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="section-title">📋 個人資訊</div>
+            <div id="profile-info" class="profile-info">
+                <div class="loading">載入用戶資訊中...</div>
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <div class="section-title">📊 使用統計</div>
+            <div id="user-stats" class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="task-count">-</div>
+                    <div class="stat-label">總任務數</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="today-count">-</div>
+                    <div class="stat-label">今日任務</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let liffProfile = null;
+        
+        // 初始化 LIFF
+        window.onload = function() {
+            if (typeof liff !== 'undefined') {
+                liff.init({
+                    liffId: '${process.env.LINE_LIFF_ID || '2007976732-Ye2k35eo'}'
+                }).then(() => {
+                    if (liff.isLoggedIn()) {
+                        liff.getProfile().then(profile => {
+                            liffProfile = profile;
+                            displayProfile(profile);
+                            loadStats();
+                        });
+                    } else {
+                        liff.login();
+                    }
+                }).catch(err => {
+                    console.error('LIFF 初始化失敗:', err);
+                    initDemo();
+                });
+            } else {
+                initDemo();
+            }
+        };
+        
+        function initDemo() {
+            const demoProfile = {
+                displayName: 'Demo 用戶',
+                userId: 'demo-user-id',
+                statusMessage: 'LINE Bot 愛用者',
+                pictureUrl: ''
+            };
+            displayProfile(demoProfile);
+            loadStats();
+        }
+        
+        function displayProfile(profile) {
+            document.getElementById('profile-info').innerHTML = \`
+                <div class="info-item">
+                    <span class="info-label">👤 顯示名稱</span>
+                    <span class="info-value">\${profile.displayName}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">🆔 用戶ID</span>
+                    <span class="info-value">\${profile.userId}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📱 連接狀態</span>
+                    <span class="info-value">\${liffProfile ? 'LIFF已連接' : 'Demo模式'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">🎯 狀態訊息</span>
+                    <span class="info-value">\${profile.statusMessage || '無狀態訊息'}</span>
+                </div>
+            \`;
+        }
+        
+        function loadStats() {
+            const userId = liffProfile ? liffProfile.userId : 'demo-user';
+            
+            fetch(\`/api/tasks/\${userId}\`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.tasks) {
+                        const totalTasks = data.tasks.length;
+                        const today = new Date().toLocaleDateString('zh-TW');
+                        const todayTasks = data.tasks.filter(task => 
+                            new Date(task.timestamp).toLocaleDateString('zh-TW') === today
+                        ).length;
+                        
+                        document.getElementById('task-count').textContent = totalTasks;
+                        document.getElementById('today-count').textContent = todayTasks;
+                    } else {
+                        // Demo 數據
+                        document.getElementById('task-count').textContent = '3';
+                        document.getElementById('today-count').textContent = '2';
+                    }
+                })
+                .catch(error => {
+                    console.error('載入統計錯誤:', error);
+                    // Demo 數據
+                    document.getElementById('task-count').textContent = '3';
+                    document.getElementById('today-count').textContent = '2';
+                });
+        }
     </script>
 </body>
 </html>
