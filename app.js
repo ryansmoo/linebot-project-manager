@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const OpenAI = require('openai');
 const database = require('./database');
+const googleCalendarService = require('./google-calendar');
 
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'CnT5EpvP2ATp1hWRMB69uDRk9AzmO5+34Pd1QkrcxFe6NTDloT2olr5sNKbX5vJjVUxav5EPSMagBHYt328GPCLK6KE1ZL70JFX2vswFSiTdlCd3VP5GEwQ3xTyKJhfuW3Qt3gT27zPsihcGBCLevQdB04t89/1O/w1cDnyilFU=',
@@ -72,6 +73,39 @@ function bindLineToMember(memberId, lineUserId) {
   lineBindings.set(lineUserId, memberId);
   
   return true;
+}
+
+// 時間檢測和解析功能
+function extractTimeFromText(text) {
+  // 匹配時間格式：HH:MM 或 H:MM
+  const timePattern = /(\d{1,2})[：:]\d{2}/;
+  const match = text.match(timePattern);
+  
+  if (match) {
+    const timeStr = match[0].replace('：', ':'); // 統一格式
+    const [hours, minutes] = timeStr.split(':').map(num => parseInt(num));
+    
+    // 驗證時間有效性
+    if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+      return {
+        hasTime: true,
+        time: timeStr,
+        hours: hours,
+        minutes: minutes,
+        textWithoutTime: text.replace(timePattern, '').trim(),
+        originalText: text
+      };
+    }
+  }
+  
+  return {
+    hasTime: false,
+    time: null,
+    hours: null,
+    minutes: null,
+    textWithoutTime: text,
+    originalText: text
+  };
 }
 
 // 任務管理功能
@@ -231,6 +265,163 @@ app.get('/health', (req, res) => {
       enabled: !!process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo'
     }
+  });
+});
+
+// Google Calendar OAuth 授權回調
+app.get('/auth/google/callback', async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    
+    if (!code || !state) {
+      return res.status(400).send('缺少必要的授權參數');
+    }
+
+    const result = await googleCalendarService.handleAuthCallback(code, state);
+    
+    if (result.success) {
+      // 授權成功頁面
+      const html = `
+      <!DOCTYPE html>
+      <html lang="zh-TW">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>✅ Google Calendar 授權成功</title>
+          <style>
+              * {
+                  margin: 0;
+                  padding: 0;
+                  box-sizing: border-box;
+              }
+              
+              body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+                  min-height: 100vh;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  padding: 20px;
+              }
+              
+              .container {
+                  background: white;
+                  border-radius: 20px;
+                  padding: 40px;
+                  text-align: center;
+                  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                  max-width: 400px;
+                  width: 100%;
+              }
+              
+              .success-icon {
+                  font-size: 60px;
+                  margin-bottom: 20px;
+              }
+              
+              .title {
+                  font-size: 24px;
+                  font-weight: bold;
+                  color: #333;
+                  margin-bottom: 15px;
+              }
+              
+              .message {
+                  color: #666;
+                  margin-bottom: 30px;
+                  line-height: 1.5;
+              }
+              
+              .instruction {
+                  background: #f8f9fa;
+                  border-radius: 10px;
+                  padding: 20px;
+                  color: #333;
+                  font-size: 14px;
+                  line-height: 1.5;
+              }
+              
+              .highlight {
+                  color: #4285F4;
+                  font-weight: bold;
+              }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <div class="success-icon">✅</div>
+              <div class="title">Google Calendar 授權成功！</div>
+              <div class="message">
+                  您的帳號已成功連結到 Google Calendar。
+              </div>
+              <div class="instruction">
+                  <strong>下一步：</strong><br>
+                  回到 LINE 聊天室，當您輸入帶有時間的任務時<br>
+                  （例如：<span class="highlight">20:00 回家吃飯</span>），<br>
+                  就可以點擊 <span class="highlight">📅 上傳日曆</span> 按鈕<br>
+                  自動同步到您的 Google Calendar！
+              </div>
+          </div>
+          
+          <script>
+              // 3秒後自動關閉視窗
+              setTimeout(() => {
+                  if (window.opener) {
+                      window.close();
+                  }
+              }, 3000);
+          </script>
+      </body>
+      </html>
+      `;
+      
+      res.send(html);
+    } else {
+      // 授權失敗頁面
+      res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="zh-TW">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>❌ 授權失敗</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>❌ Google Calendar 授權失敗</h1>
+            <p>錯誤：${result.error}</p>
+            <p>請返回 LINE 重新嘗試授權。</p>
+        </body>
+        </html>
+      `);
+    }
+    
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    res.status(500).send('伺服器錯誤，請稍後再試');
+  }
+});
+
+// 檢查用戶 Google Calendar 授權狀態
+app.get('/api/calendar/status/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const isAuthorized = googleCalendarService.isUserAuthorized(userId);
+  
+  res.json({
+    userId: userId,
+    isAuthorized: isAuthorized,
+    authorizedUsers: googleCalendarService.getAuthorizedUsers().length
+  });
+});
+
+// 撤銷用戶授權
+app.post('/api/calendar/revoke/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const success = googleCalendarService.revokeUserAuth(userId);
+  
+  res.json({
+    success: success,
+    message: success ? '授權已撤銷' : '用戶未授權或撤銷失敗'
   });
 });
 
@@ -2125,6 +2316,44 @@ function getBaseUrl(req) {
 
 // 任務記錄確認 Flex Message  
 function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
+  // 檢測任務中是否包含時間
+  const timeInfo = extractTimeFromText(taskText);
+  
+  // 基本按鈕
+  const buttons = [
+    {
+      type: 'button',
+      style: 'primary',
+      height: 'sm',
+      action: {
+        type: 'uri',
+        label: '📝 編輯',
+        uri: `${baseUrl}/liff/tasks`
+      }
+    }
+  ];
+  
+  // 如果有時間，加入日曆按鈕
+  if (timeInfo.hasTime) {
+    buttons.push({
+      type: 'button',
+      style: 'secondary',
+      height: 'sm',
+      action: {
+        type: 'postback',
+        label: '📅 上傳日曆',
+        data: JSON.stringify({
+          action: 'add_to_calendar',
+          taskId: taskId,
+          userId: userId,
+          taskText: taskText,
+          time: timeInfo.time,
+          title: timeInfo.textWithoutTime || taskText
+        })
+      }
+    });
+  }
+
   return {
     type: 'flex',
     altText: `任務已記錄：${taskText}`,
@@ -2166,7 +2395,16 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
                 color: '#333333',
                 margin: 'sm',
                 wrap: true
-              }
+              },
+              // 如果有時間，顯示時間資訊
+              ...(timeInfo.hasTime ? [{
+                type: 'text',
+                text: `⏰ 時間：${timeInfo.time}`,
+                size: 'sm',
+                color: '#4CAF50',
+                margin: 'sm',
+                weight: 'bold'
+              }] : [])
             ]
           },
           {
@@ -2181,16 +2419,13 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
         layout: 'vertical',
         spacing: 'sm',
         contents: [
-          {
-            type: 'button',
-            style: 'primary',
-            height: 'sm',
-            action: {
-              type: 'uri',
-              label: '編輯',
-              uri: `${baseUrl}/liff/tasks`
-            }
-          },
+          ...buttons.map((button, index) => [
+            ...(index > 0 ? [{
+              type: 'separator',
+              margin: 'sm'
+            }] : []),
+            button
+          ]).flat(),
           {
             type: 'separator',
             margin: 'md'
@@ -2201,7 +2436,7 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
             contents: [
               {
                 type: 'text',
-                text: '✅ 任務已加入今日待辦清單',
+                text: timeInfo.hasTime ? '✅ 任務已記錄，可同步到 Google 日曆' : '✅ 任務已加入今日待辦清單',
                 size: 'xs',
                 color: '#888888',
                 align: 'center'
@@ -2490,6 +2725,219 @@ app.post('/webhook', line.middleware(config), (req, res) => {
     });
 });
 
+// 處理 postback 事件（按鈕點擊）
+async function handlePostbackEvent(event, baseUrl) {
+  const userId = event.source.userId || 'default-user';
+  
+  try {
+    const postbackData = JSON.parse(event.postback.data);
+    console.log('Postback data:', postbackData);
+    
+    if (postbackData.action === 'add_to_calendar') {
+      return await handleAddToCalendar(event, postbackData, baseUrl);
+    }
+    
+    return Promise.resolve(null);
+  } catch (error) {
+    console.error('Error handling postback:', error);
+    
+    const errorMessage = {
+      type: 'text',
+      text: '❌ 處理請求時發生錯誤，請稍後再試。'
+    };
+    
+    return client.replyMessage(event.replyToken, errorMessage);
+  }
+}
+
+// 處理加入日曆的請求
+async function handleAddToCalendar(event, postbackData, baseUrl) {
+  const userId = event.source.userId || 'default-user';
+  
+  try {
+    // 檢查用戶是否已授權 Google Calendar
+    if (!googleCalendarService.isUserAuthorized(userId)) {
+      // 需要先授權
+      const authUrl = googleCalendarService.generateAuthUrl(userId, 'calendar_auth');
+      
+      const authMessage = {
+        type: 'flex',
+        altText: '需要授權 Google Calendar',
+        contents: {
+          type: 'bubble',
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '📅 Google Calendar 授權',
+                weight: 'bold',
+                size: 'xl',
+                color: '#4285F4',
+                align: 'center',
+                margin: 'md'
+              },
+              {
+                type: 'separator',
+                margin: 'md'
+              },
+              {
+                type: 'text',
+                text: '要將任務同步到 Google 日曆，需要先完成授權。',
+                wrap: true,
+                size: 'sm',
+                color: '#666666',
+                margin: 'lg'
+              },
+              {
+                type: 'text',
+                text: '授權後，您就可以自動同步所有帶時間的任務到日曆中！',
+                wrap: true,
+                size: 'sm',
+                color: '#4CAF50',
+                margin: 'md'
+              }
+            ],
+            paddingAll: 'lg'
+          },
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'button',
+                style: 'primary',
+                action: {
+                  type: 'uri',
+                  label: '🔗 前往授權',
+                  uri: authUrl
+                }
+              },
+              {
+                type: 'text',
+                text: '授權完成後，請重新點擊「📅 上傳日曆」按鈕',
+                size: 'xs',
+                color: '#888888',
+                align: 'center',
+                margin: 'md'
+              }
+            ],
+            paddingAll: 'lg'
+          }
+        }
+      };
+      
+      return client.replyMessage(event.replyToken, authMessage);
+    }
+    
+    // 用戶已授權，直接創建日曆事件
+    const eventData = {
+      title: postbackData.title,
+      time: postbackData.time,
+      description: `LINE Bot 任務：${postbackData.taskText}`
+    };
+    
+    const result = await googleCalendarService.createCalendarEvent(userId, eventData);
+    
+    if (result.success) {
+      const successMessage = {
+        type: 'flex',
+        altText: '成功加入 Google Calendar',
+        contents: {
+          type: 'bubble',
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '✅ 成功加入日曆！',
+                weight: 'bold',
+                size: 'xl',
+                color: '#4CAF50',
+                align: 'center',
+                margin: 'md'
+              },
+              {
+                type: 'separator',
+                margin: 'md'
+              },
+              {
+                type: 'text',
+                text: '您的任務已成功同步到 Google Calendar：',
+                size: 'sm',
+                color: '#666666',
+                margin: 'lg'
+              },
+              {
+                type: 'text',
+                text: postbackData.taskText,
+                weight: 'bold',
+                size: 'lg',
+                color: '#333333',
+                margin: 'sm',
+                wrap: true
+              },
+              {
+                type: 'text',
+                text: `⏰ ${postbackData.time}`,
+                size: 'sm',
+                color: '#4CAF50',
+                margin: 'sm',
+                weight: 'bold'
+              }
+            ],
+            paddingAll: 'lg'
+          },
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'button',
+                style: 'link',
+                action: {
+                  type: 'uri',
+                  label: '📅 查看日曆',
+                  uri: result.eventUrl || 'https://calendar.google.com'
+                }
+              }
+            ],
+            paddingAll: 'lg'
+          }
+        }
+      };
+      
+      return client.replyMessage(event.replyToken, successMessage);
+    } else {
+      // 處理錯誤
+      let errorText = '❌ 無法加入日曆，請稍後再試。';
+      
+      if (result.error === 'authorization_expired') {
+        errorText = '❌ Google Calendar 授權已過期，請重新授權。';
+      }
+      
+      const errorMessage = {
+        type: 'text',
+        text: errorText
+      };
+      
+      return client.replyMessage(event.replyToken, errorMessage);
+    }
+    
+  } catch (error) {
+    console.error('Error adding to calendar:', error);
+    
+    const errorMessage = {
+      type: 'text',
+      text: '❌ 加入日曆時發生錯誤，請稍後再試。'
+    };
+    
+    return client.replyMessage(event.replyToken, errorMessage);
+  }
+}
+
 async function handleEvent(event, baseUrl) {
   console.log('Received event:', event);
   
@@ -2499,6 +2947,11 @@ async function handleEvent(event, baseUrl) {
   let isSuccessful = true;
   let errorMessage = null;
 
+  // 處理不同類型的事件
+  if (event.type === 'postback') {
+    return handlePostbackEvent(event, baseUrl);
+  }
+  
   if (event.type !== 'message' || event.message.type !== 'text') {
     return Promise.resolve(null);
   }

@@ -7,8 +7,9 @@
 - 📋 **任務記錄與管理**：智能識別並記錄您的待辦事項
 - 📱 **精美Flex Message**：專業級卡片式視覺回覆
 - 🌐 **任務網頁介面**：**精美的網頁任務管理系統**
+- 📅 **Google Calendar 整合**：**自動同步帶時間的任務到 Google 日曆** ✨NEW✨
 - 🔧 **多種互動模式**：
-  - `17:00小美約會` - **任務記錄** + 確認卡片 + **網頁連結**
+  - `20:00 回家吃飯` - **任務記錄** + 確認卡片 + **📅 上傳日曆按鈕**
   - `今天我的任務有哪些？` - **任務清單** + **網頁介面按鈕**
   - `hello` - 記事機器人歡迎訊息
   - `/help` 或 `幫助` - 功能說明
@@ -34,6 +35,11 @@
    # OpenAI API 設定
    OPENAI_API_KEY=你的_openai_api_key
    OPENAI_MODEL=gpt-3.5-turbo
+   
+   # Google Calendar 設定（選用）
+   GOOGLE_CLIENT_ID=你的_google_oauth_client_id
+   GOOGLE_CLIENT_SECRET=你的_google_oauth_client_secret
+   GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
    ```
 
 3. 啟動機器人：
@@ -131,8 +137,32 @@
 - **Ngrok 日誌**: `tail -f ngrok.log`
 - **Ngrok 管理介面**: http://localhost:4040
 
+## 📅 Google Calendar 整合功能
+
+### 🎯 功能說明
+當用戶輸入包含時間的任務時，會自動顯示「📅 上傳日曆」按鈕，可將任務同步到 Google Calendar。
+
+### 📝 使用範例
+```
+用戶輸入：20:00 回家吃飯
+系統回覆：[Flex Message 卡片]
+         📝 任務已記錄
+         您的任務：20:00 回家吃飯
+         ⏰ 時間：20:00
+         [📝 編輯] [📅 上傳日曆]
+```
+
+### ⚙️ 詳細設定
+請參考 [`GOOGLE_CALENDAR_SETUP.md`](./GOOGLE_CALENDAR_SETUP.md) 獲得完整的設定指南。
+
+### 支援的時間格式
+- `HH:MM` - 例如：`09:30`、`14:00`
+- `H:MM` - 例如：`9:30`
+- 支援中文冒號：`18：30`
+
 ## ⚠️ 重要注意事項
 
 - 每次重啟 ngrok，Webhook URL 會改變，需重新設定
 - 免費版 ngrok 有連線時間限制
 - 請勿將 `.env` 檔案提交到版本控制系統
+- Google Calendar 功能需要額外的 OAuth 設定（參考設定指南）
