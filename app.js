@@ -2216,6 +2216,120 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
   };
 }
 
+// 累積任務 Flex Message - 顯示今天所有任務
+function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
+  const taskCount = todayTasks.length;
+  
+  // 創建任務列表內容
+  const taskContents = todayTasks.map((task, index) => ({
+    type: 'box',
+    layout: 'horizontal',
+    contents: [
+      {
+        type: 'text',
+        text: `${index + 1}.`,
+        size: 'sm',
+        color: '#666666',
+        flex: 0,
+        margin: 'sm'
+      },
+      {
+        type: 'text',
+        text: task.text,
+        size: 'md',
+        color: '#333333',
+        margin: 'sm',
+        flex: 5,
+        wrap: true,
+        weight: 'bold'
+      }
+    ],
+    margin: 'md',
+    paddingAll: 'sm',
+    backgroundColor: '#f8f9fa',
+    cornerRadius: '8px'
+  }));
+
+  return {
+    type: 'flex',
+    altText: `今日任務清單 (${taskCount}項)`,
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '📋 今日任務清單',
+            weight: 'bold',
+            size: 'xl',
+            color: '#2196F3',
+            align: 'center',
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: `共 ${taskCount} 項任務`,
+            size: 'sm',
+            color: '#666666',
+            margin: 'lg',
+            align: 'center'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: taskContents,
+            margin: 'lg'
+          },
+          {
+            type: 'separator',
+            margin: 'lg'
+          },
+          {
+            type: 'text',
+            text: '✨ 繼續加油！',
+            size: 'sm',
+            color: '#2196F3',
+            align: 'center',
+            margin: 'md'
+          }
+        ],
+        paddingAll: 'lg'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            action: {
+              type: 'uri',
+              label: '管理所有任務',
+              uri: `${baseUrl}/liff/tasks?userId=${userId}`
+            },
+            style: 'primary',
+            color: '#2196F3'
+          },
+          {
+            type: 'text',
+            text: '點擊進入 LIFF 應用管理任務',
+            size: 'xs',
+            color: '#888888',
+            align: 'center',
+            margin: 'sm'
+          }
+        ],
+        paddingAll: 'lg'
+      }
+    }
+  };
+}
+
 // 任務清單 Flex Message
 function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   return {
@@ -2550,30 +2664,34 @@ async function handleEvent(event, baseUrl) {
           }
         }
         
-        const flexMessage = createTaskRecordFlexMessage(userMessage, userId, task.id, baseUrl);
+        // 獲取今天所有任務（包含剛新增的）
+        const todayTasks = getTodayTasks(userId);
+        
+        // 使用累積任務顯示函數
+        const flexMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
         flexMessage.quickReply = {
           items: [
             {
               type: 'action',
               action: {
                 type: 'uri',
-                label: '今天',
+                label: '管理任務',
                 uri: `${baseUrl}/liff/tasks`
               }
             },
             {
               type: 'action',
               action: {
-                type: 'uri',
-                label: '全部',
-                uri: `${baseUrl}/liff/tasks`
+                type: 'message',
+                label: '查看全部',
+                text: '今天我的任務有哪些？'
               }
             },
             {
               type: 'action',
               action: {
                 type: 'uri',
-                label: '個人',
+                label: '個人設定',
                 uri: `${baseUrl}/profile/${userId}`
               }
             }
