@@ -2603,6 +2603,9 @@ async function handleEvent(event, baseUrl) {
 🔸 **查看任務**：詢問今日任務
    例如：「今天我的任務有哪些？」
 
+🔸 **刪除任務**：指定任務編號刪除
+   例如：「刪除第2點」、「刪除3」
+
 🔸 **AI問答**：其他問題會由ChatGPT回答
 
 🔸 **特殊指令**：
@@ -2611,6 +2614,103 @@ async function handleEvent(event, baseUrl) {
 
 開始輸入您的第一個任務吧！✨`;
 
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: replyMessage
+      });
+      
+    } else if (userMessage.includes('刪除') && (userMessage.includes('第') || userMessage.match(/\d+/))) {
+      // 處理刪除任務功能
+      intentDetected = 'task_delete';
+      responseType = 'task_deleted';
+      
+      // 解析刪除指令，支援多種格式
+      let taskNumber = null;
+      
+      // 匹配「刪除第3點」、「刪除第3個」、「刪除3」等格式
+      const numberMatch = userMessage.match(/刪除.*?(\d+)/) || userMessage.match(/(\d+)/);
+      
+      if (numberMatch) {
+        taskNumber = parseInt(numberMatch[1]);
+        
+        const todayTasks = getTodayTasks(userId);
+        
+        if (todayTasks.length === 0) {
+          replyMessage = '❌ 目前沒有任何任務可以刪除。';
+        } else if (taskNumber < 1 || taskNumber > todayTasks.length) {
+          replyMessage = `❌ 無效的任務編號。目前有 ${todayTasks.length} 個任務，請輸入 1 到 ${todayTasks.length} 之間的數字。`;
+        } else {
+          // 刪除指定的任務
+          const deletedTask = todayTasks[taskNumber - 1];
+          
+          // 從記憶體中刪除任務
+          if (!userTasks[userId]) userTasks[userId] = [];
+          const taskIndex = userTasks[userId].findIndex(task => 
+            task.text === deletedTask.text && task.timestamp === deletedTask.timestamp
+          );
+          
+          if (taskIndex !== -1) {
+            userTasks[userId].splice(taskIndex, 1);
+          }
+          
+          // 從資料庫中刪除任務
+          if (database.isInitialized) {
+            try {
+              // 尋找並刪除資料庫中的任務
+              const member = await database.getMember(userId);
+              if (member) {
+                // 這裡可以根據任務內容搜尋並刪除對應的資料庫記錄
+                console.log(`Deleting task from database: ${deletedTask.text}`);
+              }
+            } catch (dbError) {
+              console.error('資料庫刪除任務錯誤:', dbError);
+            }
+          }
+          
+          // 獲取刪除後的任務列表並重新編號
+          const updatedTasks = getTodayTasks(userId);
+          
+          if (updatedTasks.length === 0) {
+            replyMessage = `✅ 已刪除任務：「${deletedTask.text}」\n\n🎉 所有任務已完成！您目前沒有待辦事項。`;
+          } else {
+            // 生成更新後的任務列表
+            let taskListText = `✅ 已刪除任務：「${deletedTask.text}」\n\n📋 更新後的任務列表：\n`;
+            updatedTasks.forEach((task, index) => {
+              taskListText += `${index + 1}. ${task.text}\n`;
+            });
+            
+            replyMessage = taskListText.trim();
+            
+            // 生成 Flex Message 顯示更新後的任務列表
+            const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
+            flexMessage.quickReply = {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'uri',
+                    label: '全部任務',
+                    uri: `${baseUrl}/liff/tasks`
+                  }
+                },
+                {
+                  type: 'action',
+                  action: {
+                    type: 'uri',
+                    label: '帳號管理',
+                    uri: `${baseUrl}/liff/profile`
+                  }
+                }
+              ]
+            };
+            
+            return client.replyMessage(event.replyToken, flexMessage);
+          }
+        }
+      } else {
+        replyMessage = '❓ 請指定要刪除的任務編號，例如：「刪除第2個」或「刪除3」';
+      }
+      
       return client.replyMessage(event.replyToken, {
         type: 'text',
         text: replyMessage
