@@ -1,0 +1,33 @@
+# Railway 部署時忽略的文件和目錄
+
+# LIFF 開發文件（保留已建置的 dist 目錄）
+liff-app/src/
+liff-app/node_modules/
+liff-app/package.json
+liff-app/package-lock.json
+liff-app/tsconfig.json
+liff-app/vite.config.ts
+liff-app/.env
+liff-app/.gitignore
+liff-app/index.html
+
+# 開發文件
+.git/
+.vscode/
+*.log
+debug-uri.js
+test-*.js
+setup-*.js
+
+# 文檔
+*.md
+GOOGLE_CALENDAR_INTEGRATION_SETUP.md
+SUPABASE_SETUP_GUIDE.md
+
+# 本地設定
+webhook-url.txt
+.env
+.env.local
+
+# 測試文件
+test-google-auth.html
