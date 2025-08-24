@@ -48,7 +48,7 @@ sleep 2
 
 # 啟動 LocalTunnel
 echo -e "${YELLOW}🌐 啟動 LocalTunnel...${NC}"
-nohup npx lt --port 3000 > tunnel.log 2>&1 &
+nohup npx lt --port 3012 > tunnel.log 2>&1 &
 LT_PID=$!
 echo $LT_PID > tunnel.pid
 
@@ -79,7 +79,7 @@ if [ ! -z "$TUNNEL_URL" ]; then
     echo ""
     echo -e "${GREEN}🎉 成功啟動！${NC}"
     echo "=================================="
-    echo -e "${GREEN}✅ LINE Bot:${NC} http://localhost:3000"
+    echo -e "${GREEN}✅ LINE Bot:${NC} http://localhost:3012"
     echo -e "${GREEN}✅ Tunnel URL:${NC} $TUNNEL_URL"
     echo -e "${GREEN}🔗 Webhook URL:${NC} $WEBHOOK_URL"
     echo ""

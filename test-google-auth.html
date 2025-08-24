@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Google Calendar 授權測試</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .title {
+            color: #4285F4;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .test-btn {
+            background: #4285F4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .test-btn:hover {
+            background: #3367d6;
+        }
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔧 Google Calendar 授權測試</h1>
+        
+        <div class="info">
+            <strong>📋 測試資訊：</strong><br>
+            • Client ID: 236431413848-nsnitui7t561pigjitsddjb55q776pji.apps.googleusercontent.com<br>
+            • Redirect URI: https://metal-lions-help.loca.lt/auth/google/callback<br>
+            • 隧道狀態: <span id="tunnelStatus">檢查中...</span>
+        </div>
+
+        <button class="test-btn" onclick="testGoogleAuth()">
+            🚀 測試 Google Calendar 授權
+        </button>
+
+        <div id="result"></div>
+
+        <div class="info">
+            <strong>🔍 故障排除檢查清單：</strong><br>
+            <input type="checkbox"> Google Cloud Console 中已新增重新導向 URI<br>
+            <input type="checkbox"> Google Calendar API 已啟用<br>
+            <input type="checkbox"> OAuth 同意畫面已設定<br>
+            <input type="checkbox" style="color: red;"> <strong>已解決測試用戶問題</strong> (最重要!)<br>
+            • 方法1: OAuth 同意畫面 → 加入測試用戶<br>
+            • 方法2: 點擊 PUBLISH APP 發布應用程式
+        </div>
+    </div>
+
+    <script>
+        function testGoogleAuth() {
+            const clientId = '236431413848-nsnitui7t561pigjitsddjb55q776pji.apps.googleusercontent.com';
+            const redirectUri = 'https://metal-lions-help.loca.lt/auth/google/callback';
+            const scope = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly';
+            
+            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth' +
+                '?client_id=' + encodeURIComponent(clientId) +
+                '&redirect_uri=' + encodeURIComponent(redirectUri) +
+                '&scope=' + encodeURIComponent(scope) +
+                '&response_type=code' +
+                '&access_type=offline' +
+                '&prompt=consent' +
+                '&state=' + encodeURIComponent(JSON.stringify({ userId: 'test-user', test: true }));
+
+            document.getElementById('result').innerHTML = 
+                '<div class="status warning">🔄 正在跳轉到 Google 授權頁面...</div>';
+            
+            // 在新視窗中開啟授權
+            const authWindow = window.open(authUrl, 'googleAuth', 'width=500,height=600');
+            
+            // 監聽授權完成
+            const checkClosed = setInterval(() => {
+                if (authWindow.closed) {
+                    clearInterval(checkClosed);
+                    document.getElementById('result').innerHTML = 
+                        '<div class="status warning">📱 請檢查授權結果，如果失敗請確認測試用戶設定</div>';
+                }
+            }, 1000);
+        }
+
+        // 檢查隧道狀態
+        fetch('https://metal-lions-help.loca.lt/health')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('tunnelStatus').innerHTML = 
+                    '<span style="color: green;">✅ 正常運作</span>';
+            })
+            .catch(error => {
+                document.getElementById('tunnelStatus').innerHTML = 
+                    '<span style="color: red;">❌ 連接失敗</span>';
+            });
+    </script>
+</body>
+</html>

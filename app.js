@@ -3,13 +3,16 @@ const line = require('@line/bot-sdk');
 const express = require('express');
 const path = require('path');
 const OpenAI = require('openai');
+const axios = require('axios');
 const database = require('./database');
-const googleCalendarService = require('./google-calendar');
+const supabaseConfig = require('./supabase-config');
+const googleCalendarService = require('./google-calendar-service');
 
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'CnT5EpvP2ATp1hWRMB69uDRk9AzmO5+34Pd1QkrcxFe6NTDloT2olr5sNKbX5vJjVUxav5EPSMagBHYt328GPCLK6KE1ZL70JFX2vswFSiTdlCd3VP5GEwQ3xTyKJhfuW3Qt3gT27zPsihcGBCLevQdB04t89/1O/w1cDnyilFU=',
   channelSecret: process.env.LINE_CHANNEL_SECRET || 'eaaf339ed4aa0a351b5893f10d4581c5'
 };
+
 
 const client = new line.Client(config);
 
@@ -108,11 +111,14 @@ function extractTimeFromText(text) {
   };
 }
 
-// 任務管理功能
-function addTask(userId, taskText) {
+// 任務管理功能（同步到 Supabase）
+async function addTask(userId, taskText) {
   if (!userTasks.has(userId)) {
     userTasks.set(userId, []);
   }
+  
+  // 解析任務中的時間資訊
+  const timeInfo = extractTimeFromText(taskText);
   
   const task = {
     id: Date.now(),
@@ -121,12 +127,67 @@ function addTask(userId, taskText) {
     date: new Date().toLocaleDateString('zh-TW')
   };
   
+  // 記錄到記憶體
   userTasks.get(userId).push(task);
+  
+  // 同步記錄到 Supabase
+  try {
+    const supabaseTaskData = {
+      line_user_id: userId,
+      task_text: taskText,
+      task_title: timeInfo.textWithoutTime || taskText,
+      task_time: timeInfo.hasTime ? timeInfo.time : null,
+      has_time: timeInfo.hasTime,
+      status: 'active',
+      metadata: {
+        local_task_id: task.id,
+        extracted_time_info: timeInfo
+      }
+    };
+    
+    const result = await supabaseConfig.addTask(supabaseTaskData);
+    if (result.success) {
+      console.log(`✅ 任務已同步到 Supabase - User: ${userId}, Task: ${taskText}`);
+      // 更新本地任務資料，包含 Supabase ID
+      task.supabaseId = result.data.id;
+    } else {
+      console.error('❌ 同步任務到 Supabase 失敗:', result.error);
+    }
+  } catch (error) {
+    console.error('❌ 同步任務到 Supabase 發生錯誤:', error);
+  }
+  
   console.log(`Added task for user ${userId}: ${taskText}`);
   return task;
 }
 
-function getTodayTasks(userId) {
+// 從 Supabase 和記憶體取得今日任務
+async function getTodayTasks(userId) {
+  try {
+    // 先從 Supabase 取得最新資料
+    const supabaseResult = await supabaseConfig.getUserTasks(userId);
+    if (supabaseResult.success) {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const todayTasks = supabaseResult.data.filter(task => 
+        task.task_date === today && task.status === 'active'
+      );
+      
+      // 轉換為本地格式以保持相容性
+      return todayTasks.map(task => ({
+        id: task.metadata?.local_task_id || task.id,
+        text: task.task_text,
+        timestamp: task.created_at,
+        date: new Date(task.task_date).toLocaleDateString('zh-TW'),
+        supabaseId: task.id,
+        hasTime: task.has_time,
+        taskTime: task.task_time
+      }));
+    }
+  } catch (error) {
+    console.error('❌ 從 Supabase 取得任務失敗:', error);
+  }
+  
+  // 備援：從記憶體取得
   if (!userTasks.has(userId)) {
     return [];
   }
@@ -135,7 +196,27 @@ function getTodayTasks(userId) {
   return userTasks.get(userId).filter(task => task.date === today);
 }
 
-function getAllTasks(userId) {
+async function getAllTasks(userId) {
+  try {
+    // 先從 Supabase 取得所有任務
+    const supabaseResult = await supabaseConfig.getUserTasks(userId);
+    if (supabaseResult.success) {
+      return supabaseResult.data.map(task => ({
+        id: task.metadata?.local_task_id || task.id,
+        text: task.task_text,
+        timestamp: task.created_at,
+        date: new Date(task.task_date).toLocaleDateString('zh-TW'),
+        supabaseId: task.id,
+        hasTime: task.has_time,
+        taskTime: task.task_time,
+        status: task.status
+      }));
+    }
+  } catch (error) {
+    console.error('❌ 從 Supabase 取得所有任務失敗:', error);
+  }
+  
+  // 備援：從記憶體取得
   return userTasks.get(userId) || [];
 }
 
@@ -277,7 +358,7 @@ app.get('/auth/google/callback', async (req, res) => {
       return res.status(400).send('缺少必要的授權參數');
     }
 
-    const result = await googleCalendarService.handleAuthCallback(code, state);
+    const result = await googleCalendarService.handleOAuthCallback(code, state);
     
     if (result.success) {
       // 授權成功頁面
@@ -2314,6 +2395,61 @@ function getBaseUrl(req) {
   return process.env.BASE_URL || 'http://localhost:3000';
 }
 
+// 特殊「任務」關鍵字 Flex Message
+function createTaskKeywordFlexMessage() {
+  return {
+    type: 'flex',
+    altText: '任務收到！',
+    contents: {
+      type: 'bubble',
+      hero: {
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        size: 'full',
+        aspectRatio: '20:13',
+        aspectMode: 'cover'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ 任務收到！',
+            weight: 'bold',
+            size: 'xl',
+            color: '#2196F3'
+          },
+          {
+            type: 'text',
+            text: '您的任務已經成功接收，點擊下方按鈕查看更多資訊！',
+            wrap: true,
+            color: '#666666',
+            margin: 'md'
+          }
+        ]
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'sm',
+            action: {
+              type: 'uri',
+              label: '🔗 前往 Ryan 的 Threads',
+              uri: 'https://www.threads.com/@ryan_ryan_lin?hl=zh-tw'
+            }
+          }
+        ]
+      }
+    }
+  };
+}
+
 // 任務記錄確認 Flex Message  
 function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
   // 檢測任務中是否包含時間
@@ -2734,7 +2870,62 @@ async function handlePostbackEvent(event, baseUrl) {
     console.log('Postback data:', postbackData);
     
     if (postbackData.action === 'add_to_calendar') {
-      return await handleAddToCalendar(event, postbackData, baseUrl);
+      console.log('📅 處理上傳日曆請求...');
+      // 檢查用戶是否已授權 Google Calendar
+      console.log('🔍 檢查用戶授權狀態...');
+      const isAuthorized = await googleCalendarService.isUserAuthorized(userId);
+      console.log('📅 用戶授權狀態:', isAuthorized);
+      
+      if (!isAuthorized) {
+        // 需要授權，產生授權 URL
+        console.log('🔐 用戶未授權，生成授權 URL...');
+        const authUrl = googleCalendarService.generateAuthUrl(userId);
+        console.log('🔗 授權 URL:', authUrl.substring(0, 100) + '...');
+        
+        console.log('💬 準備回覆 LINE 訊息...');
+        const replyResult = await client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: `📅 請先完成 Google Calendar 授權：\n\n點擊連結進行授權：\n${authUrl}\n\n授權完成後，請再次點擊「上傳日曆」按鈕。`
+        });
+        console.log('✅ LINE 訊息回覆成功');
+        return replyResult;
+      }
+      
+      // 已授權，直接上傳到 Google Calendar
+      const { taskId, taskText, title, time } = postbackData;
+      
+      // 解析時間格式
+      const timeFormat = googleCalendarService.parseTaskTimeToCalendarFormat(taskText, time);
+      
+      const eventData = {
+        taskId,
+        title: title || taskText,
+        description: `LINE Bot 任務：${taskText}`,
+        startTime: timeFormat.startTime,
+        endTime: timeFormat.endTime
+      };
+      
+      const result = await googleCalendarService.createCalendarEvent(userId, eventData);
+      
+      if (result.success) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: `✅ 任務已成功同步到 Google Calendar！\n\n📅 事件連結：${result.eventUrl}`
+        });
+      } else {
+        if (result.needAuth) {
+          const authUrl = googleCalendarService.generateAuthUrl(userId);
+          return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: `❌ 需要重新授權 Google Calendar：\n\n點擊連結進行授權：\n${authUrl}`
+          });
+        } else {
+          return client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: `❌ 同步失敗：${result.error}`
+          });
+        }
+      }
     }
     
     return Promise.resolve(null);
@@ -2750,193 +2941,7 @@ async function handlePostbackEvent(event, baseUrl) {
   }
 }
 
-// 處理加入日曆的請求
-async function handleAddToCalendar(event, postbackData, baseUrl) {
-  const userId = event.source.userId || 'default-user';
-  
-  try {
-    // 檢查用戶是否已授權 Google Calendar
-    if (!googleCalendarService.isUserAuthorized(userId)) {
-      // 需要先授權
-      const authUrl = googleCalendarService.generateAuthUrl(userId, 'calendar_auth');
-      
-      const authMessage = {
-        type: 'flex',
-        altText: '需要授權 Google Calendar',
-        contents: {
-          type: 'bubble',
-          body: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '📅 Google Calendar 授權',
-                weight: 'bold',
-                size: 'xl',
-                color: '#4285F4',
-                align: 'center',
-                margin: 'md'
-              },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
-              {
-                type: 'text',
-                text: '要將任務同步到 Google 日曆，需要先完成授權。',
-                wrap: true,
-                size: 'sm',
-                color: '#666666',
-                margin: 'lg'
-              },
-              {
-                type: 'text',
-                text: '授權後，您就可以自動同步所有帶時間的任務到日曆中！',
-                wrap: true,
-                size: 'sm',
-                color: '#4CAF50',
-                margin: 'md'
-              }
-            ],
-            paddingAll: 'lg'
-          },
-          footer: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'button',
-                style: 'primary',
-                action: {
-                  type: 'uri',
-                  label: '🔗 前往授權',
-                  uri: authUrl
-                }
-              },
-              {
-                type: 'text',
-                text: '授權完成後，請重新點擊「📅 上傳日曆」按鈕',
-                size: 'xs',
-                color: '#888888',
-                align: 'center',
-                margin: 'md'
-              }
-            ],
-            paddingAll: 'lg'
-          }
-        }
-      };
-      
-      return client.replyMessage(event.replyToken, authMessage);
-    }
-    
-    // 用戶已授權，直接創建日曆事件
-    const eventData = {
-      title: postbackData.title,
-      time: postbackData.time,
-      description: `LINE Bot 任務：${postbackData.taskText}`
-    };
-    
-    const result = await googleCalendarService.createCalendarEvent(userId, eventData);
-    
-    if (result.success) {
-      const successMessage = {
-        type: 'flex',
-        altText: '成功加入 Google Calendar',
-        contents: {
-          type: 'bubble',
-          body: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '✅ 成功加入日曆！',
-                weight: 'bold',
-                size: 'xl',
-                color: '#4CAF50',
-                align: 'center',
-                margin: 'md'
-              },
-              {
-                type: 'separator',
-                margin: 'md'
-              },
-              {
-                type: 'text',
-                text: '您的任務已成功同步到 Google Calendar：',
-                size: 'sm',
-                color: '#666666',
-                margin: 'lg'
-              },
-              {
-                type: 'text',
-                text: postbackData.taskText,
-                weight: 'bold',
-                size: 'lg',
-                color: '#333333',
-                margin: 'sm',
-                wrap: true
-              },
-              {
-                type: 'text',
-                text: `⏰ ${postbackData.time}`,
-                size: 'sm',
-                color: '#4CAF50',
-                margin: 'sm',
-                weight: 'bold'
-              }
-            ],
-            paddingAll: 'lg'
-          },
-          footer: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'button',
-                style: 'link',
-                action: {
-                  type: 'uri',
-                  label: '📅 查看日曆',
-                  uri: result.eventUrl || 'https://calendar.google.com'
-                }
-              }
-            ],
-            paddingAll: 'lg'
-          }
-        }
-      };
-      
-      return client.replyMessage(event.replyToken, successMessage);
-    } else {
-      // 處理錯誤
-      let errorText = '❌ 無法加入日曆，請稍後再試。';
-      
-      if (result.error === 'authorization_expired') {
-        errorText = '❌ Google Calendar 授權已過期，請重新授權。';
-      }
-      
-      const errorMessage = {
-        type: 'text',
-        text: errorText
-      };
-      
-      return client.replyMessage(event.replyToken, errorMessage);
-    }
-    
-  } catch (error) {
-    console.error('Error adding to calendar:', error);
-    
-    const errorMessage = {
-      type: 'text',
-      text: '❌ 加入日曆時發生錯誤，請稍後再試。'
-    };
-    
-    return client.replyMessage(event.replyToken, errorMessage);
-  }
-}
+
 
 async function handleEvent(event, baseUrl) {
   console.log('Received event:', event);
@@ -2961,7 +2966,7 @@ async function handleEvent(event, baseUrl) {
   let replyMessage = '';
 
   try {
-    // 記錄收到的訊息到資料庫
+    // 記錄收到的訊息到資料庫（原本的系統）
     if (database.isInitialized) {
       await database.logChatMessage({
         lineUserId: userId,
@@ -2982,6 +2987,25 @@ async function handleEvent(event, baseUrl) {
       await database.updateLastActivity(userId);
       await database.updateActivityStats(userId, 'message');
     }
+    
+    // 同時記錄到 Supabase
+    try {
+      const messageData = {
+        line_user_id: userId,
+        message_type: event.message.type,
+        direction: 'incoming',
+        content: userMessage,
+        raw_data: event,
+        session_id: event.webhookEventId
+      };
+      
+      const result = await supabaseConfig.logMessage(messageData);
+      if (!result.success) {
+        console.error('❌ 記錄訊息到 Supabase 失敗:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ 記錄訊息到 Supabase 發生錯誤:', error);
+    }
     if (userMessage.toLowerCase() === 'hello') {
       intentDetected = 'greeting';
       responseType = 'welcome';
@@ -2992,12 +3016,21 @@ async function handleEvent(event, baseUrl) {
         text: replyMessage
       });
       
+    } else if (userMessage === '任務') {
+      // 特殊「任務」關鍵字處理 - 回傳 FLEX Message
+      intentDetected = 'task_keyword';
+      responseType = 'flex_message';
+      
+      const flexMessage = createTaskKeywordFlexMessage();
+      
+      return client.replyMessage(event.replyToken, flexMessage);
+      
     } else if (userMessage.includes('今天我的任務有哪些') || userMessage.includes('今日任務') || userMessage.includes('待辦事項') || userMessage === '任務清單') {
       intentDetected = 'task_query';
       responseType = 'task_list';
       console.log(`Getting tasks for user: ${userId}`);
       
-      const todayTasks = getTodayTasks(userId);
+      const todayTasks = await getTodayTasks(userId);
       const taskCount = todayTasks.length;
       
       if (taskCount === 0) {
@@ -3033,6 +3066,7 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
+      
     } else if (userMessage.toLowerCase().includes('/help') || userMessage === '幫助') {
       replyMessage = `📝 記事機器人功能說明：
 
@@ -3044,6 +3078,8 @@ async function handleEvent(event, baseUrl) {
 
 🔸 **刪除任務**：指定任務編號刪除
    例如：「刪除第2點」、「刪除3」
+
+🔸 **資料儲存**：所有訊息都會記錄到 Supabase 資料庫
 
 🔸 **AI問答**：其他問題會由ChatGPT回答
 
@@ -3186,7 +3222,7 @@ async function handleEvent(event, baseUrl) {
         responseType = 'task_created';
         console.log(`Adding task for user ${userId}: ${userMessage}`);
         
-        const task = addTask(userId, userMessage);
+        const task = await addTask(userId, userMessage);
         
         // 同時記錄任務到資料庫
         if (database.isInitialized) {
@@ -3210,11 +3246,11 @@ async function handleEvent(event, baseUrl) {
           }
         }
         
-        // 創建單個任務編輯訊息
-        const singleTaskMessage = createSingleTaskEditFlexMessage(task, userId, baseUrl);
+        // 創建任務記錄確認訊息（包含日曆按鈕）
+        const taskRecordMessage = createTaskRecordFlexMessage(userMessage, userId, task.id, baseUrl);
         
         // 獲取今天所有任務（包含剛新增的）
-        const todayTasks = getTodayTasks(userId);
+        const todayTasks = await getTodayTasks(userId);
         
         // 創建累積任務列表訊息
         const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
@@ -3239,10 +3275,10 @@ async function handleEvent(event, baseUrl) {
           ]
         };
         
-        // 發送兩則訊息：1.單個任務編輯 2.累積任務列表
+        // 發送兩則訊息：1.任務記錄確認（含日曆按鈕） 2.累積任務列表
         try {
-          // 先回覆單個任務訊息
-          await client.replyMessage(event.replyToken, singleTaskMessage);
+          // 先回覆任務記錄確認訊息
+          await client.replyMessage(event.replyToken, taskRecordMessage);
           
           // 再推送累積任務訊息
           await client.pushMessage(userId, cumulativeTasksMessage);
