@@ -6077,15 +6077,38 @@ app.delete('/api/clear-data/:userId', async (req, res) => {
 const PORT = process.env.PORT || 3015;
 
 // 啟動應用程式
-initializeApp().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Bot is running on port ${PORT}`);
-    console.log(`📊 資料庫已連接並可使用`);
-  });
-}).catch((error) => {
-  console.error('❌ 應用程式啟動失敗:', error);
-  process.exit(1);
-});
+async function startServer() {
+  try {
+    await initializeApp();
+    
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Bot is running on port ${PORT}`);
+      console.log(`📊 資料庫已連接並可使用`);
+      console.log(`🌐 Server is accessible at http://0.0.0.0:${PORT}`);
+    });
+
+    // 設定伺服器超時
+    server.timeout = 30000;
+    
+    return server;
+  } catch (error) {
+    console.error('❌ 應用程式啟動失敗:', error);
+    
+    // 如果資料庫初始化失敗，仍然啟動伺服器（僅使用記憶體）
+    if (error.message?.includes('database') || error.message?.includes('sqlite')) {
+      console.log('⚠️ 資料庫初始化失敗，使用記憶體模式');
+      const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Bot is running on port ${PORT} (Memory Mode)`);
+      });
+      server.timeout = 30000;
+      return server;
+    }
+    
+    process.exit(1);
+  }
+}
+
+startServer();
 
 // 優雅關閉處理
 process.on('SIGINT', async () => {
