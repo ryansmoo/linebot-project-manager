@@ -3268,7 +3268,7 @@ async function handleEvent(event, baseUrl) {
               type: 'action',
               action: {
                 type: 'uri',
-                label: '帳號管理',
+                label: '個人帳戶',
                 uri: `${baseUrl}/liff/profile`
               }
             }
@@ -5931,7 +5931,150 @@ async function initializeApp() {
   }
 }
 
-const PORT = process.env.PORT || 3000;
+// LIFF React 應用程式 API 路由
+app.use('/liff', express.static(path.join(__dirname, 'liff-app', 'dist')));
+
+// API: 取得使用者所有任務
+app.get('/api/tasks/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    // 從 Supabase 取得使用者所有任務
+    const result = await supabaseConfig.getUserTasks(userId);
+    if (result.success) {
+      const tasks = result.data.map(task => ({
+        id: task.id,
+        text: task.task_text,
+        timestamp: task.created_at,
+        date: new Date(task.task_date).toLocaleDateString('zh-TW'),
+        hasTime: task.has_time,
+        taskTime: task.task_time,
+        status: task.status
+      }));
+      res.json({ success: true, tasks });
+    } else {
+      // 備援：從記憶體取得
+      const memoryTasks = await getAllTasks(userId);
+      res.json({ success: true, tasks: memoryTasks });
+    }
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 刪除指定任務
+app.delete('/api/tasks/:userId/:taskId', async (req, res) => {
+  const { userId, taskId } = req.params;
+  try {
+    // 從 Supabase 刪除任務
+    const result = await supabaseConfig.deleteTask(taskId);
+    if (result.success) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 取得使用者統計資料
+app.get('/api/user-stats/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    // 從 Supabase 取得統計資料
+    const tasksResult = await supabaseConfig.getUserTasks(userId);
+    const messagesResult = await supabaseConfig.getUserMessages(userId);
+
+    let stats = {
+      totalMessages: 0,
+      totalTasks: 0,
+      aiQueries: 0,
+      lastActivity: new Date().toLocaleDateString('zh-TW'),
+      joinDate: new Date().toLocaleDateString('zh-TW'),
+      tasksSummary: {
+        active: 0,
+        completed: 0,
+        withTime: 0
+      }
+    };
+
+    if (tasksResult.success) {
+      const tasks = tasksResult.data;
+      stats.totalTasks = tasks.length;
+      stats.tasksSummary.active = tasks.filter(t => t.status === 'active').length;
+      stats.tasksSummary.completed = tasks.filter(t => t.status === 'completed').length;
+      stats.tasksSummary.withTime = tasks.filter(t => t.has_time).length;
+      
+      if (tasks.length > 0) {
+        stats.joinDate = new Date(tasks[0].created_at).toLocaleDateString('zh-TW');
+      }
+    }
+
+    if (messagesResult.success) {
+      const messages = messagesResult.data;
+      stats.totalMessages = messages.length;
+      stats.aiQueries = messages.filter(m => m.intent_detected === 'general_query').length;
+      
+      if (messages.length > 0) {
+        stats.lastActivity = new Date(messages[messages.length - 1].created_at).toLocaleDateString('zh-TW');
+      }
+    }
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 匯出使用者資料
+app.get('/api/export-data/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const [tasksResult, messagesResult] = await Promise.all([
+      supabaseConfig.getUserTasks(userId),
+      supabaseConfig.getUserMessages(userId)
+    ]);
+
+    const exportData = {
+      userId,
+      exportDate: new Date().toISOString(),
+      tasks: tasksResult.success ? tasksResult.data : [],
+      messages: messagesResult.success ? messagesResult.data : []
+    };
+
+    res.json({ success: true, data: exportData });
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 清除使用者所有資料
+app.delete('/api/clear-data/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    // 清除 Supabase 資料
+    const [tasksResult, messagesResult] = await Promise.all([
+      supabaseConfig.clearUserTasks(userId),
+      supabaseConfig.clearUserMessages(userId)
+    ]);
+
+    // 清除記憶體資料
+    if (userTasks.has(userId)) {
+      userTasks.delete(userId);
+    }
+
+    res.json({ success: true, message: '所有資料已清除' });
+  } catch (error) {
+    console.error('Error clearing data:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+const PORT = process.env.PORT || 3015;
 
 // 啟動應用程式
 initializeApp().then(() => {
