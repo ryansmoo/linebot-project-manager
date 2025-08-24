@@ -4,7 +4,15 @@ const express = require('express');
 const path = require('path');
 const OpenAI = require('openai');
 const axios = require('axios');
-const database = require('./database');
+// 條件式載入資料庫模組（Railway 環境跳過）
+let database = null;
+if (process.env.RAILWAY_ENVIRONMENT === undefined) {
+  try {
+    database = require('./database');
+  } catch (error) {
+    console.log('⚠️ SQLite 資料庫模組載入失敗，使用記憶體模式');
+  }
+}
 const supabaseConfig = require('./supabase-config');
 const googleCalendarService = require('./google-calendar-service');
 
@@ -2833,6 +2841,23 @@ async function getChatGPTResponse(userMessage) {
   }
 }
 
+// GET webhook 路由 - 用於 LINE Developer Console 驗證
+app.get('/webhook', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'LINE Bot Webhook is working!',
+    timestamp: new Date().toISOString(),
+    server: 'Node.js + Express',
+    version: '1.0.0',
+    endpoints: {
+      webhook: 'POST /webhook - LINE Bot 訊息處理',
+      health: 'GET / - 健康檢查',
+      liff: 'GET /liff/* - LIFF 應用程式',
+      api: 'GET /api/* - REST API'
+    }
+  });
+});
+
 app.post('/webhook', line.middleware(config), (req, res) => {
   const baseUrl = getBaseUrl(req);
   
@@ -2967,7 +2992,7 @@ async function handleEvent(event, baseUrl) {
 
   try {
     // 記錄收到的訊息到資料庫（原本的系統）
-    if (database.isInitialized) {
+    if (database && database && database.isInitialized) {
       await database.logChatMessage({
         lineUserId: userId,
         memberId: null, // 將在後面取得
@@ -3144,7 +3169,7 @@ async function handleEvent(event, baseUrl) {
           }
           
           // 從資料庫中刪除任務
-          if (database.isInitialized) {
+          if (database && database.isInitialized) {
             try {
               // 尋找並刪除資料庫中的任務
               const member = await database.getMember(userId);
@@ -3225,7 +3250,7 @@ async function handleEvent(event, baseUrl) {
         const task = await addTask(userId, userMessage);
         
         // 同時記錄任務到資料庫
-        if (database.isInitialized) {
+        if (database && database.isInitialized) {
           try {
             const member = await database.getMember(userId);
             await database.createTask({
@@ -3316,7 +3341,7 @@ async function handleEvent(event, baseUrl) {
     });
   } finally {
     // 記錄處理完成的資訊到資料庫
-    if (database.isInitialized) {
+    if (database && database.isInitialized) {
       const processingTime = Date.now() - startTime;
       
       try {
@@ -5886,7 +5911,7 @@ app.post('/api/task/update', express.json(), (req, res) => {
   console.log(`任務已更新:`, updatedTask);
   
   // 同時更新資料庫
-  if (database.isInitialized) {
+  if (database && database.isInitialized) {
     try {
       database.updateTask(taskId, {
         title: updatedTask.text,
@@ -5916,6 +5941,17 @@ app.post('/api/task/update', express.json(), (req, res) => {
 async function initializeApp() {
   try {
     console.log('🔄 正在初始化資料庫...');
+    
+    // 檢查是否為 Railway 環境
+    const isRailway = process.env.RAILWAY_ENVIRONMENT !== undefined;
+    
+    if (isRailway) {
+      console.log('🚂 偵測到 Railway 環境，跳過 SQLite 初始化');
+      console.log('✅ Railway 模式啟動完成（使用記憶體 + Supabase）');
+      return;
+    }
+    
+    // 本地環境才初始化 SQLite
     await database.init();
     console.log('✅ 資料庫初始化完成');
     
@@ -5927,7 +5963,8 @@ async function initializeApp() {
     
   } catch (error) {
     console.error('❌ 資料庫初始化失敗:', error);
-    process.exit(1);
+    console.log('⚠️ 繼續使用記憶體模式和 Supabase');
+    // 不要退出，讓應用程式繼續運行
   }
 }
 

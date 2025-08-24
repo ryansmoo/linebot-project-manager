@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "npm-9_x"]
+
+[phases.install]
+cmds = [
+    "npm ci --only=production",
+    "cd liff-app && npm ci --only=production"
+]
+
+[phases.build]
+cmds = [
+    "cd liff-app && npm run build"
+]
+
+[start]
+cmd = "node app.js"
