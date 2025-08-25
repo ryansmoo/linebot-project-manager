@@ -97,29 +97,44 @@ app.put('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
   const { text, notes, taskTime, category, customCategory, reminderEnabled, reminderTime } = req.body;
   
-  console.log('📝 更新任務:', taskId, { text, notes, taskTime, category, customCategory, reminderEnabled, reminderTime });
+  console.log('📝 收到更新任務請求:');
+  console.log('  任務ID:', taskId);
+  console.log('  請求數據:', { text, notes, taskTime, category, customCategory, reminderEnabled, reminderTime });
+  
+  // 先顯示所有現有任務用於除錯
+  console.log('🔍 目前所有任務:');
+  for (const [userId, userDates] of userTasks) {
+    console.log(`  用戶 ${userId.substring(0, 10)}...:`);
+    for (const [date, tasks] of userDates) {
+      console.log(`    日期 ${date}: ${tasks.length} 個任務`);
+      tasks.forEach((task, index) => {
+        console.log(`      ${index + 1}. ID: ${task.id}, 內容: ${task.text}`);
+      });
+    }
+  }
   
   // 查找並更新任務
   for (const [userId, userDates] of userTasks) {
     for (const [date, tasks] of userDates) {
       const taskIndex = tasks.findIndex(t => t.id === taskId);
       if (taskIndex !== -1) {
+        console.log('✅ 找到任務，準備更新:', tasks[taskIndex].text);
+        
         const oldTask = { ...tasks[taskIndex] };
         
-        tasks[taskIndex].text = text || tasks[taskIndex].text;
-        tasks[taskIndex].notes = notes || tasks[taskIndex].notes;
-        tasks[taskIndex].taskTime = taskTime || tasks[taskIndex].taskTime;
-        tasks[taskIndex].category = category || tasks[taskIndex].category;
-        tasks[taskIndex].customCategory = customCategory || tasks[taskIndex].customCategory;
-        tasks[taskIndex].reminderEnabled = reminderEnabled !== undefined ? reminderEnabled : tasks[taskIndex].reminderEnabled;
-        tasks[taskIndex].reminderTime = reminderTime || tasks[taskIndex].reminderTime;
+        // 更新任務屬性
+        if (text !== undefined) tasks[taskIndex].text = text;
+        if (notes !== undefined) tasks[taskIndex].notes = notes;
+        if (taskTime !== undefined) tasks[taskIndex].taskTime = taskTime;
+        if (category !== undefined) tasks[taskIndex].category = category;
+        if (customCategory !== undefined) tasks[taskIndex].customCategory = customCategory;
+        if (reminderEnabled !== undefined) tasks[taskIndex].reminderEnabled = reminderEnabled;
+        if (reminderTime !== undefined) tasks[taskIndex].reminderTime = reminderTime;
         tasks[taskIndex].updatedAt = new Date().toISOString();
         
-        // 如果提醒設定有變化，重新安排提醒
-        console.log('📝 檢查提醒設定變化...');
-        console.log('提醒啟用:', tasks[taskIndex].reminderEnabled);
-        console.log('任務時間:', tasks[taskIndex].taskTime);
+        console.log('📝 任務更新後:', tasks[taskIndex]);
         
+        // 如果提醒設定有變化，重新安排提醒
         if (tasks[taskIndex].reminderEnabled && tasks[taskIndex].taskTime) {
           console.log('🔔 重新安排提醒...');
           scheduleReminder(tasks[taskIndex]);
@@ -133,6 +148,7 @@ app.put('/api/task/:taskId', (req, res) => {
     }
   }
   
+  console.log('❌ 找不到任務 ID:', taskId);
   res.status(404).json({ success: false, error: '任務不存在' });
 });
 
