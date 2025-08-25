@@ -337,101 +337,46 @@ function cancelReminder(taskId) {
 // 發送任務提醒
 async function sendTaskReminder(task) {
   try {
+    console.log('📤 準備發送任務提醒...');
+    console.log('任務詳情:', {
+      taskId: task.id,
+      taskText: task.text,
+      userId: task.userId?.substring(0, 10) + '...',
+      taskTime: task.taskTime
+    });
+    
     const taskTime = new Date(task.taskTime);
+    
+    // 使用簡化版的文字訊息測試
     const reminderMessage = {
-      type: 'flex',
-      altText: `提醒：${task.text} 即將開始`,
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "🔔 任務提醒",
-              weight: "bold",
-              size: "lg",
-              color: "#ffffff"
-            }
-          ],
-          backgroundColor: "#FF9800",
-          paddingAll: "20px"
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: task.text,
-              size: "lg",
-              weight: "bold",
-              color: "#333333",
-              wrap: true
-            },
-            {
-              type: "separator",
-              margin: "md"
-            },
-            {
-              type: "box",
-              layout: "baseline",
-              contents: [
-                {
-                  type: "text",
-                  text: "開始時間:",
-                  size: "sm",
-                  color: "#666666",
-                  flex: 0
-                },
-                {
-                  type: "text", 
-                  text: taskTime.toLocaleString('zh-TW'),
-                  size: "sm",
-                  color: "#333333",
-                  flex: 0
-                }
-              ],
-              margin: "md"
-            },
-            {
-              type: "box",
-              layout: "baseline",
-              contents: [
-                {
-                  type: "text",
-                  text: "剩餘時間:",
-                  size: "sm",
-                  color: "#666666",
-                  flex: 0
-                },
-                {
-                  type: "text", 
-                  text: `${task.reminderTime} 分鐘`,
-                  size: "sm",
-                  color: "#FF9800",
-                  weight: "bold",
-                  flex: 0
-                }
-              ],
-              margin: "sm"
-            }
-          ],
-          spacing: "sm"
-        }
-      }
+      type: 'text',
+      text: `🔔 任務提醒\n\n📋 任務：${task.text}\n⏰ 預定時間：${taskTime.toLocaleString('zh-TW')}\n⚡ 即將在 ${task.reminderTime} 分鐘後開始！`
     };
     
-    // 使用 Push API 發送提醒（需要用戶的 LINE ID）
-    console.log('📤 發送任務提醒給用戶:', task.userId);
-    await client.pushMessage(task.userId, reminderMessage);
-    console.log('✅ 任務提醒發送成功');
+    console.log('📤 使用 Push API 發送提醒給用戶:', task.userId?.substring(0, 10) + '...');
+    
+    // 使用 Push API 發送提醒
+    const result = await client.pushMessage(task.userId, reminderMessage);
+    
+    console.log('✅ Push API 回應:', result);
+    console.log('✅ 任務提醒發送成功！');
     
     // 從提醒列表中移除
-    reminderTimeouts.delete(task.id);
+    if (task.id !== 'test-' + task.id && reminderTimeouts.has(task.id)) {
+      reminderTimeouts.delete(task.id);
+      console.log('🗑️ 已從提醒列表移除任務:', task.id);
+    }
+    
+    return result;
   } catch (error) {
     console.error('❌ 發送任務提醒失敗:', error);
+    console.error('錯誤詳情:', {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      data: error.response?.data
+    });
+    throw error;
   }
 }
 
@@ -449,6 +394,11 @@ async function handleEvent(event) {
     const messageText = event.message.text;
 
     console.log('💬 收到訊息:', messageText, 'from user:', userId.substring(0, 10) + '...');
+
+    // 檢查是否為測試提醒指令
+    if (messageText.includes('測試提醒')) {
+      return handleTestReminder(event, userId, messageText);
+    }
 
     // 檢查是否為完成/刪除任務的指令
     const isCompleteCommand = /已完成|完成了|刪掉|刪除|完成(\d+)/.test(messageText);
@@ -663,6 +613,42 @@ async function handleEvent(event) {
     }
     
     throw error;
+  }
+}
+
+// 處理測試提醒指令
+async function handleTestReminder(event, userId, messageText) {
+  try {
+    console.log('🧪 收到測試提醒指令');
+    
+    // 立即發送測試提醒
+    const testTask = {
+      id: 'test-' + Date.now(),
+      text: '測試提醒任務',
+      userId: userId,
+      taskTime: new Date().toISOString(),
+      reminderTime: 1
+    };
+    
+    console.log('📤 立即發送測試提醒...');
+    await sendTaskReminder(testTask);
+    
+    // 回覆確認訊息
+    const confirmMessage = {
+      type: 'text',
+      text: '✅ 測試提醒已發送！如果您沒收到推播訊息，請檢查 LINE 通知設定。'
+    };
+    
+    return await client.replyMessage(event.replyToken, confirmMessage);
+  } catch (error) {
+    console.error('❌ 測試提醒失敗:', error);
+    
+    const errorMessage = {
+      type: 'text',
+      text: '❌ 測試提醒發送失敗，請查看日誌了解詳情。'
+    };
+    
+    return await client.replyMessage(event.replyToken, errorMessage);
   }
 }
 
