@@ -193,20 +193,11 @@ async function handleEvent(event) {
     
     console.log('📝 任務已儲存:', newTask);
 
-    // 建立兩則 FLEX MESSAGE
-    const currentTaskMessage = createCurrentTaskFlex(newTask);
-    const todayTasksMessage = createTodayTasksFlex(userId, today);
-
+    // 暫時使用簡單的文字訊息測試
     const replyMessages = [
       {
-        type: 'flex',
-        altText: `已記錄任務: ${messageText}`,
-        contents: currentTaskMessage
-      },
-      {
-        type: 'flex',
-        altText: '今天的任務清單',
-        contents: todayTasksMessage
+        type: 'text',
+        text: `✅ 已記錄任務: ${messageText}\n📋 這是您今天的第 ${userTasks.get(userId).get(today).length} 個任務`
       }
     ];
 
