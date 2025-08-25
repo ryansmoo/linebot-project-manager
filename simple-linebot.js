@@ -168,7 +168,14 @@ async function handleEvent(event) {
 
     console.log('💬 收到訊息:', messageText, 'from user:', userId.substring(0, 10) + '...');
 
-    // 儲存任務到今天
+    // 檢查是否為完成/刪除任務的指令
+    const isCompleteCommand = /已完成|完成了|刪掉|刪除|完成(\d+)/.test(messageText);
+    
+    if (isCompleteCommand) {
+      return handleCompleteTask(event, userId, messageText);
+    }
+
+    // 一般任務新增
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const taskId = Date.now().toString();
     
@@ -367,6 +374,175 @@ async function handleEvent(event) {
       console.error('❌ 備案訊息也失敗:', fallbackError);
     }
     
+    throw error;
+  }
+}
+
+// 處理完成/刪除任務
+async function handleCompleteTask(event, userId, messageText) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 確保用戶的任務結構存在
+    if (!userTasks.has(userId) || !userTasks.get(userId).has(today)) {
+      // 沒有今天的任務
+      const replyMessage = {
+        type: 'text',
+        text: '📋 今天還沒有任務可以完成呢！'
+      };
+      
+      return await client.replyMessage(event.replyToken, replyMessage);
+    }
+    
+    const todayTasks = userTasks.get(userId).get(today);
+    
+    // 解析要完成的任務編號
+    const numberMatch = messageText.match(/(\d+)/);
+    let taskToRemove = null;
+    
+    if (numberMatch) {
+      // 指定編號的任務 (例如: "完成2", "刪掉1")
+      const taskNumber = parseInt(numberMatch[1]);
+      if (taskNumber > 0 && taskNumber <= todayTasks.length) {
+        taskToRemove = todayTasks.splice(taskNumber - 1, 1)[0];
+      }
+    } else if (todayTasks.length > 0) {
+      // 沒有指定編號，完成最新的任務
+      taskToRemove = todayTasks.pop();
+    }
+    
+    if (!taskToRemove) {
+      const replyMessage = {
+        type: 'text',
+        text: '❓ 找不到要完成的任務'
+      };
+      
+      return await client.replyMessage(event.replyToken, replyMessage);
+    }
+    
+    console.log('✅ 已完成任務:', taskToRemove.text);
+    
+    // 重新生成任務清單
+    const taskListItems = todayTasks.map((task, index) => ({
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+          text: `${index + 1}.`,
+          size: "sm",
+          color: "#00B900",
+          weight: "bold",
+          flex: 0
+        },
+        {
+          type: "text",
+          text: task.text,
+          size: "sm",
+          color: "#333333",
+          wrap: true,
+          flex: 1
+        }
+      ],
+      spacing: "sm",
+      margin: index === 0 ? "none" : "md"
+    }));
+    
+    // 建立完成任務後的 FLEX MESSAGE
+    const replyMessage = {
+      type: 'flex',
+      altText: `任務已完成: ${taskToRemove.text}`,
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "✅ 任務已完成",
+              weight: "bold",
+              size: "lg",
+              color: "#ffffff"
+            },
+            {
+              type: "text",
+              text: `完成：${taskToRemove.text}`,
+              size: "sm",
+              color: "#ffffff"
+            }
+          ],
+          backgroundColor: "#28a745",
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: todayTasks.length > 0 ? [
+            {
+              type: "text",
+              text: `剩餘任務 ${todayTasks.length} 項`,
+              size: "md",
+              weight: "bold",
+              color: "#333333",
+              margin: "md"
+            },
+            ...taskListItems
+          ] : [
+            {
+              type: "text",
+              text: "🎉 今天所有任務都完成了！",
+              size: "md",
+              color: "#28a745",
+              align: "center",
+              weight: "bold"
+            }
+          ],
+          spacing: "sm",
+          paddingAll: "15px"
+        }
+      }
+    };
+    
+    // 建立 Quick Reply 按鈕
+    const quickReply = {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📅 今天',
+            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📋 全部',
+            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '👤 帳戶',
+            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
+          }
+        }
+      ]
+    };
+    
+    replyMessage.quickReply = quickReply;
+    
+    console.log('📤 發送完成任務 FLEX 訊息...');
+    const result = await client.replyMessage(event.replyToken, replyMessage);
+    console.log('✅ 訊息發送成功');
+    
+    return result;
+  } catch (error) {
+    console.error('❌ 完成任務處理錯誤:', error);
     throw error;
   }
 }
