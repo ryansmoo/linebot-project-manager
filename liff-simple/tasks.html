@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任務管理 - LIFF App</title>
+    <title>今天的任務 - To-Do List</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -31,88 +31,34 @@
             color: white;
             padding: 20px;
             text-align: center;
-            position: relative;
         }
         .header h1 {
-            font-size: 20px;
-            margin-bottom: 5px;
+            font-size: 22px;
+            margin-bottom: 10px;
         }
-        .header .subtitle {
-            font-size: 14px;
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 12px;
             opacity: 0.9;
+            margin-top: 2px;
         }
         .content {
             padding: 20px;
-            min-height: 400px;
-        }
-        .welcome-section {
-            text-align: center;
-            padding: 20px 0;
-        }
-        .welcome-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        .welcome-title {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .welcome-text {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .task-list {
-            margin-top: 20px;
-        }
-        .task-item {
-            background: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            border-left: 4px solid #00B900;
-            transition: all 0.3s ease;
-        }
-        .task-item:hover {
-            transform: translateX(2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .task-time {
-            font-size: 12px;
-            color: #00B900;
-            font-weight: bold;
-        }
-        .task-title {
-            font-size: 14px;
-            color: #333;
-            margin-top: 5px;
-        }
-        .add-task-btn {
-            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: transform 0.2s ease;
-        }
-        .add-task-btn:hover {
-            transform: translateY(-2px);
-        }
-        .debug-info {
-            background: #f0f0f0;
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 5px;
-            font-size: 12px;
-            color: #666;
-            max-height: 100px;
-            overflow-y: auto;
         }
         .loading {
             text-align: center;
@@ -131,144 +77,355 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .todo-list {
+            margin-top: 10px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #00B900;
+        }
+        .todo-item.completed {
+            opacity: 0.6;
+            background: #e8f5e8;
+            border-left-color: #28a745;
+        }
+        .todo-item.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        @keyframes slideOut {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #00B900;
+            border-radius: 50%;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .checkbox:hover {
+            transform: scale(1.1);
+        }
+        .checkbox.checked {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+        }
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #666;
+        }
+        .task-time {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .empty-text {
+            line-height: 1.6;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📝 任務管理</h1>
-            <div class="subtitle">智能任務助手</div>
+            <h1>📝 To-Do List</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalTasks">0</div>
+                    <div class="stat-label">總任務</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completedTasks">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="pendingTasks">0</div>
+                    <div class="stat-label">待完成</div>
+                </div>
+            </div>
         </div>
         
         <div class="content">
             <div id="loading" class="loading">
                 <div class="loading-spinner"></div>
-                <p>正在載入任務資料...</p>
+                <p>正在載入今天的任務...</p>
             </div>
             
             <div id="app" style="display: none;">
-                <div class="welcome-section">
-                    <div class="welcome-icon">🎯</div>
-                    <div class="welcome-title">歡迎使用任務管理系統</div>
-                    <div class="welcome-text">
-                        在這裡您可以查看和管理您的所有任務，<br>
-                        讓生活更有條理！
-                    </div>
+                <div class="todo-list" id="todoList">
+                    <!-- 任務列表將在這裡動態生成 -->
                 </div>
                 
-                <div class="task-list" id="taskList">
-                    <!-- 範例任務 -->
-                    <div class="task-item">
-                        <div class="task-time">09:00</div>
-                        <div class="task-title">檢查今日行程安排</div>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-time">14:00</div>
-                        <div class="task-title">參加團隊會議</div>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-time">18:00</div>
-                        <div class="task-title">整理本週工作總結</div>
-                    </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">🎉</div>
+                    <div class="empty-title">今天沒有任務</div>
+                    <div class="empty-text">傳送訊息給 LINE Bot<br>開始記錄您的任務！</div>
                 </div>
-                
-                <button class="add-task-btn" onclick="addNewTask()">
-                    ➕ 新增任務
-                </button>
                 
                 <div class="debug-info" id="debugInfo">
                     <strong>系統狀態：</strong><br>
                     頁面載入時間: <span id="loadTime"></span><br>
-                    LIFF 狀態: <span id="liffStatus">檢查中...</span><br>
-                    用戶 ID: <span id="userId">取得中...</span>
+                    用戶 ID: <span id="userId">取得中...</span><br>
+                    任務載入狀態: <span id="loadStatus">載入中...</span>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 記錄載入時間
-        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
-        
-        // 模擬載入過程
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            
-            // 檢查 LIFF 狀態
-            checkLiffStatus();
-        }, 1500);
+        let userId = null;
+        let tasks = [];
+        let completedCount = 0;
 
-        function checkLiffStatus() {
+        // 記錄載入時間
+        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString('zh-TW');
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 To-Do List 頁面載入開始');
+            
+            // 從 URL 參數取得用戶資訊
+            const urlParams = new URLSearchParams(window.location.search);
+            userId = urlParams.get('userId');
+            
+            console.log('用戶 ID:', userId);
+            document.getElementById('userId').textContent = userId ? userId.substring(0, 15) + '...' : '未提供';
+            
+            // 模擬載入過程
+            setTimeout(() => {
+                loadTodayTasks();
+            }, 1000);
+        });
+
+        // 載入今天的任務
+        async function loadTodayTasks() {
             try {
-                if (typeof liff !== 'undefined') {
-                    liff.init({
-                        liffId: '2007976732-Ye2k35eo' // 您的 LIFF ID
-                    }).then(() => {
-                        document.getElementById('liffStatus').textContent = '✅ 已連接';
-                        
-                        if (liff.isLoggedIn()) {
-                            liff.getProfile().then(profile => {
-                                document.getElementById('userId').textContent = profile.displayName || profile.userId;
-                            }).catch(err => {
-                                document.getElementById('userId').textContent = '無法取得';
-                                console.log('取得用戶資料失敗:', err);
-                            });
-                        } else {
-                            document.getElementById('userId').textContent = '未登入';
-                        }
-                    }).catch(err => {
-                        document.getElementById('liffStatus').textContent = '❌ 連接失敗';
-                        console.log('LIFF 初始化失敗:', err);
-                    });
-                } else {
-                    document.getElementById('liffStatus').textContent = '⚠️ LIFF SDK 未載入';
-                }
+                document.getElementById('loadStatus').textContent = '連接伺服器...';
+                
+                // 這裡應該調用實際的 API
+                // 暫時使用模擬數據
+                const mockTasks = generateMockTasks();
+                tasks = mockTasks;
+                
+                displayTasks();
+                updateStats();
+                
+                document.getElementById('loadStatus').textContent = '載入完成 ✅';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                
+                console.log('✅ 任務載入完成，共', tasks.length, '項任務');
             } catch (error) {
-                document.getElementById('liffStatus').textContent = '❌ 檢查失敗';
-                console.log('LIFF 檢查錯誤:', error);
+                console.error('❌ 載入任務失敗:', error);
+                document.getElementById('loadStatus').textContent = '載入失敗 ❌';
+                showEmptyState();
             }
         }
 
-        function addNewTask() {
-            const taskList = document.getElementById('taskList');
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('zh-TW', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
+        // 生成模擬數據
+        function generateMockTasks() {
+            if (!userId) return [];
             
-            const newTask = document.createElement('div');
-            newTask.className = 'task-item';
-            newTask.innerHTML = `
-                <div class="task-time">${timeString}</div>
-                <div class="task-title">新任務 - ${now.toLocaleDateString('zh-TW')}</div>
-            `;
-            
-            taskList.appendChild(newTask);
-            
-            // 滾動到新任務
-            newTask.scrollIntoView({ behavior: 'smooth' });
+            return [
+                {
+                    id: '1',
+                    text: '檢查今日行程安排',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    text: '參加團隊會議',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '3',
+                    text: '整理本週工作總結',
+                    completed: true,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '4',
+                    text: '準備明天的簡報資料',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                }
+            ];
         }
 
-        // 頁面可見性變化時的處理
+        // 顯示任務列表
+        function displayTasks() {
+            const todoList = document.getElementById('todoList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (tasks.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            todoList.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const taskElement = createTaskElement(task, index);
+                todoList.appendChild(taskElement);
+            });
+        }
+
+        // 建立任務元素
+        function createTaskElement(task, index) {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = `todo-item ${task.completed ? 'completed' : ''}`;
+            taskDiv.setAttribute('data-task-id', task.id);
+            
+            const createdTime = new Date(task.createdAt).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            taskDiv.innerHTML = `
+                <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask('${task.id}')"></div>
+                <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                <div class="task-time">${createdTime}</div>
+            `;
+            
+            return taskDiv;
+        }
+
+        // 切換任務完成狀態
+        function toggleTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            task.completed = !task.completed;
+            
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            const checkbox = taskElement.querySelector('.checkbox');
+            const taskText = taskElement.querySelector('.task-text');
+            
+            if (task.completed) {
+                // 標記為完成
+                taskElement.classList.add('completed');
+                checkbox.classList.add('checked');
+                taskText.classList.add('completed');
+                completedCount++;
+                
+                console.log('✅ 任務已完成:', task.text);
+                
+                // 延遲移除任務
+                setTimeout(() => {
+                    taskElement.classList.add('removing');
+                    setTimeout(() => {
+                        tasks = tasks.filter(t => t.id !== taskId);
+                        displayTasks();
+                        updateStats();
+                    }, 300);
+                }, 800);
+                
+            } else {
+                // 取消完成狀態
+                taskElement.classList.remove('completed');
+                checkbox.classList.remove('checked');
+                taskText.classList.remove('completed');
+                if (completedCount > 0) completedCount--;
+                
+                console.log('↩️ 任務取消完成:', task.text);
+            }
+            
+            updateStats();
+        }
+
+        // 更新統計數據
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            
+            document.getElementById('totalTasks').textContent = total + completedCount;
+            document.getElementById('completedTasks').textContent = completed + completedCount;
+            document.getElementById('pendingTasks').textContent = pending;
+        }
+
+        // 顯示空狀態
+        function showEmptyState() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('todoList').innerHTML = '';
+        }
+
+        // 頁面可見性變化處理
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
-                console.log('頁面重新獲得焦點');
-                // 可以在這裡重新整理資料
+                console.log('📱 頁面重新獲得焦點，重新整理任務');
+                // 可以在這裡重新載入任務
             }
         });
 
         // 錯誤處理
         window.addEventListener('error', function(e) {
-            console.error('頁面錯誤:', e.error);
+            console.error('❌ 頁面錯誤:', e.error);
             const debugInfo = document.getElementById('debugInfo');
             if (debugInfo) {
                 debugInfo.innerHTML += '<br>❌ 錯誤: ' + e.message;
             }
         });
 
-        console.log('📱 LIFF 任務管理頁面載入完成');
+        console.log('📝 To-Do List 頁面初始化完成');
     </script>
 </body>
 </html>
