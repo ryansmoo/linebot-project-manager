@@ -79,16 +79,30 @@ app.get('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
   console.log('🔍 查詢任務:', taskId);
   
+  // 先顯示所有任務用於除錯
+  console.log('📋 目前記憶體中的所有任務:');
+  for (const [userId, userDates] of userTasks) {
+    console.log(`  用戶 ${userId.substring(0, 10)}...:`);
+    for (const [date, tasks] of userDates) {
+      console.log(`    日期 ${date}: ${tasks.length} 個任務`);
+      tasks.forEach((task, index) => {
+        console.log(`      ${index + 1}. ID: ${task.id}, 內容: ${task.text}`);
+      });
+    }
+  }
+  
   // 查找任務
   for (const [userId, userDates] of userTasks) {
     for (const [date, tasks] of userDates) {
       const task = tasks.find(t => t.id === taskId);
       if (task) {
+        console.log('✅ 找到任務:', task);
         return res.json({ success: true, task });
       }
     }
   }
   
+  console.log('❌ 查詢失敗 - 找不到任務 ID:', taskId);
   res.status(404).json({ success: false, error: '任務不存在' });
 });
 
@@ -462,6 +476,16 @@ async function handleEvent(event) {
     userTasks.get(userId).get(today).push(newTask);
     
     console.log('📝 任務已儲存:', newTask);
+    console.log('📊 當前記憶體中的任務數量:');
+    for (const [uid, userDates] of userTasks) {
+      console.log(`  用戶 ${uid.substring(0, 10)}...:`);
+      for (const [date, tasks] of userDates) {
+        console.log(`    日期 ${date}: ${tasks.length} 個任務`);
+        tasks.forEach((task, index) => {
+          console.log(`      ${index + 1}. ID: ${task.id}, 內容: ${task.text}`);
+        });
+      }
+    }
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
