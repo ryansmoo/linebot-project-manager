@@ -95,21 +95,32 @@ app.get('/api/task/:taskId', (req, res) => {
 // API 端點：更新任務
 app.put('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
-  const { text, notes, taskTime, category, customCategory } = req.body;
+  const { text, notes, taskTime, category, customCategory, reminderEnabled, reminderTime } = req.body;
   
-  console.log('📝 更新任務:', taskId, { text, notes, taskTime, category, customCategory });
+  console.log('📝 更新任務:', taskId, { text, notes, taskTime, category, customCategory, reminderEnabled, reminderTime });
   
   // 查找並更新任務
   for (const [userId, userDates] of userTasks) {
     for (const [date, tasks] of userDates) {
       const taskIndex = tasks.findIndex(t => t.id === taskId);
       if (taskIndex !== -1) {
+        const oldTask = { ...tasks[taskIndex] };
+        
         tasks[taskIndex].text = text || tasks[taskIndex].text;
         tasks[taskIndex].notes = notes || tasks[taskIndex].notes;
         tasks[taskIndex].taskTime = taskTime || tasks[taskIndex].taskTime;
         tasks[taskIndex].category = category || tasks[taskIndex].category;
         tasks[taskIndex].customCategory = customCategory || tasks[taskIndex].customCategory;
+        tasks[taskIndex].reminderEnabled = reminderEnabled !== undefined ? reminderEnabled : tasks[taskIndex].reminderEnabled;
+        tasks[taskIndex].reminderTime = reminderTime || tasks[taskIndex].reminderTime;
         tasks[taskIndex].updatedAt = new Date().toISOString();
+        
+        // 如果提醒設定有變化，重新安排提醒
+        if (tasks[taskIndex].reminderEnabled && tasks[taskIndex].taskTime) {
+          scheduleReminder(tasks[taskIndex]);
+        } else if (oldTask.reminderEnabled && !tasks[taskIndex].reminderEnabled) {
+          cancelReminder(taskId);
+        }
         
         return res.json({ success: true, task: tasks[taskIndex] });
       }
@@ -156,6 +167,147 @@ app.get('/api/tasks/:userId', (req, res) => {
 // 任務儲存（記憶體，按用戶ID和日期分組）
 const userTasks = new Map(); // userId -> { date -> [tasks] }
 
+// 提醒任務管理
+const reminderTimeouts = new Map(); // taskId -> timeoutId
+
+// 安排任務提醒
+function scheduleReminder(task) {
+  if (!task.reminderEnabled || !task.taskTime) return;
+  
+  const taskTime = new Date(task.taskTime);
+  const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
+  const now = new Date();
+  
+  // 如果提醒時間已經過了，不安排提醒
+  if (reminderTime <= now) {
+    console.log('⏰ 任務提醒時間已過:', task.text);
+    return;
+  }
+  
+  // 取消舊的提醒
+  cancelReminder(task.id);
+  
+  const delay = reminderTime.getTime() - now.getTime();
+  console.log(`⏰ 安排任務提醒: ${task.text}, 將在 ${reminderTime.toLocaleString('zh-TW')} 提醒`);
+  
+  const timeoutId = setTimeout(() => {
+    sendTaskReminder(task);
+  }, delay);
+  
+  reminderTimeouts.set(task.id, timeoutId);
+}
+
+// 取消任務提醒
+function cancelReminder(taskId) {
+  const timeoutId = reminderTimeouts.get(taskId);
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    reminderTimeouts.delete(taskId);
+    console.log('❌ 已取消任務提醒:', taskId);
+  }
+}
+
+// 發送任務提醒
+async function sendTaskReminder(task) {
+  try {
+    const taskTime = new Date(task.taskTime);
+    const reminderMessage = {
+      type: 'flex',
+      altText: `提醒：${task.text} 即將開始`,
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🔔 任務提醒",
+              weight: "bold",
+              size: "lg",
+              color: "#ffffff"
+            }
+          ],
+          backgroundColor: "#FF9800",
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: task.text,
+              size: "lg",
+              weight: "bold",
+              color: "#333333",
+              wrap: true
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "開始時間:",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 0
+                },
+                {
+                  type: "text", 
+                  text: taskTime.toLocaleString('zh-TW'),
+                  size: "sm",
+                  color: "#333333",
+                  flex: 0
+                }
+              ],
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "剩餘時間:",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 0
+                },
+                {
+                  type: "text", 
+                  text: `${task.reminderTime} 分鐘`,
+                  size: "sm",
+                  color: "#FF9800",
+                  weight: "bold",
+                  flex: 0
+                }
+              ],
+              margin: "sm"
+            }
+          ],
+          spacing: "sm"
+        }
+      }
+    };
+    
+    // 使用 Push API 發送提醒（需要用戶的 LINE ID）
+    console.log('📤 發送任務提醒給用戶:', task.userId);
+    await client.pushMessage(task.userId, reminderMessage);
+    console.log('✅ 任務提醒發送成功');
+    
+    // 從提醒列表中移除
+    reminderTimeouts.delete(task.id);
+  } catch (error) {
+    console.error('❌ 發送任務提醒失敗:', error);
+  }
+}
+
 // 主要事件處理
 async function handleEvent(event) {
   try {
@@ -200,7 +352,9 @@ async function handleEvent(event) {
       taskTime: null,
       category: 'work',
       customCategory: '',
-      notes: ''
+      notes: '',
+      reminderEnabled: false,
+      reminderTime: 30
     };
     
     userTasks.get(userId).get(today).push(newTask);

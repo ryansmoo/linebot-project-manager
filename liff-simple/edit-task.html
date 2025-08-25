@@ -214,6 +214,72 @@
             width: 100%;
             z-index: 10;
         }
+        .reminder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #00B900;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider.round {
+            border-radius: 24px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        .reminder-settings {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .reminder-preview {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+        }
+        .reminder-preview small {
+            color: #1976d2;
+        }
     </style>
 </head>
 <body>
@@ -277,6 +343,31 @@
                             type="datetime-local"
                             class="form-input" 
                         />
+                    </div>
+                    
+                    <!-- 提醒任務 -->
+                    <div class="form-group">
+                        <div class="reminder-header">
+                            <label class="form-label">🔔 提醒任務</label>
+                            <label class="switch">
+                                <input type="checkbox" id="reminderEnabled" onchange="toggleReminder()">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        
+                        <div id="reminderSettings" class="reminder-settings" style="display: none;">
+                            <label class="form-label" for="reminderTime">提醒時間</label>
+                            <select id="reminderTime" class="form-input">
+                                <option value="1">1分鐘前</option>
+                                <option value="10">10分鐘前</option>
+                                <option value="30" selected>30分鐘前</option>
+                                <option value="60">60分鐘前</option>
+                            </select>
+                            
+                            <div class="reminder-preview" id="reminderPreview">
+                                <small>📅 提醒時間：計算中...</small>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- 任務類別 -->
@@ -389,6 +480,12 @@
                         document.getElementById('customCategory').value = taskData.customCategory || '';
                     }
                     
+                    // 提醒設定
+                    document.getElementById('reminderEnabled').checked = taskData.reminderEnabled || false;
+                    document.getElementById('reminderTime').value = taskData.reminderTime || 30;
+                    toggleReminder();
+                    updateReminderPreview();
+                    
                     document.getElementById('taskNotes').value = taskData.notes || '';
                     
                     // 隱藏載入畫面，顯示應用
@@ -415,6 +512,8 @@
             const taskTime = document.getElementById('taskTime').value;
             const taskCategory = document.getElementById('taskCategory').value;
             const customCategory = taskCategory === 'custom' ? document.getElementById('customCategory').value : '';
+            const reminderEnabled = document.getElementById('reminderEnabled').checked;
+            const reminderTime = document.getElementById('reminderTime').value;
             
             if (!taskText.trim()) {
                 showMessage('請輸入任務內容', 'error');
@@ -434,7 +533,9 @@
                         notes: taskNotes,
                         taskTime: taskTime,
                         category: taskCategory,
-                        customCategory: customCategory
+                        customCategory: customCategory,
+                        reminderEnabled: reminderEnabled,
+                        reminderTime: parseInt(reminderTime)
                     })
                 });
                 
@@ -564,7 +665,9 @@
                         notes: document.getElementById('taskNotes').value,
                         taskTime: document.getElementById('taskTime').value,
                         category: document.getElementById('taskCategory').value,
-                        customCategory: document.getElementById('taskCategory').value === 'custom' ? document.getElementById('customCategory').value : ''
+                        customCategory: document.getElementById('taskCategory').value === 'custom' ? document.getElementById('customCategory').value : '',
+                        reminderEnabled: document.getElementById('reminderEnabled').checked,
+                        reminderTime: parseInt(document.getElementById('reminderTime').value)
                     })
                 });
                 
@@ -595,6 +698,40 @@
                 customGroup.style.display = 'none';
             }
         }
+        
+        function toggleReminder() {
+            const enabled = document.getElementById('reminderEnabled').checked;
+            const settings = document.getElementById('reminderSettings');
+            
+            if (enabled) {
+                settings.style.display = 'block';
+                updateReminderPreview();
+            } else {
+                settings.style.display = 'none';
+            }
+        }
+        
+        function updateReminderPreview() {
+            const taskTime = document.getElementById('taskTime').value;
+            const reminderMinutes = parseInt(document.getElementById('reminderTime').value);
+            const preview = document.getElementById('reminderPreview');
+            
+            if (!taskTime) {
+                preview.innerHTML = '<small>📅 請先設定任務時間</small>';
+                return;
+            }
+            
+            const taskDate = new Date(taskTime);
+            const reminderDate = new Date(taskDate.getTime() - reminderMinutes * 60000);
+            
+            preview.innerHTML = `<small>📅 提醒時間：${reminderDate.toLocaleString('zh-TW')}</small>`;
+        }
+        
+        // 監聽時間變化來更新提醒預覽
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('taskTime').addEventListener('change', updateReminderPreview);
+            document.getElementById('reminderTime').addEventListener('change', updateReminderPreview);
+        });
         
         console.log('✏️ LIFF 任務編輯頁面載入完成');
     </script>
