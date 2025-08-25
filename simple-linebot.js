@@ -644,6 +644,8 @@ async function handleEvent(event) {
     replyMessages[1].quickReply = quickReply;
 
     console.log('📤 發送 2 則 FLEX 訊息 + Quick Reply...');
+    console.log('🔍 Quick Reply 結構:', JSON.stringify(quickReply, null, 2));
+    console.log('🔍 第二則訊息結構檢查:', replyMessages[1].quickReply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
     const result = await client.replyMessage(event.replyToken, replyMessages);
     console.log('✅ 訊息發送成功');
     
@@ -860,6 +862,8 @@ async function handleCompleteTask(event, userId, messageText) {
     replyMessage.quickReply = quickReply;
     
     console.log('📤 發送完成任務 FLEX 訊息...');
+    console.log('🔍 完成任務 Quick Reply 結構:', JSON.stringify(quickReply, null, 2));
+    console.log('🔍 完成任務訊息結構檢查:', replyMessage.quickReply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
     const result = await client.replyMessage(event.replyToken, replyMessage);
     console.log('✅ 訊息發送成功');
     
