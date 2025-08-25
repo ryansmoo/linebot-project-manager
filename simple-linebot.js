@@ -1188,7 +1188,7 @@ function restoreReminders() {
   console.log(`✅ 已恢復 ${restoredCount} 個提醒任務`);
 }
 
-// 每30秒檢查一次提醒任務（更頻繁）
+// 每分鐘檢查一次提醒任務（作為備用機制）
 function startReminderChecker() {
   setInterval(() => {
     const now = new Date();
@@ -1253,7 +1253,7 @@ function startReminderChecker() {
     }
     
     console.log(`✅ 檢查完成：檢查了 ${checkedCount} 個提醒任務，發送了 ${sentCount} 個提醒`);
-  }, 30000); // 每30秒檢查一次
+  }, 60000); // 每60秒檢查一次
 }
 
 // 啟動服務器
