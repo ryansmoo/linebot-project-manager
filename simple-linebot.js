@@ -42,10 +42,11 @@ app.get('/webhook', (req, res) => {
 });
 
 // LINE Bot Webhook - 加強錯誤處理
-app.post('/webhook', line.middleware(config), (req, res) => {
+app.post('/webhook', (req, res) => {
   console.log('📨 收到 Webhook 請求:', new Date().toLocaleTimeString());
-  console.log('📋 事件數量:', req.body.events ? req.body.events.length : 0);
+  console.log('📋 請求內容:', JSON.stringify(req.body, null, 2));
   
+  // 暫時跳過 LINE SDK middleware 進行調試
   if (!req.body.events || req.body.events.length === 0) {
     console.log('✅ Webhook 驗證請求');
     return res.status(200).json({ status: 'OK' });
