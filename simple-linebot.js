@@ -173,25 +173,50 @@ app.get('/api/tasks/:userId', (req, res) => {
 // API 端點：檢查提醒狀態 (測試用)
 app.get('/api/reminders/status', (req, res) => {
   const activeReminders = [];
+  const allTasks = [];
   
+  // 收集所有任務
+  for (const [userId, userDates] of userTasks) {
+    for (const [date, tasks] of userDates) {
+      for (const task of tasks) {
+        allTasks.push({
+          taskId: task.id,
+          userId: userId,
+          date: date,
+          taskText: task.text,
+          taskTime: task.taskTime,
+          reminderEnabled: task.reminderEnabled,
+          reminderTime: task.reminderTime,
+          hasActiveReminder: reminderTimeouts.has(task.id)
+        });
+      }
+    }
+  }
+  
+  // 收集活躍提醒
   for (const [taskId, timeoutId] of reminderTimeouts) {
-    // 查找對應的任務
-    for (const [userId, userDates] of userTasks) {
-      for (const [date, tasks] of userDates) {
-        const task = tasks.find(t => t.id === taskId);
-        if (task) {
-          const taskTime = new Date(task.taskTime);
-          const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
-          
-          activeReminders.push({
-            taskId: task.id,
-            taskText: task.text,
-            taskTime: taskTime.toISOString(),
-            reminderTime: reminderTime.toISOString(),
-            reminderMinutes: task.reminderTime,
-            timeoutId: timeoutId ? 'active' : 'inactive'
-          });
+    const task = allTasks.find(t => t.taskId === taskId);
+    if (task) {
+      let taskTime, reminderTime;
+      
+      if (task.taskTime) {
+        if (task.taskTime.includes('T')) {
+          taskTime = new Date(task.taskTime);
+        } else {
+          taskTime = new Date(task.taskTime.replace('T', ' '));
         }
+        reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
+        
+        activeReminders.push({
+          taskId: task.taskId,
+          taskText: task.taskText,
+          originalTaskTime: task.taskTime,
+          parsedTaskTime: taskTime.toISOString(),
+          reminderTime: reminderTime.toISOString(),
+          reminderMinutes: task.reminderTime,
+          timeoutId: timeoutId ? 'active' : 'inactive',
+          delayFromNow: reminderTime.getTime() - new Date().getTime()
+        });
       }
     }
   }
@@ -199,9 +224,36 @@ app.get('/api/reminders/status', (req, res) => {
   res.json({
     success: true,
     currentTime: new Date().toISOString(),
-    activeReminders: activeReminders,
-    totalActiveReminders: reminderTimeouts.size
+    totalTasks: allTasks.length,
+    tasksWithReminders: allTasks.filter(t => t.reminderEnabled).length,
+    totalActiveReminders: reminderTimeouts.size,
+    allTasks: allTasks,
+    activeReminders: activeReminders
   });
+});
+
+// API 端點：測試立即發送提醒
+app.post('/api/test-reminder/:taskId', async (req, res) => {
+  const { taskId } = req.params;
+  
+  // 查找任務
+  for (const [userId, userDates] of userTasks) {
+    for (const [date, tasks] of userDates) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        console.log('🧪 測試發送提醒:', task.text);
+        try {
+          await sendTaskReminder(task);
+          return res.json({ success: true, message: '測試提醒已發送' });
+        } catch (error) {
+          console.error('❌ 測試提醒發送失敗:', error);
+          return res.json({ success: false, error: error.message });
+        }
+      }
+    }
+  }
+  
+  res.status(404).json({ success: false, error: '任務不存在' });
 });
 
 // 任務儲存（記憶體，按用戶ID和日期分組）
@@ -213,17 +265,35 @@ const reminderTimeouts = new Map(); // taskId -> timeoutId
 // 安排任務提醒
 function scheduleReminder(task) {
   if (!task.reminderEnabled || !task.taskTime) {
-    console.log('⚠️ 提醒未啟用或無任務時間:', task.text);
+    console.log('⚠️ 提醒未啟用或無任務時間:', task.text, {
+      reminderEnabled: task.reminderEnabled,
+      taskTime: task.taskTime
+    });
     return;
   }
   
-  const taskTime = new Date(task.taskTime);
+  // 處理 datetime-local 格式（無時區資訊）
+  let taskTime;
+  if (task.taskTime.includes('T')) {
+    // 如果是 ISO 格式，直接使用
+    taskTime = new Date(task.taskTime);
+  } else {
+    // 如果是 datetime-local 格式，需要當作本地時間處理
+    taskTime = new Date(task.taskTime.replace('T', ' '));
+  }
+  
   const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
   const now = new Date();
   
-  console.log(`📅 任務時間: ${taskTime.toLocaleString('zh-TW')}`);
-  console.log(`🔔 提醒時間: ${reminderTime.toLocaleString('zh-TW')}`);
-  console.log(`⏰ 現在時間: ${now.toLocaleString('zh-TW')}`);
+  console.log(`📅 任務名稱: ${task.text}`);
+  console.log(`📅 原始任務時間: ${task.taskTime}`);
+  console.log(`📅 解析任務時間: ${taskTime.toISOString()}`);
+  console.log(`🔔 提醒時間: ${reminderTime.toISOString()}`);
+  console.log(`⏰ 現在時間: ${now.toISOString()}`);
+  console.log(`⏱️ 提醒分鐘數: ${task.reminderTime}`);
+  
+  const delay = reminderTime.getTime() - now.getTime();
+  console.log(`⏱️ 計算延遲: ${delay}ms (${Math.floor(delay / 1000)} 秒)`);
   
   // 如果提醒時間已經過了，立即發送提醒
   if (reminderTime <= now) {
@@ -232,13 +302,17 @@ function scheduleReminder(task) {
     return;
   }
   
+  // 如果延遲時間太長（超過24小時），不安排提醒
+  if (delay > 24 * 60 * 60 * 1000) {
+    console.log('⚠️ 提醒時間超過24小時，不安排提醒:', task.text);
+    return;
+  }
+  
   // 取消舊的提醒
   cancelReminder(task.id);
   
-  const delay = reminderTime.getTime() - now.getTime();
   console.log(`⏰ 安排任務提醒: ${task.text}`);
-  console.log(`⏱️ 延遲時間: ${Math.floor(delay / 1000)} 秒`);
-  console.log(`📤 將在 ${reminderTime.toLocaleString('zh-TW')} 提醒`);
+  console.log(`📤 將在 ${Math.floor(delay / 60000)} 分鐘後提醒`);
   
   const timeoutId = setTimeout(() => {
     console.log(`🚀 執行提醒任務: ${task.text}`);
@@ -246,7 +320,8 @@ function scheduleReminder(task) {
   }, delay);
   
   reminderTimeouts.set(task.id, timeoutId);
-  console.log(`✅ 提醒已排程，任務ID: ${task.id}`);
+  console.log(`✅ 提醒已排程，任務ID: ${task.id}，Timeout ID: ${timeoutId}`);
+  console.log(`📊 目前活躍提醒數量: ${reminderTimeouts.size}`);
 }
 
 // 取消任務提醒
