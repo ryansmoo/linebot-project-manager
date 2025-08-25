@@ -1203,29 +1203,44 @@ function startReminderChecker() {
           if (task.reminderEnabled && task.taskTime) {
             checkedCount++;
             
-            // 解析任務時間
+            // 解析任務時間 - 處理時區問題
             let taskTime;
             if (task.taskTime.includes('T')) {
-              taskTime = new Date(task.taskTime);
+              // datetime-local 格式需要當作台灣時間處理
+              const localTimeStr = task.taskTime;
+              // 將本地時間轉換為台灣時區的 Date 對象
+              taskTime = new Date(localTimeStr + ':00+08:00'); // 加上台灣時區
             } else {
-              taskTime = new Date(task.taskTime.replace('T', ' '));
+              taskTime = new Date(task.taskTime.replace('T', ' ') + '+08:00');
             }
             
             const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
             
-            console.log(`  📋 檢查任務: ${task.text}`);
-            console.log(`    任務時間: ${taskTime.toLocaleString('zh-TW')}`);
-            console.log(`    提醒時間: ${reminderTime.toLocaleString('zh-TW')}`);
-            console.log(`    現在時間: ${now.toLocaleString('zh-TW')}`);
+            // 取得台灣時間進行比較
+            const taiwanNow = new Date(now.getTime() + 8 * 60 * 60 * 1000); // UTC+8
             
-            // 如果現在時間已經到達或超過提醒時間，且任務時間還沒過
-            if (now >= reminderTime && now < taskTime) {
+            console.log(`  📋 檢查任務: ${task.text}`);
+            console.log(`    原始時間: ${task.taskTime}`);
+            console.log(`    任務時間: ${taskTime.toISOString()} (${taskTime.toLocaleString('zh-TW')})`);
+            console.log(`    提醒時間: ${reminderTime.toISOString()} (${reminderTime.toLocaleString('zh-TW')})`);
+            console.log(`    UTC時間: ${now.toISOString()}`);
+            console.log(`    台灣時間: ${taiwanNow.toISOString()} (${taiwanNow.toLocaleString('zh-TW')})`);
+            console.log(`    是否已發送: ${task.reminderSent}`);
+            
+            // 使用 UTC 時間進行比較，但確保時區正確
+            if (!task.reminderSent && now >= reminderTime && now < taskTime) {
               console.log('🚨 提醒時間到了！立即發送提醒');
               sendTaskReminder(task);
               
               // 標記為已發送，避免重複發送
               task.reminderSent = true;
               sentCount++;
+            } else if (task.reminderSent) {
+              console.log('⏭️ 提醒已發送過，跳過');
+            } else if (now >= taskTime) {
+              console.log('⏰ 任務時間已過');
+            } else if (now < reminderTime) {
+              console.log(`⏳ 還需等待 ${Math.round((reminderTime.getTime() - now.getTime()) / 60000)} 分鐘`);
             }
             // 重新安排未來的提醒
             else if (reminderTime > now && !reminderTimeouts.has(task.id)) {
