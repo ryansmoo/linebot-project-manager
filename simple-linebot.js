@@ -193,11 +193,60 @@ async function handleEvent(event) {
     
     console.log('📝 任務已儲存:', newTask);
 
-    // 暫時使用簡單的文字訊息測試
+    // 建立 FLEX MESSAGE 顯示任務內容
     const replyMessages = [
       {
-        type: 'text',
-        text: `✅ 已記錄任務: ${messageText}\n📋 這是您今天的第 ${userTasks.get(userId).get(today).length} 個任務`
+        type: 'flex',
+        altText: `已記錄任務: ${messageText}`,
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "✅ 任務已記錄",
+                weight: "bold",
+                size: "md",
+                color: "#ffffff"
+              }
+            ],
+            backgroundColor: "#00B900",
+            paddingAll: "15px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: messageText,
+                size: "lg",
+                weight: "bold",
+                color: "#333333",
+                wrap: true
+              }
+            ],
+            spacing: "sm"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "uri",
+                  label: "✏️ 編輯",
+                  uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
+                },
+                color: "#00B900"
+              }
+            ]
+          }
+        }
       }
     ];
 
