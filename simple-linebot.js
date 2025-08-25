@@ -95,17 +95,20 @@ app.get('/api/task/:taskId', (req, res) => {
 // API 端點：更新任務
 app.put('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
-  const { text, notes } = req.body;
+  const { text, notes, taskTime, category, customCategory } = req.body;
   
-  console.log('📝 更新任務:', taskId, { text, notes });
+  console.log('📝 更新任務:', taskId, { text, notes, taskTime, category, customCategory });
   
   // 查找並更新任務
   for (const [userId, userDates] of userTasks) {
     for (const [date, tasks] of userDates) {
       const taskIndex = tasks.findIndex(t => t.id === taskId);
       if (taskIndex !== -1) {
-        tasks[taskIndex].text = text;
-        tasks[taskIndex].notes = notes;
+        tasks[taskIndex].text = text || tasks[taskIndex].text;
+        tasks[taskIndex].notes = notes || tasks[taskIndex].notes;
+        tasks[taskIndex].taskTime = taskTime || tasks[taskIndex].taskTime;
+        tasks[taskIndex].category = category || tasks[taskIndex].category;
+        tasks[taskIndex].customCategory = customCategory || tasks[taskIndex].customCategory;
         tasks[taskIndex].updatedAt = new Date().toISOString();
         
         return res.json({ success: true, task: tasks[taskIndex] });
@@ -193,7 +196,11 @@ async function handleEvent(event) {
       text: messageText,
       createdAt: new Date().toISOString(),
       date: today,
-      userId: userId
+      userId: userId,
+      taskTime: null,
+      category: 'work',
+      customCategory: '',
+      notes: ''
     };
     
     userTasks.get(userId).get(today).push(newTask);

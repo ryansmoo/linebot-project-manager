@@ -170,13 +170,57 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        .form-label-with-icon {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .edit-icon {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            font-size: 14px;
+            color: #00B900;
+        }
+        .edit-icon:hover {
+            background-color: #f0f0f0;
+        }
+        .editable-field {
+            position: relative;
+        }
+        .task-display {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            min-height: 48px;
+            line-height: 24px;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .task-display:hover {
+            border-color: #00B900;
+            background: #f0fff0;
+        }
+        .editable-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>✏️ 編輯任務</h1>
-            <div class="subtitle">任務資訊管理</div>
+            <h1>✏️ 編輯</h1>
+            <div class="subtitle">任務編輯</div>
         </div>
         
         <div class="content">
@@ -205,14 +249,56 @@
                 </div>
                 
                 <form id="editForm">
+                    <!-- 任務名稱 -->
                     <div class="form-group">
-                        <label class="form-label" for="taskText">📝 任務內容</label>
-                        <textarea 
-                            id="taskText" 
-                            class="form-input form-textarea" 
-                            placeholder="請輸入任務內容..."
-                            required
-                        ></textarea>
+                        <div class="form-label-with-icon">
+                            <label class="form-label">📝 任務名稱</label>
+                            <span class="edit-icon" onclick="enableEditMode('taskText')" title="點擊編輯">✏️</span>
+                        </div>
+                        <div class="editable-field">
+                            <span id="taskTextDisplay" class="task-display" onclick="enableEditMode('taskText')">載入中...</span>
+                            <input 
+                                id="taskText" 
+                                class="form-input editable-input" 
+                                placeholder="請輸入任務內容..."
+                                required
+                                style="display: none;"
+                                onblur="saveTaskName()"
+                                onkeypress="handleEnterKey(event, 'taskText')"
+                            />
+                        </div>
+                    </div>
+                    
+                    <!-- 任務時間 -->
+                    <div class="form-group">
+                        <label class="form-label" for="taskTime">⏰ 任務時間</label>
+                        <input 
+                            id="taskTime" 
+                            type="datetime-local"
+                            class="form-input" 
+                        />
+                    </div>
+                    
+                    <!-- 任務類別 -->
+                    <div class="form-group">
+                        <label class="form-label" for="taskCategory">🏷️ 類別</label>
+                        <select id="taskCategory" class="form-input" onchange="toggleCustomCategory()">
+                            <option value="work">💼 工作</option>
+                            <option value="family">🏠 家庭</option>
+                            <option value="study">📚 學習</option>
+                            <option value="travel">✈️ 旅遊</option>
+                            <option value="custom">🎯 自定義</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 自定義類別輸入 -->
+                    <div class="form-group" id="customCategoryGroup" style="display: none;">
+                        <label class="form-label" for="customCategory">自定義類別名稱</label>
+                        <input 
+                            id="customCategory" 
+                            class="form-input" 
+                            placeholder="請輸入自定義類別..."
+                        />
                     </div>
                     
                     <div class="form-group">
@@ -281,7 +367,28 @@
                     // 填充表單
                     document.getElementById('taskId').textContent = taskData.id;
                     document.getElementById('createdAt').textContent = new Date(taskData.createdAt).toLocaleString('zh-TW');
+                    
+                    // 任務名稱顯示
+                    document.getElementById('taskTextDisplay').textContent = taskData.text;
                     document.getElementById('taskText').value = taskData.text;
+                    
+                    // 任務時間
+                    if (taskData.taskTime) {
+                        document.getElementById('taskTime').value = taskData.taskTime;
+                    } else {
+                        // 如果沒有設定時間，使用創建時間
+                        const createdDate = new Date(taskData.createdAt);
+                        const localDateTime = new Date(createdDate.getTime() - createdDate.getTimezoneOffset() * 60000);
+                        document.getElementById('taskTime').value = localDateTime.toISOString().slice(0, 16);
+                    }
+                    
+                    // 任務類別
+                    document.getElementById('taskCategory').value = taskData.category || 'work';
+                    toggleCustomCategory();
+                    if (taskData.category === 'custom') {
+                        document.getElementById('customCategory').value = taskData.customCategory || '';
+                    }
+                    
                     document.getElementById('taskNotes').value = taskData.notes || '';
                     
                     // 隱藏載入畫面，顯示應用
@@ -303,8 +410,11 @@
         });
 
         async function saveTask() {
-            const taskText = document.getElementById('taskText').value;
+            const taskText = document.getElementById('taskText').value || document.getElementById('taskTextDisplay').textContent;
             const taskNotes = document.getElementById('taskNotes').value;
+            const taskTime = document.getElementById('taskTime').value;
+            const taskCategory = document.getElementById('taskCategory').value;
+            const customCategory = taskCategory === 'custom' ? document.getElementById('customCategory').value : '';
             
             if (!taskText.trim()) {
                 showMessage('請輸入任務內容', 'error');
@@ -321,7 +431,10 @@
                     },
                     body: JSON.stringify({
                         text: taskText,
-                        notes: taskNotes
+                        notes: taskNotes,
+                        taskTime: taskTime,
+                        category: taskCategory,
+                        customCategory: customCategory
                     })
                 });
                 
@@ -405,6 +518,84 @@
             showMessage('系統發生錯誤，請稍後再試', 'error');
         });
 
+        // 即時編輯功能
+        function enableEditMode(fieldId) {
+            const display = document.getElementById(fieldId + 'Display');
+            const input = document.getElementById(fieldId);
+            
+            display.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+            input.select();
+        }
+        
+        function disableEditMode(fieldId) {
+            const display = document.getElementById(fieldId + 'Display');
+            const input = document.getElementById(fieldId);
+            
+            display.style.display = 'block';
+            input.style.display = 'none';
+        }
+        
+        async function saveTaskName() {
+            const input = document.getElementById('taskText');
+            const display = document.getElementById('taskTextDisplay');
+            const newText = input.value.trim();
+            
+            if (!newText) {
+                input.value = display.textContent;
+                disableEditMode('taskText');
+                return;
+            }
+            
+            // 更新顯示
+            display.textContent = newText;
+            disableEditMode('taskText');
+            
+            // 自動儲存到後端
+            try {
+                const response = await fetch(`/api/task/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: newText,
+                        notes: document.getElementById('taskNotes').value,
+                        taskTime: document.getElementById('taskTime').value,
+                        category: document.getElementById('taskCategory').value,
+                        customCategory: document.getElementById('taskCategory').value === 'custom' ? document.getElementById('customCategory').value : ''
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('任務名稱已自動更新');
+                }
+            } catch (error) {
+                console.error('自動儲存失敗:', error);
+            }
+        }
+        
+        function handleEnterKey(event, fieldId) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (fieldId === 'taskText') {
+                    saveTaskName();
+                }
+            }
+        }
+        
+        function toggleCustomCategory() {
+            const category = document.getElementById('taskCategory').value;
+            const customGroup = document.getElementById('customCategoryGroup');
+            
+            if (category === 'custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+        
         console.log('✏️ LIFF 任務編輯頁面載入完成');
     </script>
 </body>
