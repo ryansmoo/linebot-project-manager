@@ -21,6 +21,10 @@ if (!config.channelSecret || config.channelSecret === 'your_channel_secret_here'
 const client = new line.Client(config);
 const app = express();
 
+// Express 中間件設定
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // 基本設定
 const PORT = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || process.env.RAILWAY_PUBLIC_DOMAIN 
@@ -88,7 +92,7 @@ app.get('/api/task/:taskId', (req, res) => {
 });
 
 // API 端點：更新任務
-app.put('/api/task/:taskId', express.json(), (req, res) => {
+app.put('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
   const { text, notes } = req.body;
   
