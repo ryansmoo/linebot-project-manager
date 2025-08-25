@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全部任務 - LIFF App</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 20px;
+        }
+        .stats-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .stats-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        .stats-value {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .date-group {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .date-header {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .task-list {
+            background: white;
+        }
+        .task-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        .task-number {
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .task-content {
+            flex: 1;
+        }
+        .task-text {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .task-time {
+            color: #666;
+            font-size: 12px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 全部任務</h1>
+            <div class="subtitle">歷史任務記錄</div>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在載入任務資料...</p>
+            </div>
+            
+            <div id="app" style="display: none;">
+                <div class="stats-card">
+                    <div class="stats-row">
+                        <span class="stats-label">總任務數</span>
+                        <span class="stats-value" id="totalTasks">0</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">活動天數</span>
+                        <span class="stats-value" id="activeDays">0</span>
+                    </div>
+                </div>
+                
+                <div id="tasksByDate"></div>
+                
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-icon">📝</div>
+                    <h3>還沒有任務記錄</h3>
+                    <p>傳送訊息給 LINE Bot 開始記錄您的任務！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userId = null;
+
+        // 載入頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            userId = urlParams.get('userId');
+            
+            console.log('用戶 ID:', userId);
+            
+            // 模擬載入過程
+            setTimeout(() => {
+                loadAllTasks();
+            }, 1000);
+        });
+
+        async function loadAllTasks() {
+            if (!userId) {
+                showEmptyState();
+                return;
+            }
+            
+            try {
+                // 這裡應該調用 API 獲取所有任務
+                // 暫時使用模擬數據
+                const mockTasks = generateMockTasks();
+                displayTasks(mockTasks);
+                
+                // 隱藏載入畫面，顯示應用
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+            } catch (error) {
+                console.error('載入任務失敗:', error);
+                showEmptyState();
+            }
+        }
+
+        function generateMockTasks() {
+            // 模擬數據，實際應從 API 獲取
+            const tasks = {};
+            const today = new Date();
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                if (i < 3) { // 只有前3天有任務
+                    tasks[dateStr] = [
+                        { text: `任務 ${i + 1}-1`, createdAt: new Date().toISOString() },
+                        { text: `任務 ${i + 1}-2`, createdAt: new Date().toISOString() }
+                    ];
+                }
+            }
+            
+            return tasks;
+        }
+
+        function displayTasks(tasksByDate) {
+            const container = document.getElementById('tasksByDate');
+            const dates = Object.keys(tasksByDate).sort().reverse(); // 最新日期在前
+            
+            if (dates.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            let totalTasks = 0;
+            
+            dates.forEach(date => {
+                const tasks = tasksByDate[date];
+                totalTasks += tasks.length;
+                
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'date-group';
+                
+                const formattedDate = new Date(date).toLocaleDateString('zh-TW', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                dateGroup.innerHTML = `
+                    <div class="date-header">${formattedDate}</div>
+                    <div class="task-list">
+                        ${tasks.map((task, index) => `
+                            <div class="task-item">
+                                <div class="task-number">${index + 1}</div>
+                                <div class="task-content">
+                                    <div class="task-text">${task.text}</div>
+                                    <div class="task-time">${new Date(task.createdAt).toLocaleTimeString('zh-TW')}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(dateGroup);
+            });
+            
+            // 更新統計
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('activeDays').textContent = dates.length;
+        }
+
+        function showEmptyState() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('頁面錯誤:', e.error);
+            showEmptyState();
+        });
+
+        console.log('📋 LIFF 全部任務頁面載入完成');
+    </script>
+</body>
+</html>

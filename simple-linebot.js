@@ -316,7 +316,40 @@ async function handleEvent(event) {
       }
     ];
 
-    console.log('📤 發送 2 則 FLEX 訊息...');
+    // 建立 Quick Reply 按鈕
+    const quickReply = {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📅 今天',
+            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📋 全部',
+            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '👤 帳戶',
+            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
+          }
+        }
+      ]
+    };
+
+    // 將 Quick Reply 添加到第二則訊息
+    replyMessages[1].quickReply = quickReply;
+
+    console.log('📤 發送 2 則 FLEX 訊息 + Quick Reply...');
     const result = await client.replyMessage(event.replyToken, replyMessages);
     console.log('✅ 訊息發送成功');
     
