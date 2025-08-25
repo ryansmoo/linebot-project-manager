@@ -134,6 +134,9 @@ app.put('/api/task/:taskId', (req, res) => {
         
         console.log('📝 任務更新後:', tasks[taskIndex]);
         
+        // 重置提醒發送狀態
+        tasks[taskIndex].reminderSent = false;
+        
         // 如果提醒設定有變化，重新安排提醒
         if (tasks[taskIndex].reminderEnabled && tasks[taskIndex].taskTime) {
           console.log('🔔 重新安排提醒...');
@@ -378,9 +381,14 @@ async function sendTaskReminder(task) {
     console.log('✅ 任務提醒發送成功！');
     
     // 從提醒列表中移除
-    if (task.id !== 'test-' + task.id && reminderTimeouts.has(task.id)) {
+    if (reminderTimeouts.has(task.id)) {
       reminderTimeouts.delete(task.id);
       console.log('🗑️ 已從提醒列表移除任務:', task.id);
+    }
+    
+    // 標記為已發送
+    if (task.id.indexOf('test-') !== 0) {
+      task.reminderSent = true;
     }
     
     return result;
@@ -447,7 +455,8 @@ async function handleEvent(event) {
       customCategory: '',
       notes: '',
       reminderEnabled: false,
-      reminderTime: 30
+      reminderTime: 30,
+      reminderSent: false
     };
     
     userTasks.get(userId).get(today).push(newTask);
@@ -1155,34 +1164,57 @@ function restoreReminders() {
   console.log(`✅ 已恢復 ${restoredCount} 個提醒任務`);
 }
 
-// 每分鐘檢查一次是否有遺漏的提醒
+// 每30秒檢查一次提醒任務（更頻繁）
 function startReminderChecker() {
   setInterval(() => {
-    console.log('🔍 定期檢查提醒任務...');
+    const now = new Date();
+    console.log(`🔍 [${now.toLocaleTimeString('zh-TW')}] 定期檢查提醒任務...`);
+    
+    let checkedCount = 0;
+    let sentCount = 0;
     
     for (const [userId, userDates] of userTasks) {
       for (const [date, tasks] of userDates) {
         for (const task of tasks) {
-          if (task.reminderEnabled && task.taskTime && !reminderTimeouts.has(task.id)) {
-            const taskTime = new Date(task.taskTime);
-            const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
-            const now = new Date();
+          if (task.reminderEnabled && task.taskTime) {
+            checkedCount++;
             
-            // 如果提醒時間已過但任務時間還沒到，立即發送
-            if (reminderTime <= now && taskTime > now) {
-              console.log('⚠️ 發現遺漏的提醒，立即發送:', task.text);
-              sendTaskReminder(task);
+            // 解析任務時間
+            let taskTime;
+            if (task.taskTime.includes('T')) {
+              taskTime = new Date(task.taskTime);
+            } else {
+              taskTime = new Date(task.taskTime.replace('T', ' '));
             }
-            // 如果提醒時間還沒到，重新安排
-            else if (reminderTime > now) {
-              console.log('🔧 重新安排遺漏的提醒:', task.text);
+            
+            const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
+            
+            console.log(`  📋 檢查任務: ${task.text}`);
+            console.log(`    任務時間: ${taskTime.toLocaleString('zh-TW')}`);
+            console.log(`    提醒時間: ${reminderTime.toLocaleString('zh-TW')}`);
+            console.log(`    現在時間: ${now.toLocaleString('zh-TW')}`);
+            
+            // 如果現在時間已經到達或超過提醒時間，且任務時間還沒過
+            if (now >= reminderTime && now < taskTime) {
+              console.log('🚨 提醒時間到了！立即發送提醒');
+              sendTaskReminder(task);
+              
+              // 標記為已發送，避免重複發送
+              task.reminderSent = true;
+              sentCount++;
+            }
+            // 重新安排未來的提醒
+            else if (reminderTime > now && !reminderTimeouts.has(task.id)) {
+              console.log('🔧 重新安排未來的提醒');
               scheduleReminder(task);
             }
           }
         }
       }
     }
-  }, 60000); // 每分鐘檢查一次
+    
+    console.log(`✅ 檢查完成：檢查了 ${checkedCount} 個提醒任務，發送了 ${sentCount} 個提醒`);
+  }, 30000); // 每30秒檢查一次
 }
 
 // 啟動服務器
