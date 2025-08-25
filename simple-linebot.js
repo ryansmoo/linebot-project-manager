@@ -236,7 +236,6 @@ async function handleEvent(event) {
 function createCurrentTaskFlex(task) {
   return {
     type: "bubble",
-    size: "kilo", 
     header: {
       type: "box",
       layout: "vertical",
@@ -277,18 +276,17 @@ function createCurrentTaskFlex(task) {
               text: "記錄時間:",
               size: "sm",
               color: "#666666",
-              flex: 0,
-              margin: "md"
+              flex: 0
             },
             {
               type: "text", 
               text: new Date(task.createdAt).toLocaleString('zh-TW'),
               size: "sm",
               color: "#666666",
-              flex: 0,
-              margin: "sm"
+              flex: 0
             }
-          ]
+          ],
+          margin: "md"
         }
       ],
       spacing: "sm"
@@ -334,8 +332,7 @@ function createTodayTasksFlex(userId, date) {
         size: "sm",
         color: "#333333",
         flex: 1,
-        wrap: true,
-        margin: "sm"
+        wrap: true
       }
     ],
     spacing: "sm",
