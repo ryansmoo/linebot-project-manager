@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>編輯任務 - LIFF App</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 20px;
+        }
+        .task-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00B900;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        .info-value {
+            color: #666;
+            font-size: 14px;
+            text-align: right;
+            flex: 1;
+            margin-left: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #00B900;
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 185, 0, 0.3);
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00B900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success-message, .error-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✏️ 編輯任務</h1>
+            <div class="subtitle">任務資訊管理</div>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在載入任務資料...</p>
+            </div>
+            
+            <div id="app" style="display: none;">
+                <div id="message"></div>
+                
+                <div class="task-info">
+                    <h3 style="margin-bottom: 15px; color: #333;">📋 任務資訊</h3>
+                    <div class="info-row">
+                        <span class="info-label">任務 ID</span>
+                        <span class="info-value" id="taskId">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">建立時間</span>
+                        <span class="info-value" id="createdAt">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">狀態</span>
+                        <span class="info-value" id="taskStatus">進行中</span>
+                    </div>
+                </div>
+                
+                <form id="editForm">
+                    <div class="form-group">
+                        <label class="form-label" for="taskText">📝 任務內容</label>
+                        <textarea 
+                            id="taskText" 
+                            class="form-input form-textarea" 
+                            placeholder="請輸入任務內容..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="taskNotes">📖 備註</label>
+                        <textarea 
+                            id="taskNotes" 
+                            class="form-input form-textarea" 
+                            placeholder="添加備註（選填）..."
+                        ></textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">
+                            ↩️ 返回
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            💾 儲存變更
+                        </button>
+                    </div>
+                    
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="deleteTask()">
+                            🗑️ 刪除任務
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let taskData = null;
+        let taskId = null;
+        let userId = null;
+
+        // 載入頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 從 URL 參數獲取任務資訊
+            const urlParams = new URLSearchParams(window.location.search);
+            taskId = urlParams.get('taskId');
+            userId = urlParams.get('userId');
+            
+            console.log('任務 ID:', taskId);
+            console.log('用戶 ID:', userId);
+            
+            // 模擬載入過程
+            setTimeout(() => {
+                loadTaskData();
+            }, 1000);
+        });
+
+        async function loadTaskData() {
+            if (!taskId) {
+                showMessage('缺少任務 ID', 'error');
+                return;
+            }
+            
+            try {
+                // 從 API 獲取任務資料
+                const response = await fetch(`/api/task/${taskId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    taskData = result.task;
+                    
+                    // 填充表單
+                    document.getElementById('taskId').textContent = taskData.id;
+                    document.getElementById('createdAt').textContent = new Date(taskData.createdAt).toLocaleString('zh-TW');
+                    document.getElementById('taskText').value = taskData.text;
+                    document.getElementById('taskNotes').value = taskData.notes || '';
+                    
+                    // 隱藏載入畫面，顯示應用
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+                } else {
+                    showMessage('找不到任務資料', 'error');
+                }
+            } catch (error) {
+                console.error('載入任務失敗:', error);
+                showMessage('載入任務失敗，請稍後再試', 'error');
+            }
+        }
+
+        // 處理表單提交
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveTask();
+        });
+
+        async function saveTask() {
+            const taskText = document.getElementById('taskText').value;
+            const taskNotes = document.getElementById('taskNotes').value;
+            
+            if (!taskText.trim()) {
+                showMessage('請輸入任務內容', 'error');
+                return;
+            }
+            
+            showMessage('正在儲存...', 'info');
+            
+            try {
+                const response = await fetch(`/api/task/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: taskText,
+                        notes: taskNotes
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('✅ 任務已成功儲存！', 'success');
+                    
+                    // 2 秒後自動返回
+                    setTimeout(() => {
+                        goBack();
+                    }, 2000);
+                } else {
+                    showMessage('儲存失敗：' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('儲存任務失敗:', error);
+                showMessage('儲存失敗，請稍後再試', 'error');
+            }
+        }
+
+        async function deleteTask() {
+            if (confirm('確定要刪除這個任務嗎？此操作無法復原。')) {
+                showMessage('正在刪除...', 'info');
+                
+                try {
+                    const response = await fetch(`/api/task/${taskId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showMessage('🗑️ 任務已刪除', 'success');
+                        
+                        // 2 秒後自動返回
+                        setTimeout(() => {
+                            goBack();
+                        }, 1500);
+                    } else {
+                        showMessage('刪除失敗：' + result.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('刪除任務失敗:', error);
+                    showMessage('刪除失敗，請稍後再試', 'error');
+                }
+            }
+        }
+
+        function goBack() {
+            // 嘗試關閉 LIFF 視窗，如果失敗則導航到任務列表
+            try {
+                if (liff && liff.isInClient()) {
+                    liff.closeWindow();
+                } else {
+                    window.location.href = 'tasks.html';
+                }
+            } catch (error) {
+                window.location.href = 'tasks.html';
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'error' ? 'error-message' : 
+                                 type === 'success' ? 'success-message' : 
+                                 'info-message';
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('頁面錯誤:', e.error);
+            showMessage('系統發生錯誤，請稍後再試', 'error');
+        });
+
+        console.log('✏️ LIFF 任務編輯頁面載入完成');
+    </script>
+</body>
+</html>
