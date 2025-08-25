@@ -193,8 +193,38 @@ async function handleEvent(event) {
     
     console.log('📝 任務已儲存:', newTask);
 
-    // 建立 FLEX MESSAGE 顯示任務內容
+    // 取得今天所有任務來顯示
+    const todayTasks = userTasks.get(userId).get(today);
+    
+    // 建立任務清單內容
+    const taskListItems = todayTasks.map((task, index) => ({
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+          text: `${index + 1}.`,
+          size: "sm",
+          color: "#00B900",
+          weight: "bold",
+          flex: 0
+        },
+        {
+          type: "text",
+          text: task.text,
+          size: "sm",
+          color: "#333333",
+          wrap: true,
+          flex: 1
+        }
+      ],
+      spacing: "sm",
+      margin: index === 0 ? "none" : "md"
+    }));
+
+    // 建立兩則 FLEX MESSAGE
     const replyMessages = [
+      // 第一則：當前任務記錄
       {
         type: 'flex',
         altText: `已記錄任務: ${messageText}`,
@@ -245,6 +275,42 @@ async function handleEvent(event) {
                 color: "#00B900"
               }
             ]
+          }
+        }
+      },
+      // 第二則：今天所有任務清單
+      {
+        type: 'flex',
+        altText: `今天的任務清單`,
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📋 今天的任務",
+                weight: "bold",
+                size: "lg",
+                color: "#ffffff"
+              },
+              {
+                type: "text",
+                text: `今天任務 ${todayTasks.length} 項`,
+                size: "sm",
+                color: "#ffffff"
+              }
+            ],
+            backgroundColor: "#0084FF",
+            paddingAll: "20px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: taskListItems,
+            spacing: "sm",
+            paddingAll: "15px"
           }
         }
       }
