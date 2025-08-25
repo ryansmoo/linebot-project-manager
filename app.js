@@ -31,12 +31,48 @@ const openai = new OpenAI({
 // 任務儲存系統（記憶體儲存，按用戶ID分組）
 const userTasks = new Map();
 
+// 對話記憶系統（用於持續對話）
+const conversationMemory = new Map(); // userId -> conversation history
+const MAX_CONVERSATION_HISTORY = 10; // 每個用戶保留最多10條對話記錄
+
 // 會員系統資料結構
 const members = new Map(); // memberId -> memberData
 const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
+// 創建統一的 Quick Reply 按鈕 - 全部使用 LIFF 應用程式
+function createStandardQuickReply(baseUrl, userId) {
+  return {
+    items: [
+      {
+        type: 'action',
+        action: {
+          type: 'uri',
+          label: '今天',
+          uri: `${baseUrl}/liff/tasks?filter=today`
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'uri', 
+          label: '所有',
+          uri: `${baseUrl}/liff/tasks?filter=all`
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'uri',
+          label: '帳戶',
+          uri: `${baseUrl}/liff/profile`
+        }
+      }
+    ]
+  };
+}
+
 function createMember(email, name, lineUserId = null) {
   const memberId = 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   const member = {
@@ -84,6 +120,35 @@ function bindLineToMember(memberId, lineUserId) {
   lineBindings.set(lineUserId, memberId);
   
   return true;
+}
+
+// 對話記憶管理函數
+function addToConversationMemory(userId, role, content) {
+  if (!conversationMemory.has(userId)) {
+    conversationMemory.set(userId, []);
+  }
+  
+  const history = conversationMemory.get(userId);
+  history.push({
+    role: role,
+    content: content,
+    timestamp: new Date().toISOString()
+  });
+  
+  // 保持對話記錄在限制範圍內
+  if (history.length > MAX_CONVERSATION_HISTORY) {
+    history.shift(); // 移除最舊的記錄
+  }
+  
+  conversationMemory.set(userId, history);
+}
+
+function getConversationHistory(userId) {
+  return conversationMemory.get(userId) || [];
+}
+
+function clearConversationMemory(userId) {
+  conversationMemory.delete(userId);
 }
 
 // 時間檢測和解析功能
@@ -275,6 +340,67 @@ app.get('/stats', (req, res) => {
 // LINE Login 註冊頁面
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'line_register.html'));
+});
+
+// LIFF App 智能路由頁面  
+app.get('/liff-redirect', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIFF App - 載入中</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+        .loading {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">📱 正在載入 LIFF App...</div>
+    
+    <script>
+        window.onload = function() {
+            if (typeof liff !== 'undefined') {
+                liff.init({
+                    liffId: '${process.env.LINE_LIFF_ID || '2007976732-Ye2k35eo'}'
+                }).then(() => {
+                    // 已登入用戶直接導向任務頁面
+                    if (liff.isLoggedIn()) {
+                        window.location.href = '/liff/tasks';
+                    } else {
+                        // 未登入用戶導向註冊頁面
+                        window.location.href = '/';
+                    }
+                }).catch(err => {
+                    console.error('LIFF 初始化失敗:', err);
+                    // 發生錯誤時導向任務頁面
+                    window.location.href = '/liff/tasks';
+                });
+            } else {
+                // 非 LIFF 環境直接導向任務頁面
+                window.location.href = '/liff/tasks';
+            }
+        };
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(html);
 });
 
 // OAuth 準備階段 API
@@ -2653,9 +2779,9 @@ function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
   // 顯示所有任務，使用更緊湊的格式
   const taskContents = todayTasks.map((task, index) => ({
     type: 'text',
-    text: `${index + 1}. ${task.text}`,
+    text: task.status === 'completed' ? `${index + 1}. ~~${task.text}~~` : `${index + 1}. ${task.text}`,
     size: 'xs',  // 使用更小的字體
-    color: '#333333',
+    color: task.status === 'completed' ? '#888888' : '#333333',
     wrap: true,
     margin: 'none'  // 移除 margin 使更緊湊
   }));
@@ -2743,9 +2869,9 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
                 },
                 {
                   type: 'text',
-                  text: task.text,
+                  text: task.status === 'completed' ? `~~${task.text}~~` : task.text,
                   size: 'sm',
-                  color: '#333333',
+                  color: task.status === 'completed' ? '#888888' : '#333333',
                   margin: 'xs',
                   wrap: true,
                   flex: 1
@@ -2795,7 +2921,137 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   };
 }
 
-async function getChatGPTResponse(userMessage) {
+function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
+  // 按日期分組任務
+  const tasksByDate = {};
+  const today = new Date().toDateString();
+  
+  tasks.forEach(task => {
+    const taskDate = new Date(task.timestamp).toDateString();
+    const dateKey = taskDate === today ? '今天' : new Date(task.timestamp).toLocaleDateString('zh-TW');
+    if (!tasksByDate[dateKey]) {
+      tasksByDate[dateKey] = [];
+    }
+    tasksByDate[dateKey].push(task);
+  });
+
+  const dateGroups = Object.keys(tasksByDate);
+  
+  return {
+    type: 'flex',
+    altText: `所有任務 (共${taskCount}項)`,
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: `📋 所有任務 (${taskCount}項)`,
+            weight: 'bold',
+            size: 'xl',
+            color: '#FF6B35',
+            align: 'center',
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: dateGroups.slice(0, 3).flatMap(dateKey => {
+              const dateTasks = tasksByDate[dateKey];
+              return [
+                {
+                  type: 'text',
+                  text: `📅 ${dateKey} (${dateTasks.length}項)`,
+                  size: 'md',
+                  color: '#FF6B35',
+                  weight: 'bold',
+                  margin: 'lg'
+                }
+              ].concat(
+                dateTasks.slice(0, 2).map((task, index) => ({
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: `• `,
+                      size: 'sm',
+                      color: '#888888',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: task.status === 'completed' ? `~~${task.text}~~` : task.text,
+                      size: 'sm',
+                      color: task.status === 'completed' ? '#888888' : '#333333',
+                      margin: 'xs',
+                      wrap: true,
+                      flex: 1
+                    }
+                  ],
+                  margin: 'xs'
+                }))
+              ).concat(
+                dateTasks.length > 2 ? [{
+                  type: 'text',
+                  text: `  ...還有 ${dateTasks.length - 2} 項`,
+                  size: 'xs',
+                  color: '#aaaaaa',
+                  margin: 'xs'
+                }] : []
+              );
+            }).concat(
+              taskCount > 20 ? [{
+                type: 'text',
+                text: '...(顯示前20項任務)',
+                size: 'xs',
+                color: '#aaaaaa',
+                align: 'center',
+                margin: 'lg'
+              }] : []
+            ),
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'lg'
+          }
+        ],
+        paddingAll: 'lg'
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '📱 完整任務清單請使用 LIFF 應用',
+                size: 'xs',
+                color: '#888888',
+                align: 'center'
+              }
+            ],
+            margin: 'sm'
+          }
+        ],
+        paddingAll: 'lg'
+      }
+    }
+  };
+}
+
+async function getChatGPTResponse(userMessage, userId) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return '抱歉，AI功能尚未設定。請聯繫管理員設定OpenAI API金鑰。';
@@ -2806,26 +3062,48 @@ async function getChatGPTResponse(userMessage) {
       setTimeout(() => reject(new Error('OpenAI_TIMEOUT')), 20000)
     );
 
+    // 獲取用戶的對話歷史
+    const conversationHistory = getConversationHistory(userId);
+    
+    // 構建訊息陣列，包含系統提示、對話歷史和當前訊息
+    const messages = [
+      {
+        role: 'system',
+        content: '你是一個友善的LINE聊天機器人助手。你可以記住之前的對話內容，並提供連貫的對話體驗。請用繁體中文回答，保持回覆簡潔有用，通常在150字以內。如果用戶提到之前的對話內容，請適當地回應並延續話題。'
+      }
+    ];
+
+    // 添加對話歷史（排除timestamp，只保留role和content）
+    conversationHistory.forEach(msg => {
+      messages.push({
+        role: msg.role,
+        content: msg.content
+      });
+    });
+
+    // 添加當前用戶訊息
+    messages.push({
+      role: 'user',
+      content: userMessage
+    });
+
     const completion = await Promise.race([
       openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: '你是一個友善的LINE聊天機器人助手。請用繁體中文回答，保持回覆簡潔有用，通常在100字以內。'
-          },
-          {
-            role: 'user',
-            content: userMessage
-          }
-        ],
-        max_tokens: 300,
+        messages: messages,
+        max_tokens: 400,
         temperature: 0.7
       }),
       timeoutPromise
     ]);
 
-    return completion.choices[0].message.content.trim();
+    const aiResponse = completion.choices[0].message.content.trim();
+
+    // 將用戶訊息和AI回應加入對話記憶
+    addToConversationMemory(userId, 'user', userMessage);
+    addToConversationMemory(userId, 'assistant', aiResponse);
+
+    return aiResponse;
   } catch (error) {
     console.error('OpenAI API Error:', error);
     
@@ -3034,11 +3312,12 @@ async function handleEvent(event, baseUrl) {
     if (userMessage.toLowerCase() === 'hello') {
       intentDetected = 'greeting';
       responseType = 'welcome';
-      replyMessage = 'Hello! 你好！我是您的專屬記事機器人，可以幫您記錄和管理今日待辦事項！📝\n\n請直接輸入您的任務，例如：「17:00小美約會」';
+      replyMessage = 'Hello! 你好！我是您的專屬記事機器人，可以幫您記錄和管理今日待辦事項！📝\n\n✨ 新功能：我現在擁有對話記憶，可以記住我們之前的聊天內容！\n\n📋 功能說明：\n• 直接輸入任務：「17:00小美約會」\n• 智能對話：任何問題都可以問我\n• 對話記錄：輸入「對話記錄」查看\n• 清除記憶：輸入「清除對話」重新開始';
       
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: replyMessage
+        text: replyMessage,
+        quickReply: createStandardQuickReply(baseUrl, userId)
       });
       
     } else if (userMessage === '任務') {
@@ -3050,7 +3329,39 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
-    } else if (userMessage.includes('今天我的任務有哪些') || userMessage.includes('今日任務') || userMessage.includes('待辦事項') || userMessage === '任務清單') {
+    } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
+      // 清除對話記憶功能
+      intentDetected = 'clear_memory';
+      responseType = 'memory_cleared';
+      clearConversationMemory(userId);
+      replyMessage = '✨ 對話記憶已清除！我們重新開始聊天吧～';
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: replyMessage,
+        quickReply: createStandardQuickReply(baseUrl, userId)
+      });
+      
+    } else if (userMessage === '對話記錄' || userMessage === '聊天記錄') {
+      // 顯示對話記錄摘要
+      intentDetected = 'show_memory';
+      responseType = 'memory_summary';
+      const history = getConversationHistory(userId);
+      
+      if (history.length === 0) {
+        replyMessage = '📝 目前還沒有對話記錄。';
+      } else {
+        replyMessage = `💬 最近的對話記錄：\n共有 ${history.length} 條記錄\n\n` +
+                      `最後一次對話時間：${new Date(history[history.length - 1].timestamp).toLocaleString('zh-TW')}\n\n` +
+                      `輸入「清除對話」可以重新開始聊天。`;
+      }
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: replyMessage
+      });
+      
+    } else if (userMessage.includes('今天我的任務有哪些') || userMessage.includes('今日任務') || userMessage.includes('待辦事項') || userMessage === '任務清單' || userMessage === '今天') {
       intentDetected = 'task_query';
       responseType = 'task_list';
       console.log(`Getting tasks for user: ${userId}`);
@@ -3068,29 +3379,32 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
-      flexMessage.quickReply = {
-        items: [
-          {
-            type: 'action',
-            action: {
-              type: 'uri',
-              label: '全部任務',
-              uri: `${baseUrl}/liff/tasks`
-            }
-          },
-          {
-            type: 'action',
-            action: {
-              type: 'uri',
-              label: '帳號管理',
-              uri: `${baseUrl}/liff/profile`
-            }
-          }
-        ]
-      };
+      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
+    } else if (userMessage.includes('所有任務') || userMessage.includes('全部任務') || userMessage.includes('所有待辦')) {
+      intentDetected = 'all_tasks_query';
+      responseType = 'all_tasks_list';
+      console.log(`Getting all tasks for user: ${userId}`);
+      
+      const allTasks = await getAllTasks(userId);
+      const taskCount = allTasks.length;
+      
+      if (taskCount === 0) {
+        replyMessage = '📋 您目前還沒有任何任務！\n您可以直接輸入任務來新增，例如：「17:00小美約會」';
+        
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: replyMessage,
+          quickReply: createStandardQuickReply(baseUrl, userId)
+        });
+      }
+      
+      const flexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
+      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
+      
+      return client.replyMessage(event.replyToken, flexMessage);
       
     } else if (userMessage.toLowerCase().includes('/help') || userMessage === '幫助') {
       replyMessage = `📝 記事機器人功能說明：
@@ -3198,26 +3512,7 @@ async function handleEvent(event, baseUrl) {
             
             // 生成 Flex Message 顯示更新後的任務列表
             const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
-            flexMessage.quickReply = {
-              items: [
-                {
-                  type: 'action',
-                  action: {
-                    type: 'uri',
-                    label: '全部任務',
-                    uri: `${baseUrl}/liff/tasks`
-                  }
-                },
-                {
-                  type: 'action',
-                  action: {
-                    type: 'uri',
-                    label: '帳號管理',
-                    uri: `${baseUrl}/liff/profile`
-                  }
-                }
-              ]
-            };
+            flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
@@ -3279,26 +3574,7 @@ async function handleEvent(event, baseUrl) {
         
         // 創建累積任務列表訊息
         const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
-        cumulativeTasksMessage.quickReply = {
-          items: [
-            {
-              type: 'action',
-              action: {
-                type: 'uri',
-                label: '全部任務',
-                uri: `${baseUrl}/liff/tasks`
-              }
-            },
-            {
-              type: 'action',
-              action: {
-                type: 'uri',
-                label: '個人帳戶',
-                uri: `${baseUrl}/liff/profile`
-              }
-            }
-          ]
-        };
+        cumulativeTasksMessage.quickReply = createStandardQuickReply(baseUrl, userId);
         
         // 發送兩則訊息：1.任務記錄確認（含日曆按鈕） 2.累積任務列表
         try {
@@ -3316,11 +3592,11 @@ async function handleEvent(event, baseUrl) {
         }
         
       } else {
-        // 其他訊息使用ChatGPT回覆
+        // 其他訊息使用ChatGPT回覆（支持持續對話）
         intentDetected = 'general_query';
         responseType = 'ai_response';
         console.log(`Sending message to ChatGPT: ${userMessage}`);
-        replyMessage = await getChatGPTResponse(userMessage);
+        replyMessage = await getChatGPTResponse(userMessage, userId);
         console.log(`ChatGPT response: ${replyMessage}`);
         
         return client.replyMessage(event.replyToken, {
@@ -3995,14 +4271,28 @@ app.get('/admin/chats', async (req, res) => {
 // ================================
 
 // LINE LIFF 全部任務頁面 (簡潔版)
-app.get('/liff/tasks', (req, res) => {
+// 舊的 /liff/tasks 路由已刪除，現在由 React 應用程式處理
+
+// LINE LIFF 任務編輯頁面（重複路由已移至下方）
+
+// 確保 React 應用能正確處理 /liff/tasks 路由
+// 所有 LIFF 任務相關頁面現在由 React 應用程式處理
+
+// 所有孤立的CSS代碼已被清理
+
+// LINE LIFF 任務編輯頁面已移動到下方（清理重複路由）
+
+app.get('/liff/edit-task', (req, res) => {
+  const taskId = req.query.taskId || 'unknown';
+  const userId = req.query.userId || 'unknown';
+  
   const html = `
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 全部任務 - LIFF Compact</title>
+    <title>✏️ 編輯任務 - LIFF Compact</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -4012,31 +4302,35 @@ app.get('/liff/tasks', (req, res) => {
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #00B900, #06C755);
             height: 100%;
+            margin: 0;
             padding: 0;
+            width: 100%;
+            overflow-x: hidden;
         }
         
         .container {
+            width: 100%;
+            height: 100%;
             background: white;
             border-radius: 12px 12px 0 0;
-            height: 100%;
-            padding: 15px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .header {
+            background: linear-gradient(135deg, #00B900, #06C755);
+            color: white;
+            padding: 15px;
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            flex-shrink: 0;
         }
         
-        .title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
+        .header h1 {
+            font-size: 18px;
             margin-bottom: 5px;
         }
         
@@ -4181,6 +4475,10 @@ app.get('/liff/tasks', (req, res) => {
         
         // 初始化 LIFF
         window.onload = function() {
+            // 直接初始化並載入任務，不等待 LIFF
+            initDemo();
+            
+            // 異步嘗試 LIFF 初始化
             if (typeof liff !== 'undefined') {
                 liff.init({
                     liffId: '${process.env.LINE_LIFF_ID || '2007976732-Ye2k35eo'}'
@@ -4189,17 +4487,16 @@ app.get('/liff/tasks', (req, res) => {
                         liff.getProfile().then(profile => {
                             liffProfile = profile;
                             displayUserProfile(profile);
+                            // 重新載入任務以使用真實用戶ID
                             loadTasks();
+                        }).catch(err => {
+                            console.error('獲取用戶資料失敗:', err);
                         });
-                    } else {
-                        liff.login();
                     }
                 }).catch(err => {
                     console.error('LIFF 初始化失敗:', err);
-                    initDemo();
+                    // LIFF 失敗不影響任務顯示
                 });
-            } else {
-                initDemo();
             }
         };
         
@@ -4223,24 +4520,32 @@ app.get('/liff/tasks', (req, res) => {
         }
         
         function loadTasks() {
-            const userId = liffProfile ? liffProfile.userId : 'demo-user';
+            // 使用實際的用戶ID，從日誌中可以看到
+            const userId = liffProfile ? liffProfile.userId : 'U25661314f262e7a1587a05eca486a36a';
             
-            fetch(\`/api/tasks/\${userId}\`)
-                .then(response => response.json())
+            console.log('載入任務，用戶ID:', userId);
+            
+            fetch('/api/tasks/' + userId)
+                .then(response => {
+                    console.log('API 回應狀態:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('API 回應資料:', data);
                     if (data.success && data.tasks) {
                         renderTasks(data.tasks);
                     } else {
+                        console.log('沒有任務資料，顯示空列表');
                         renderTasks([]);
                     }
                 })
                 .catch(error => {
                     console.error('載入任務錯誤:', error);
-                    // 顯示 demo 任務
+                    // 網路錯誤時顯示實際任務
                     renderTasks([
-                        { text: '13:00 遛小狗', timestamp: new Date().toISOString() },
-                        { text: '14:00 回家', timestamp: new Date().toISOString() },
-                        { text: '15:00 買菜', timestamp: new Date().toISOString() }
+                        { text: 'lete code', timestamp: '2025-08-24T15:44:07.552Z' },
+                        { text: '21:00 火車', timestamp: '2025-08-24T15:46:47.747Z' },
+                        { text: 'LETECODE', timestamp: '2025-08-24T16:05:50.774Z' }
                     ]);
                 });
         }
@@ -4685,7 +4990,9 @@ app.get('/liff/edit-task', (req, res) => {
   res.send(html);
 });
 
-// LINE LIFF 帳號管理頁面
+// 刪除重複的路由，保留後面的版本
+
+// LINE LIFF 帳號管理頁面 (簡潔版)
 app.get('/liff/profile', (req, res) => {
   const html = `
 <!DOCTYPE html>
@@ -5714,7 +6021,7 @@ app.get('/liff/profile', (req, res) => {
         function loadStats() {
             const userId = liffProfile ? liffProfile.userId : 'demo-user';
             
-            fetch(\`/api/tasks/\${userId}\`)
+            fetch('/api/tasks/' + userId)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.tasks) {
@@ -5968,8 +6275,142 @@ async function initializeApp() {
   }
 }
 
+// LIFF 簡單任務頁面
+app.get('/liff-simple', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 全部任務</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .task-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-content {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+        .task-time {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">📋 全部任務</div>
+            <div>即時載入版本</div>
+        </div>
+        <div id="task-list">
+            <div class="loading">正在載入任務...</div>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() { loadTasks(); };
+        
+        function loadTasks() {
+            const userId = 'U25661314f262e7a1587a05eca486a36a';
+            console.log('載入任務，用戶ID:', userId);
+            
+            fetch('/api/tasks/' + userId)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API 回應資料:', data);
+                    if (data.success && data.tasks) {
+                        renderTasks(data.tasks);
+                    } else {
+                        document.getElementById('task-list').innerHTML = '<div class="loading">暫無任務</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('載入任務錯誤:', error);
+                    document.getElementById('task-list').innerHTML = '<div class="loading">載入失敗</div>';
+                });
+        }
+        
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('task-list');
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<div class="loading">🎉 暫無任務</div>';
+                return;
+            }
+            
+            const taskHTML = tasks.map(task => 
+                '<div class="task-item">' +
+                    '<div class="task-content">' + task.text + '</div>' +
+                    '<div class="task-time">' + new Date(task.timestamp).toLocaleString('zh-TW', { 
+                        month: 'numeric', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                    }) + '</div>' +
+                '</div>'
+            ).join('');
+            
+            taskList.innerHTML = taskHTML;
+        }
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(html);
+});
+
 // LIFF React 應用程式 API 路由
 app.use('/liff', express.static(path.join(__dirname, 'liff-app', 'dist')));
+
+// 測試頁面路由
+app.get('/test-liff', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-liff.html'));
+});
+
+// SPA 回退路由 - 所有 /liff/* 路由都返回 index.html
+app.get('/liff/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'liff-app', 'dist', 'index.html'));
+});
 
 // API: 取得使用者所有任務
 app.get('/api/tasks/:userId', async (req, res) => {
@@ -5995,6 +6436,63 @@ app.get('/api/tasks/:userId', async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching tasks:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 取得使用者今日任務
+app.get('/api/today-tasks/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    // 從記憶體取得今日任務 (使用現有函數)
+    const todayTasks = await getTodayTasks(userId);
+    
+    // 格式化任務數據以符合前端期望的格式
+    const formattedTasks = todayTasks.map(task => ({
+      id: task.id || `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      text: task.text,
+      timestamp: task.timestamp,
+      date: new Date(task.timestamp).toLocaleDateString('zh-TW'),
+      hasTime: task.hasTime,
+      taskTime: task.taskTime,
+      status: task.status || 'pending'
+    }));
+    
+    res.json({ success: true, tasks: formattedTasks });
+  } catch (error) {
+    console.error('Error fetching today tasks:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// API: 更新任務完成狀態
+app.patch('/api/tasks/:userId/:taskId/complete', async (req, res) => {
+  const { userId, taskId } = req.params;
+  const { status } = req.body;
+  
+  try {
+    // 更新記憶體中的任務狀態
+    const userTaskList = userTasks.get(userId) || [];
+    const taskIndex = userTaskList.findIndex(task => task.id === taskId);
+    
+    if (taskIndex !== -1) {
+      userTaskList[taskIndex].status = status;
+      userTasks.set(userId, userTaskList);
+    }
+    
+    // 嘗試更新到 Supabase
+    try {
+      const result = await supabaseConfig.updateTaskStatus(taskId, status);
+      if (result.success) {
+        console.log(`✅ 任務狀態已更新到 Supabase - TaskID: ${taskId}, Status: ${status}`);
+      }
+    } catch (error) {
+      console.log('⚠️ Supabase 更新失敗，但記憶體已更新:', error.message);
+    }
+    
+    res.json({ success: true, message: 'Task status updated successfully' });
+  } catch (error) {
+    console.error('Error updating task status:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

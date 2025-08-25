@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務管理 LIFF App</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            padding: 20px;
+        }
+        .nav-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            text-align: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #00B900;
+            color: white;
+            border-color: #00B900;
+        }
+        .nav-button:active {
+            transform: scale(0.98);
+        }
+        .status {
+            padding: 20px;
+            background: #e8f4fd;
+            margin: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 任務管理</h1>
+            <p>LINE Bot LIFF 應用程式</p>
+        </div>
+        
+        <div class="nav">
+            <a href="/liff/tasks" class="nav-button">
+                📋 查看任務列表
+            </a>
+            
+            <a href="/liff/profile" class="nav-button">
+                👤 個人資料
+            </a>
+            
+            <a href="/liff/add-task" class="nav-button">
+                ➕ 新增任務
+            </a>
+        </div>
+        
+        <div class="status" id="status">
+            正在初始化 LIFF...
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            document.getElementById('status').textContent = '✅ LIFF 應用程式已載入';
+            
+            // 初始化LIFF
+            liff.init({ liffId: '2007976732-Ye2k35eo' }).then(() => {
+                document.getElementById('status').textContent = '✅ LIFF 已成功初始化';
+            }).catch((err) => {
+                document.getElementById('status').textContent = '⚠️ LIFF 初始化失敗: ' + err.message;
+            });
+        });
+    </script>
+</body>
+</html>

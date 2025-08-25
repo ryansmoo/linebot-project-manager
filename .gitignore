@@ -1,51 +1,50 @@
-# 依賴套件
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# 環境變數檔案
+# Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# 資料庫檔案
+# Database
+linebot.db
 *.db
 *.sqlite
-*.sqlite3
-linebot.db
 
-# 日誌檔案
+# Logs
 *.log
 bot.log
-tunnel.log
 ngrok.log
+tunnel.log
+tunnel-*.log
+server-*.log
+proxy.log
+public-server.log
 
-# 暫存檔案
-.tmp/
-.cache/
-.DS_Store
-Thumbs.db
+# Process IDs
+*.pid
+bot.pid
+ngrok.pid
+tunnel.pid
 
-# IDE 設定檔
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# IDE and Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# 本地執行檔案
-tunnel.pid
-*.pid
-
-# 備份檔案
-*.backup
-*.bak
-*_backup.*
-
-# OS 生成檔案
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -54,14 +53,13 @@ tunnel.pid
 ehthumbs.db
 Thumbs.db
 
-# 雲端特定檔案
-.vercel
-.railway
+# Build directories
+build/
+dist/
+liff-app/dist/
 
-# 測試覆蓋率報告
-coverage/
-.nyc_output/
+# Railway specific
+.railway/
 
-# 執行時暫存檔
-*.tmp
-*.temp
+# Tunnel services
+webhook-url.txt

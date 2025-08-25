@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 全部任務 - 簡化版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #00B900, #06C755);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .task-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .task-content {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+        
+        .task-time {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">📋 全部任務</div>
+            <div>簡化版直接載入</div>
+        </div>
+        
+        <div id="task-list">
+            <div class="loading">正在載入任務...</div>
+        </div>
+    </div>
+    
+    <script>
+        // 直接載入任務，不依賴 LIFF
+        window.onload = function() {
+            loadTasks();
+        };
+        
+        function loadTasks() {
+            const userId = 'U25661314f262e7a1587a05eca486a36a';
+            console.log('載入任務，用戶ID:', userId);
+            
+            fetch(`/api/tasks/${userId}`)
+                .then(response => {
+                    console.log('API 回應狀態:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API 回應資料:', data);
+                    if (data.success && data.tasks) {
+                        renderTasks(data.tasks);
+                    } else {
+                        renderTasks([]);
+                    }
+                })
+                .catch(error => {
+                    console.error('載入任務錯誤:', error);
+                    renderTasks([
+                        { text: 'lete code', timestamp: '2025-08-24T15:44:07.552Z' },
+                        { text: '21:00 火車', timestamp: '2025-08-24T15:46:47.747Z' },
+                        { text: 'LETECODE', timestamp: '2025-08-24T16:05:50.774Z' }
+                    ]);
+                });
+        }
+        
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('task-list');
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="loading">
+                        🎉 暫無任務<br>
+                        <small>在 LINE 聊天室中發送任務給我吧！</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            const taskHTML = tasks.map(task => `
+                <div class="task-item">
+                    <div class="task-content">${task.text}</div>
+                    <div class="task-time">${new Date(task.timestamp).toLocaleString('zh-TW', { 
+                        month: 'numeric', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })}</div>
+                </div>
+            `).join('');
+            
+            taskList.innerHTML = taskHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務管理 - LIFF App</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 20px;
+            min-height: 400px;
+        }
+        .welcome-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .welcome-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .welcome-text {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #00B900;
+            transition: all 0.3s ease;
+        }
+        .task-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .task-time {
+            font-size: 12px;
+            color: #00B900;
+            font-weight: bold;
+        }
+        .task-title {
+            font-size: 14px;
+            color: #333;
+            margin-top: 5px;
+        }
+        .add-task-btn {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s ease;
+        }
+        .add-task-btn:hover {
+            transform: translateY(-2px);
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00B900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 任務管理</h1>
+            <div class="subtitle">智能任務助手</div>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在載入任務資料...</p>
+            </div>
+            
+            <div id="app" style="display: none;">
+                <div class="welcome-section">
+                    <div class="welcome-icon">🎯</div>
+                    <div class="welcome-title">歡迎使用任務管理系統</div>
+                    <div class="welcome-text">
+                        在這裡您可以查看和管理您的所有任務，<br>
+                        讓生活更有條理！
+                    </div>
+                </div>
+                
+                <div class="task-list" id="taskList">
+                    <!-- 範例任務 -->
+                    <div class="task-item">
+                        <div class="task-time">09:00</div>
+                        <div class="task-title">檢查今日行程安排</div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-time">14:00</div>
+                        <div class="task-title">參加團隊會議</div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-time">18:00</div>
+                        <div class="task-title">整理本週工作總結</div>
+                    </div>
+                </div>
+                
+                <button class="add-task-btn" onclick="addNewTask()">
+                    ➕ 新增任務
+                </button>
+                
+                <div class="debug-info" id="debugInfo">
+                    <strong>系統狀態：</strong><br>
+                    頁面載入時間: <span id="loadTime"></span><br>
+                    LIFF 狀態: <span id="liffStatus">檢查中...</span><br>
+                    用戶 ID: <span id="userId">取得中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 記錄載入時間
+        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
+        
+        // 模擬載入過程
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            // 檢查 LIFF 狀態
+            checkLiffStatus();
+        }, 1500);
+
+        function checkLiffStatus() {
+            try {
+                if (typeof liff !== 'undefined') {
+                    liff.init({
+                        liffId: '2007976732-Ye2k35eo' // 您的 LIFF ID
+                    }).then(() => {
+                        document.getElementById('liffStatus').textContent = '✅ 已連接';
+                        
+                        if (liff.isLoggedIn()) {
+                            liff.getProfile().then(profile => {
+                                document.getElementById('userId').textContent = profile.displayName || profile.userId;
+                            }).catch(err => {
+                                document.getElementById('userId').textContent = '無法取得';
+                                console.log('取得用戶資料失敗:', err);
+                            });
+                        } else {
+                            document.getElementById('userId').textContent = '未登入';
+                        }
+                    }).catch(err => {
+                        document.getElementById('liffStatus').textContent = '❌ 連接失敗';
+                        console.log('LIFF 初始化失敗:', err);
+                    });
+                } else {
+                    document.getElementById('liffStatus').textContent = '⚠️ LIFF SDK 未載入';
+                }
+            } catch (error) {
+                document.getElementById('liffStatus').textContent = '❌ 檢查失敗';
+                console.log('LIFF 檢查錯誤:', error);
+            }
+        }
+
+        function addNewTask() {
+            const taskList = document.getElementById('taskList');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-TW', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            const newTask = document.createElement('div');
+            newTask.className = 'task-item';
+            newTask.innerHTML = `
+                <div class="task-time">${timeString}</div>
+                <div class="task-title">新任務 - ${now.toLocaleDateString('zh-TW')}</div>
+            `;
+            
+            taskList.appendChild(newTask);
+            
+            // 滾動到新任務
+            newTask.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 頁面可見性變化時的處理
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log('頁面重新獲得焦點');
+                // 可以在這裡重新整理資料
+            }
+        });
+
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('頁面錯誤:', e.error);
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                debugInfo.innerHTML += '<br>❌ 錯誤: ' + e.message;
+            }
+        });
+
+        console.log('📱 LIFF 任務管理頁面載入完成');
+    </script>
+</body>
+</html>

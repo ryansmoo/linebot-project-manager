@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人資料 - LIFF App</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 20px;
+        }
+        .profile-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            border: 3px solid #00B900;
+        }
+        .profile-name {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .profile-id {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .info-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .info-value {
+            color: #666;
+            font-size: 14px;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #666 0%, #888 100%);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00B900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 個人資料</h1>
+            <div class="subtitle">用戶資訊管理</div>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在載入用戶資料...</p>
+            </div>
+            
+            <div id="app" style="display: none;">
+                <div class="profile-section">
+                    <div class="avatar" id="userAvatar">👤</div>
+                    <div class="profile-name" id="userName">載入中...</div>
+                    <div class="profile-id" id="userId">用戶ID載入中...</div>
+                </div>
+                
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">📱 LINE 顯示名稱</span>
+                        <span class="info-value" id="displayName">取得中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🆔 用戶 ID</span>
+                        <span class="info-value" id="userIdShort">取得中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📊 狀態訊息</span>
+                        <span class="info-value" id="statusMessage">取得中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🕐 登入時間</span>
+                        <span class="info-value" id="loginTime">--:--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🌐 LIFF 狀態</span>
+                        <span class="info-value" id="liffStatus">檢查中...</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="refreshProfile()">
+                        🔄 重新整理資料
+                    </button>
+                    <button class="action-btn secondary" onclick="goToTasks()">
+                        📝 返回任務列表
+                    </button>
+                </div>
+                
+                <div class="debug-info" id="debugInfo">
+                    <strong>系統資訊：</strong><br>
+                    頁面載入時間: <span id="loadTime"></span><br>
+                    瀏覽器: <span id="browserInfo"></span><br>
+                    螢幕尺寸: <span id="screenInfo"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userProfile = null;
+        
+        // 記錄載入時間和系統資訊
+        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
+        document.getElementById('browserInfo').textContent = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                                                            navigator.userAgent.includes('Safari') ? 'Safari' : 'Other';
+        document.getElementById('screenInfo').textContent = `${screen.width}x${screen.height}`;
+        
+        // 模擬載入過程
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            // 初始化 LIFF 並載入用戶資料
+            initializeProfile();
+        }, 1500);
+
+        function initializeProfile() {
+            try {
+                if (typeof liff !== 'undefined') {
+                    liff.init({
+                        liffId: '2007976732-Ye2k35eo' // 您的 LIFF ID
+                    }).then(() => {
+                        document.getElementById('liffStatus').textContent = '✅ 已連接';
+                        
+                        if (liff.isLoggedIn()) {
+                            loadUserProfile();
+                        } else {
+                            showDefaultProfile();
+                            document.getElementById('liffStatus').textContent = '⚠️ 未登入';
+                        }
+                    }).catch(err => {
+                        document.getElementById('liffStatus').textContent = '❌ 連接失敗';
+                        showDefaultProfile();
+                        console.log('LIFF 初始化失敗:', err);
+                    });
+                } else {
+                    document.getElementById('liffStatus').textContent = '⚠️ LIFF SDK 未載入';
+                    showDefaultProfile();
+                }
+            } catch (error) {
+                document.getElementById('liffStatus').textContent = '❌ 檢查失敗';
+                showDefaultProfile();
+                console.log('LIFF 檢查錯誤:', error);
+            }
+        }
+
+        function loadUserProfile() {
+            liff.getProfile().then(profile => {
+                userProfile = profile;
+                displayProfile(profile);
+            }).catch(err => {
+                console.log('取得用戶資料失敗:', err);
+                showDefaultProfile();
+            });
+        }
+
+        function displayProfile(profile) {
+            // 更新頭像
+            const avatar = document.getElementById('userAvatar');
+            if (profile.pictureUrl) {
+                avatar.style.backgroundImage = `url(${profile.pictureUrl})`;
+                avatar.style.backgroundSize = 'cover';
+                avatar.textContent = '';
+            } else {
+                avatar.textContent = profile.displayName ? profile.displayName.charAt(0) : '👤';
+            }
+            
+            // 更新基本資料
+            document.getElementById('userName').textContent = profile.displayName || '未知用戶';
+            document.getElementById('userId').textContent = `ID: ${profile.userId.substring(0, 10)}...`;
+            document.getElementById('displayName').textContent = profile.displayName || '無';
+            document.getElementById('userIdShort').textContent = profile.userId.substring(0, 15) + '...';
+            document.getElementById('statusMessage').textContent = profile.statusMessage || '無狀態訊息';
+            document.getElementById('loginTime').textContent = new Date().toLocaleTimeString();
+        }
+
+        function showDefaultProfile() {
+            document.getElementById('userName').textContent = '訪客用戶';
+            document.getElementById('userId').textContent = '未登入狀態';
+            document.getElementById('displayName').textContent = '未取得';
+            document.getElementById('userIdShort').textContent = '未取得';
+            document.getElementById('statusMessage').textContent = '未取得';
+            document.getElementById('loginTime').textContent = new Date().toLocaleTimeString();
+        }
+
+        function refreshProfile() {
+            document.getElementById('userName').textContent = '載入中...';
+            document.getElementById('displayName').textContent = '更新中...';
+            
+            setTimeout(() => {
+                if (liff && liff.isLoggedIn()) {
+                    loadUserProfile();
+                } else {
+                    showDefaultProfile();
+                }
+            }, 1000);
+        }
+
+        function goToTasks() {
+            // 嘗試在 LIFF 內導航，失敗則使用一般連結
+            try {
+                if (liff && liff.isInClient()) {
+                    window.location.href = '/liff/tasks.html';
+                } else {
+                    window.location.href = 'tasks.html';
+                }
+            } catch (error) {
+                window.location.href = 'tasks.html';
+            }
+        }
+
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('頁面錯誤:', e.error);
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                debugInfo.innerHTML += '<br>❌ 錯誤: ' + e.message;
+            }
+        });
+
+        console.log('👤 LIFF 個人資料頁面載入完成');
+    </script>
+</body>
+</html>
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .profile-info {
+            padding: 20px;
+        }
+        .profile-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+        .profile-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .profile-value {
+            color: #666;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: block;
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">← 返回</button>
+            <h1>👤 個人資料</h1>
+        </div>
+        
+        <div class="profile-info">
+            <img id="avatar" class="avatar" src="" alt="頭像" style="display: none;">
+            
+            <div class="profile-item">
+                <div class="profile-label">顯示名稱</div>
+                <div id="displayName" class="profile-value">載入中...</div>
+            </div>
+            
+            <div class="profile-item">
+                <div class="profile-label">狀態訊息</div>
+                <div id="statusMessage" class="profile-value">載入中...</div>
+            </div>
+            
+            <div class="profile-item">
+                <div class="profile-label">用戶ID</div>
+                <div id="userId" class="profile-value">載入中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.location.href = '/liff';
+        }
+        
+        window.addEventListener('load', function() {
+            liff.init({ liffId: '2007976732-Ye2k35eo' }).then(() => {
+                if (liff.isLoggedIn()) {
+                    liff.getProfile().then((profile) => {
+                        document.getElementById('displayName').textContent = profile.displayName || '未設定';
+                        document.getElementById('statusMessage').textContent = profile.statusMessage || '未設定';
+                        document.getElementById('userId').textContent = profile.userId || '未知';
+                        
+                        if (profile.pictureUrl) {
+                            const avatar = document.getElementById('avatar');
+                            avatar.src = profile.pictureUrl;
+                            avatar.style.display = 'block';
+                        }
+                    }).catch((err) => {
+                        console.error('無法取得個人資料:', err);
+                        document.getElementById('displayName').textContent = '無法載入';
+                        document.getElementById('statusMessage').textContent = '無法載入';
+                        document.getElementById('userId').textContent = '無法載入';
+                    });
+                } else {
+                    document.getElementById('displayName').textContent = '請先登入';
+                    document.getElementById('statusMessage').textContent = '請先登入';
+                    document.getElementById('userId').textContent = '請先登入';
+                }
+            }).catch((err) => {
+                console.error('LIFF 初始化失敗:', err);
+            });
+        });
+    </script>
+</body>
+</html>

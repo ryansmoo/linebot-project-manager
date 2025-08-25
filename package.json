@@ -2,11 +2,11 @@
   "name": "linebot-project-manager",
   "version": "2.0.0",
   "description": "智能任務管理 LINE Bot，整合 ChatGPT AI、LIFF App、會員系統和資料庫管理",
-  "main": "app.js",
+  "main": "simple-linebot.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "production": "node start-production.js",
+    "start": "node simple-linebot.js",
+    "dev": "nodemon simple-linebot.js",
+    "legacy": "node app.js",
     "build": "echo 'No build step required'",
     "test": "echo 'Tests not implemented yet'",
     "lint": "echo 'Linting not configured'"
@@ -23,6 +23,7 @@
     "express": "^4.18.0",
     "express-rate-limit": "^8.0.1",
     "googleapis": "^157.0.0",
+    "http-proxy-middleware": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "openai": "^5.15.0",
     "sqlite3": "^5.1.7"

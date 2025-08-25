@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIFF Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .today-stats { display: flex; gap: 10px; margin: 20px 0; }
+        .stat-card { background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; flex: 1; }
+        .task-item { background: #f5f5f5; padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; align-items: center; }
+        .task-checkbox { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>📅 今日任務測試頁面</h1>
+    
+    <div class="debug">
+        <strong>🔍 Debug Info:</strong><br>
+        URL: <span id="url"></span><br>
+        Filter: <span id="filter"></span><br>
+        Title: <span id="title"></span>
+    </div>
+    
+    <!-- 區塊1: 今日任務統計 -->
+    <div class="today-stats-section">
+        <h3>📊 今日任務概況</h3>
+        <div class="today-stats">
+            <div class="stat-card">
+                <div>📋</div>
+                <div><strong>5</strong></div>
+                <div>總任務</div>
+            </div>
+            <div class="stat-card">
+                <div>✅</div>
+                <div><strong>2</strong></div>
+                <div>已完成</div>
+            </div>
+            <div class="stat-card">
+                <div>⏳</div>
+                <div><strong>3</strong></div>
+                <div>未完成</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 區塊2: 今日任務列表 -->
+    <div class="today-tasks-section">
+        <h3>📝 今日任務列表</h3>
+        <div class="tasks-with-checkbox">
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" checked>
+                <div class="task-content">
+                    <div style="text-decoration: line-through;">🕐 09:00 晨會</div>
+                    <div style="font-size: 12px; color: #666;">2025-08-25</div>
+                </div>
+            </div>
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox">
+                <div class="task-content">
+                    <div>🕒 14:00 工具</div>
+                    <div style="font-size: 12px; color: #666;">2025-08-25</div>
+                </div>
+            </div>
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox">
+                <div class="task-content">
+                    <div>📋 檢查 LIFF 應用程式</div>
+                    <div style="font-size: 12px; color: #666;">2025-08-25</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="window.close()" style="margin-top: 20px; padding: 10px 20px; background: #00B900; color: white; border: none; border-radius: 5px;">關閉</button>
+
+    <script>
+        // 顯示調試信息
+        document.getElementById('url').textContent = window.location.href;
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParam = urlParams.get('filter') || 'all';
+        document.getElementById('filter').textContent = filterParam;
+        document.getElementById('title').textContent = filterParam === 'today' ? "📅 今日任務" : "📋 所有任務";
+        
+        console.log('🔍 LIFF Test Debug:');
+        console.log('URL:', window.location.href);
+        console.log('Filter param:', filterParam);
+    </script>
+</body>
+</html>

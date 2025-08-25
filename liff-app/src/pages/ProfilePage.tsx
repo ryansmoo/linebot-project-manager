@@ -217,6 +217,125 @@ function ProfilePage() {
         </div>
       )}
 
+      <div className="subscription-section">
+        <h3>💎 訂閱方案</h3>
+        
+        <div className="plan-info">
+          <div className="current-plan">
+            <div className="plan-badge">
+              <span className="plan-icon">🆓</span>
+              <span className="plan-name">免費方案</span>
+            </div>
+            <div className="plan-details">
+              <p>• 基本任務管理功能</p>
+              <p>• 每月 100 次 AI 查詢</p>
+              <p>• 基本統計報告</p>
+            </div>
+          </div>
+
+          <div className="plan-upgrade">
+            <h4>升級至進階方案</h4>
+            <div className="premium-features">
+              <div className="feature-item">
+                <span className="feature-icon">🚀</span>
+                <span className="feature-text">無限制 AI 查詢</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">📊</span>
+                <span className="feature-text">進階統計分析</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">📅</span>
+                <span className="feature-text">完整 Google Calendar 整合</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">🔄</span>
+                <span className="feature-text">自動任務同步</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">📱</span>
+                <span className="feature-text">多裝置同步</span>
+              </div>
+            </div>
+            <button className="btn-upgrade" onClick={() => alert('升級功能即將推出！')}>
+              🚀 升級到進階版 - $9.99/月
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="modules-section">
+        <h3>🧩 功能模組</h3>
+        
+        <div className="modules-grid">
+          <div className="module-card enabled">
+            <div className="module-header">
+              <span className="module-icon">📝</span>
+              <span className="module-name">任務管理</span>
+              <span className="module-status enabled">已啟用</span>
+            </div>
+            <p className="module-description">智能任務記錄與管理系統</p>
+          </div>
+
+          <div className="module-card enabled">
+            <div className="module-header">
+              <span className="module-icon">🤖</span>
+              <span className="module-name">AI 助手</span>
+              <span className="module-status enabled">已啟用</span>
+            </div>
+            <p className="module-description">ChatGPT 智能問答與對話</p>
+          </div>
+
+          <div className="module-card disabled">
+            <div className="module-header">
+              <span className="module-icon">📅</span>
+              <span className="module-name">日曆整合</span>
+              <span className="module-status disabled">未啟用</span>
+            </div>
+            <p className="module-description">Google Calendar 完整整合</p>
+            <button className="btn-enable" onClick={() => alert('需要進階方案才能啟用此功能')}>
+              啟用
+            </button>
+          </div>
+
+          <div className="module-card disabled">
+            <div className="module-header">
+              <span className="module-icon">📊</span>
+              <span className="module-name">進階分析</span>
+              <span className="module-status disabled">未啟用</span>
+            </div>
+            <p className="module-description">深度統計分析與報告</p>
+            <button className="btn-enable" onClick={() => alert('需要進階方案才能啟用此功能')}>
+              啟用
+            </button>
+          </div>
+
+          <div className="module-card disabled">
+            <div className="module-header">
+              <span className="module-icon">🔔</span>
+              <span className="module-name">智能提醒</span>
+              <span className="module-status disabled">未啟用</span>
+            </div>
+            <p className="module-description">個人化任務提醒系統</p>
+            <button className="btn-enable" onClick={() => alert('需要進階方案才能啟用此功能')}>
+              啟用
+            </button>
+          </div>
+
+          <div className="module-card disabled">
+            <div className="module-header">
+              <span className="module-icon">🌐</span>
+              <span className="module-name">多平台同步</span>
+              <span className="module-status disabled">未啟用</span>
+            </div>
+            <p className="module-description">跨裝置資料同步服務</p>
+            <button className="btn-enable" onClick={() => alert('需要進階方案才能啟用此功能')}>
+              啟用
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="actions-section">
         <h3>⚙️ 帳戶管理</h3>
         

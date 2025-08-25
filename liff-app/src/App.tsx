@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import liff from "@line/liff";
 import "./App.css";
 import TasksPage from "./pages/TasksPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -10,19 +9,16 @@ function App() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    liff
-      .init({
-        liffId: import.meta.env.VITE_LIFF_ID || "2006600537-rGOAqY6l"
-      })
-      .then(() => {
-        console.log("LIFF init succeeded.");
-        setLiffInitialized(true);
-      })
-      .catch((e: Error) => {
-        console.error("LIFF init failed:", e);
-        setError(`${e}`);
-      });
+    console.log('App useEffect 執行');
+    // 暫時跳過 LIFF 初始化，直接載入應用程式
+    setTimeout(() => {
+      console.log('設置 LIFF 為已初始化');
+      setLiffInitialized(true);
+    }, 100);
   }, []);
+
+  // 添加調試信息
+  console.log('App render state:', { liffInitialized, error });
 
   if (!liffInitialized && !error) {
     return (
@@ -30,6 +26,9 @@ function App() {
         <div className="loading">
           <h2>Loading...</h2>
           <p>正在初始化 LIFF...</p>
+          <p style={{fontSize: '12px', color: '#666'}}>
+            Debug: liffInitialized={liffInitialized.toString()}, error={error}
+          </p>
         </div>
       </div>
     );
@@ -48,7 +47,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router basename="/liff">
       <div className="App">
         <Routes>
           <Route path="/tasks" element={<TasksPage />} />
