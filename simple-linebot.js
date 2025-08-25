@@ -116,9 +116,15 @@ app.put('/api/task/:taskId', (req, res) => {
         tasks[taskIndex].updatedAt = new Date().toISOString();
         
         // 如果提醒設定有變化，重新安排提醒
+        console.log('📝 檢查提醒設定變化...');
+        console.log('提醒啟用:', tasks[taskIndex].reminderEnabled);
+        console.log('任務時間:', tasks[taskIndex].taskTime);
+        
         if (tasks[taskIndex].reminderEnabled && tasks[taskIndex].taskTime) {
+          console.log('🔔 重新安排提醒...');
           scheduleReminder(tasks[taskIndex]);
         } else if (oldTask.reminderEnabled && !tasks[taskIndex].reminderEnabled) {
+          console.log('❌ 取消提醒...');
           cancelReminder(taskId);
         }
         
@@ -164,6 +170,40 @@ app.get('/api/tasks/:userId', (req, res) => {
   });
 });
 
+// API 端點：檢查提醒狀態 (測試用)
+app.get('/api/reminders/status', (req, res) => {
+  const activeReminders = [];
+  
+  for (const [taskId, timeoutId] of reminderTimeouts) {
+    // 查找對應的任務
+    for (const [userId, userDates] of userTasks) {
+      for (const [date, tasks] of userDates) {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          const taskTime = new Date(task.taskTime);
+          const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
+          
+          activeReminders.push({
+            taskId: task.id,
+            taskText: task.text,
+            taskTime: taskTime.toISOString(),
+            reminderTime: reminderTime.toISOString(),
+            reminderMinutes: task.reminderTime,
+            timeoutId: timeoutId ? 'active' : 'inactive'
+          });
+        }
+      }
+    }
+  }
+  
+  res.json({
+    success: true,
+    currentTime: new Date().toISOString(),
+    activeReminders: activeReminders,
+    totalActiveReminders: reminderTimeouts.size
+  });
+});
+
 // 任務儲存（記憶體，按用戶ID和日期分組）
 const userTasks = new Map(); // userId -> { date -> [tasks] }
 
@@ -172,15 +212,23 @@ const reminderTimeouts = new Map(); // taskId -> timeoutId
 
 // 安排任務提醒
 function scheduleReminder(task) {
-  if (!task.reminderEnabled || !task.taskTime) return;
+  if (!task.reminderEnabled || !task.taskTime) {
+    console.log('⚠️ 提醒未啟用或無任務時間:', task.text);
+    return;
+  }
   
   const taskTime = new Date(task.taskTime);
   const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
   const now = new Date();
   
-  // 如果提醒時間已經過了，不安排提醒
+  console.log(`📅 任務時間: ${taskTime.toLocaleString('zh-TW')}`);
+  console.log(`🔔 提醒時間: ${reminderTime.toLocaleString('zh-TW')}`);
+  console.log(`⏰ 現在時間: ${now.toLocaleString('zh-TW')}`);
+  
+  // 如果提醒時間已經過了，立即發送提醒
   if (reminderTime <= now) {
-    console.log('⏰ 任務提醒時間已過:', task.text);
+    console.log('⏰ 任務提醒時間已過，立即發送提醒:', task.text);
+    sendTaskReminder(task);
     return;
   }
   
@@ -188,13 +236,17 @@ function scheduleReminder(task) {
   cancelReminder(task.id);
   
   const delay = reminderTime.getTime() - now.getTime();
-  console.log(`⏰ 安排任務提醒: ${task.text}, 將在 ${reminderTime.toLocaleString('zh-TW')} 提醒`);
+  console.log(`⏰ 安排任務提醒: ${task.text}`);
+  console.log(`⏱️ 延遲時間: ${Math.floor(delay / 1000)} 秒`);
+  console.log(`📤 將在 ${reminderTime.toLocaleString('zh-TW')} 提醒`);
   
   const timeoutId = setTimeout(() => {
+    console.log(`🚀 執行提醒任務: ${task.text}`);
     sendTaskReminder(task);
   }, delay);
   
   reminderTimeouts.set(task.id, timeoutId);
+  console.log(`✅ 提醒已排程，任務ID: ${task.id}`);
 }
 
 // 取消任務提醒
