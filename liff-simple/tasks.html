@@ -255,10 +255,36 @@
             try {
                 document.getElementById('loadStatus').textContent = '連接伺服器...';
                 
-                // 這裡應該調用實際的 API
-                // 暫時使用模擬數據
-                const mockTasks = generateMockTasks();
-                tasks = mockTasks;
+                if (!userId) {
+                    console.log('⚠️ 沒有用戶 ID，使用模擬數據');
+                    const mockTasks = generateMockTasks();
+                    tasks = mockTasks;
+                } else {
+                    // 調用真實的 API
+                    console.log('🌐 正在從 API 載入任務...');
+                    const response = await fetch(`/api/tasks/${encodeURIComponent(userId)}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('📋 API 回應:', result);
+                    
+                    if (result.success) {
+                        // 將 API 格式轉換為前端需要的格式
+                        tasks = result.tasks.map(task => ({
+                            id: task.id,
+                            text: task.text,
+                            completed: false, // 前端管理完成狀態
+                            createdAt: task.createdAt
+                        }));
+                        console.log('✅ 成功載入', tasks.length, '項任務');
+                    } else {
+                        console.log('⚠️ API 調用失敗，使用空陣列');
+                        tasks = [];
+                    }
+                }
                 
                 displayTasks();
                 updateStats();
@@ -267,40 +293,39 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 
-                console.log('✅ 任務載入完成，共', tasks.length, '項任務');
+                console.log('✅ 任務顯示完成，共', tasks.length, '項任務');
             } catch (error) {
                 console.error('❌ 載入任務失敗:', error);
-                document.getElementById('loadStatus').textContent = '載入失敗 ❌';
-                showEmptyState();
+                document.getElementById('loadStatus').textContent = '載入失敗: ' + error.message;
+                
+                // 發生錯誤時使用模擬數據作為備案
+                console.log('🔄 使用模擬數據作為備案');
+                const mockTasks = generateMockTasks();
+                tasks = mockTasks;
+                displayTasks();
+                updateStats();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
             }
         }
 
         // 生成模擬數據
         function generateMockTasks() {
+            // 如果沒有 userId，返回空陣列，會顯示空狀態
             if (!userId) return [];
             
+            // 模擬數據用於展示功能（當 API 無法使用時）
             return [
                 {
-                    id: '1',
-                    text: '檢查今日行程安排',
+                    id: 'demo-1',
+                    text: '📋 這是演示模式的任務',
                     completed: false,
                     createdAt: new Date().toISOString()
                 },
                 {
-                    id: '2',
-                    text: '參加團隊會議',
-                    completed: false,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: '3',
-                    text: '整理本週工作總結',
-                    completed: true,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: '4',
-                    text: '準備明天的簡報資料',
+                    id: 'demo-2', 
+                    text: '✅ 實際任務會從 LINE Bot 載入',
                     completed: false,
                     createdAt: new Date().toISOString()
                 }
@@ -412,9 +437,18 @@
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 console.log('📱 頁面重新獲得焦點，重新整理任務');
-                // 可以在這裡重新載入任務
+                // 重新載入任務以獲取最新數據
+                loadTodayTasks();
             }
         });
+
+        // 定期自動刷新任務（每30秒）
+        setInterval(() => {
+            if (!document.hidden) {
+                console.log('🔄 自動刷新任務...');
+                loadTodayTasks();
+            }
+        }, 30000);
 
         // 錯誤處理
         window.addEventListener('error', function(e) {
