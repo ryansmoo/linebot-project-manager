@@ -23,7 +23,9 @@ const app = express();
 
 // 基本設定
 const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const BASE_URL = process.env.BASE_URL || process.env.RAILWAY_PUBLIC_DOMAIN 
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
+  : `http://localhost:${PORT}`;
 
 // 靜態檔案服務 - 提供 LIFF APP
 app.use('/liff', express.static(path.join(__dirname, 'liff-simple')));
@@ -230,7 +232,7 @@ function createQuickReply() {
 // 啟動服務器
 app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 精簡版 LINE Bot 啟動成功！');
-  console.log(`📡 服務運行於: http://localhost:${PORT}`);
+  console.log(`📡 服務運行於: ${BASE_URL}`);
   console.log(`🔗 Webhook URL: ${BASE_URL}/webhook`);
   console.log(`📱 LIFF 任務頁面: ${BASE_URL}/liff/tasks.html`);
   console.log(`👤 LIFF 個人頁面: ${BASE_URL}/liff/profile.html`);
