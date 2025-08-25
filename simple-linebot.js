@@ -203,6 +203,38 @@ app.get('/api/tasks/:userId', (req, res) => {
   });
 });
 
+// API 端點：完成任務（從記憶體中刪除）
+app.post('/api/task/:taskId/complete', (req, res) => {
+  const { taskId } = req.params;
+  
+  console.log('✅ 收到完成任務請求:', taskId);
+  
+  // 查找並刪除任務
+  for (const [userId, userDates] of userTasks) {
+    for (const [date, tasks] of userDates) {
+      const taskIndex = tasks.findIndex(t => t.id === taskId);
+      if (taskIndex !== -1) {
+        const completedTask = tasks[taskIndex];
+        tasks.splice(taskIndex, 1); // 從記憶體中移除任務
+        
+        console.log('✅ 任務已完成並移除:', completedTask.text);
+        
+        return res.json({ 
+          success: true, 
+          message: '任務已完成',
+          completedTask: completedTask
+        });
+      }
+    }
+  }
+  
+  console.log('❌ 找不到要完成的任務:', taskId);
+  res.status(404).json({ 
+    success: false, 
+    error: '任務不存在' 
+  });
+});
+
 // API 端點：檢查提醒狀態 (測試用)
 app.get('/api/reminders/status', (req, res) => {
   const activeReminders = [];

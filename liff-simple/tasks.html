@@ -372,24 +372,44 @@
         }
 
         // 切換任務完成狀態
-        function toggleTask(taskId) {
+        async function toggleTask(taskId) {
             const task = tasks.find(t => t.id === taskId);
             if (!task) return;
-            
-            task.completed = !task.completed;
             
             const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
             const checkbox = taskElement.querySelector('.checkbox');
             const taskText = taskElement.querySelector('.task-text');
             
-            if (task.completed) {
+            if (!task.completed) {
                 // 標記為完成
+                task.completed = true;
                 taskElement.classList.add('completed');
                 checkbox.classList.add('checked');
                 taskText.classList.add('completed');
                 completedCount++;
                 
                 console.log('✅ 任務已完成:', task.text);
+                
+                try {
+                    // 調用後端 API 完成任務
+                    console.log('🌐 通知後端完成任務...');
+                    const response = await fetch(`/api/task/${taskId}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ 後端確認任務完成:', result);
+                    } else {
+                        console.warn('⚠️ 後端 API 調用失敗，但前端繼續處理');
+                    }
+                } catch (error) {
+                    console.error('❌ 調用完成任務 API 失敗:', error);
+                    // 即使 API 失敗，前端還是繼續處理
+                }
                 
                 // 延遲移除任務
                 setTimeout(() => {
@@ -402,7 +422,8 @@
                 }, 800);
                 
             } else {
-                // 取消完成狀態
+                // 取消完成狀態（暫時不與後端同步，因為任務已經從後端移除）
+                task.completed = false;
                 taskElement.classList.remove('completed');
                 checkbox.classList.remove('checked');
                 taskText.classList.remove('completed');
