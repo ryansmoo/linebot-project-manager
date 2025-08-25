@@ -1114,6 +1114,61 @@ function createQuickReply() {
   };
 }
 
+// 重新啟動時恢復所有提醒
+function restoreReminders() {
+  console.log('🔄 檢查並恢復現有的提醒任務...');
+  let restoredCount = 0;
+  
+  for (const [userId, userDates] of userTasks) {
+    for (const [date, tasks] of userDates) {
+      for (const task of tasks) {
+        if (task.reminderEnabled && task.taskTime) {
+          const taskTime = new Date(task.taskTime);
+          const now = new Date();
+          
+          // 只恢復未來的提醒
+          if (taskTime > now) {
+            scheduleReminder(task);
+            restoredCount++;
+          }
+        }
+      }
+    }
+  }
+  
+  console.log(`✅ 已恢復 ${restoredCount} 個提醒任務`);
+}
+
+// 每分鐘檢查一次是否有遺漏的提醒
+function startReminderChecker() {
+  setInterval(() => {
+    console.log('🔍 定期檢查提醒任務...');
+    
+    for (const [userId, userDates] of userTasks) {
+      for (const [date, tasks] of userDates) {
+        for (const task of tasks) {
+          if (task.reminderEnabled && task.taskTime && !reminderTimeouts.has(task.id)) {
+            const taskTime = new Date(task.taskTime);
+            const reminderTime = new Date(taskTime.getTime() - task.reminderTime * 60000);
+            const now = new Date();
+            
+            // 如果提醒時間已過但任務時間還沒到，立即發送
+            if (reminderTime <= now && taskTime > now) {
+              console.log('⚠️ 發現遺漏的提醒，立即發送:', task.text);
+              sendTaskReminder(task);
+            }
+            // 如果提醒時間還沒到，重新安排
+            else if (reminderTime > now) {
+              console.log('🔧 重新安排遺漏的提醒:', task.text);
+              scheduleReminder(task);
+            }
+          }
+        }
+      }
+    }
+  }, 60000); // 每分鐘檢查一次
+}
+
 // 啟動服務器
 app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 精簡版 LINE Bot 啟動成功！');
@@ -1123,4 +1178,10 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`👤 LIFF 個人頁面: ${BASE_URL}/liff/profile.html`);
   console.log('📝 請將 Webhook URL 設定到 LINE Developer Console');
   console.log('⚡ 準備接收 LINE 訊息...');
+  
+  // 啟動後恢復提醒任務
+  setTimeout(() => {
+    restoreReminders();
+    startReminderChecker();
+  }, 5000); // 5秒後開始恢復提醒
 });
