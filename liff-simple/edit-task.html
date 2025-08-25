@@ -44,35 +44,6 @@
         .content {
             padding: 20px;
         }
-        .task-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #00B900;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        .info-label {
-            font-weight: bold;
-            color: #333;
-            font-size: 14px;
-        }
-        .info-value {
-            color: #666;
-            font-size: 14px;
-            text-align: right;
-            flex: 1;
-            margin-left: 10px;
-        }
         .form-group {
             margin-bottom: 20px;
         }
@@ -298,22 +269,6 @@
             <div id="app" style="display: none;">
                 <div id="message"></div>
                 
-                <div class="task-info">
-                    <h3 style="margin-bottom: 15px; color: #333;">📋 任務資訊</h3>
-                    <div class="info-row">
-                        <span class="info-label">任務 ID</span>
-                        <span class="info-value" id="taskId">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">建立時間</span>
-                        <span class="info-value" id="createdAt">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">狀態</span>
-                        <span class="info-value" id="taskStatus">進行中</span>
-                    </div>
-                </div>
-                
                 <form id="editForm">
                     <!-- 任務名稱 -->
                     <div class="form-group">
@@ -456,9 +411,6 @@
                     taskData = result.task;
                     
                     // 填充表單
-                    document.getElementById('taskId').textContent = taskData.id;
-                    document.getElementById('createdAt').textContent = new Date(taskData.createdAt).toLocaleString('zh-TW');
-                    
                     // 任務名稱顯示
                     document.getElementById('taskTextDisplay').textContent = taskData.text;
                     document.getElementById('taskText').value = taskData.text;
