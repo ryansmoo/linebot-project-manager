@@ -36,91 +36,172 @@
             font-size: 20px;
             margin-bottom: 5px;
         }
-        .header .subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-        }
         .content {
             padding: 20px;
         }
-        .stats-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-        .stats-label {
-            font-weight: bold;
-            color: #333;
-            font-size: 14px;
-        }
-        .stats-value {
-            color: #667eea;
+        
+        /* 近3天任務區塊 */
+        .recent-tasks-title {
             font-size: 18px;
             font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
         }
-        .date-group {
-            margin-bottom: 20px;
+        
+        .task-date-card {
+            background: #f8f9fa;
             border: 1px solid #e0e0e0;
             border-radius: 10px;
+            margin-bottom: 15px;
             overflow: hidden;
         }
-        .date-header {
+        
+        .task-date-header {
             background: #667eea;
             color: white;
             padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .task-date-header:hover {
+            background: #5a6fd8;
+        }
+        
+        .task-date-title {
             font-weight: bold;
             font-size: 16px;
         }
+        
+        .dropdown-arrow {
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+        
+        .dropdown-arrow.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .task-date-content {
+            display: none;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .task-date-content.expanded {
+            display: block;
+        }
+        
+        /* 統計區塊 */
+        .task-stats {
+            background: #f1f3f4;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .stats-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stats-label {
+            font-weight: normal;
+        }
+        
+        .stats-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* 任務列表 */
         .task-list {
             background: white;
         }
+        
         .task-item {
             padding: 12px 15px;
             border-bottom: 1px solid #f0f0f0;
             display: flex;
             align-items: center;
         }
+        
         .task-item:last-child {
             border-bottom: none;
         }
-        .task-number {
+        
+        .task-item.completed {
+            order: 1;
+            background-color: #f9f9f9;
+        }
+        
+        .task-item.incomplete {
+            order: 0;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            margin-right: 12px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        
+        .task-checkbox.checked {
             background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .task-checkbox.checked::after {
+            content: '✓';
             color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-size: 12px;
             font-weight: bold;
-            margin-right: 12px;
-            flex-shrink: 0;
         }
+        
         .task-content {
             flex: 1;
         }
+        
         .task-text {
             color: #333;
             font-size: 14px;
             margin-bottom: 4px;
+            transition: all 0.3s;
         }
+        
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
         .task-time {
             color: #666;
             font-size: 12px;
         }
+        
         .loading {
             text-align: center;
             padding: 40px 20px;
         }
+        
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -130,15 +211,18 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px auto;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: #666;
         }
+        
         .empty-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -149,7 +233,6 @@
     <div class="container">
         <div class="header">
             <h1>📋 全部任務</h1>
-            <div class="subtitle">歷史任務記錄</div>
         </div>
         
         <div class="content">
@@ -159,18 +242,9 @@
             </div>
             
             <div id="app" style="display: none;">
-                <div class="stats-card">
-                    <div class="stats-row">
-                        <span class="stats-label">總任務數</span>
-                        <span class="stats-value" id="totalTasks">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">活動天數</span>
-                        <span class="stats-value" id="activeDays">0</span>
-                    </div>
-                </div>
+                <div class="recent-tasks-title">近3天任務</div>
                 
-                <div id="tasksByDate"></div>
+                <div id="recentTasks"></div>
                 
                 <div id="emptyState" class="empty-state" style="display: none;">
                     <div class="empty-icon">📝</div>
@@ -183,6 +257,7 @@
 
     <script>
         let userId = null;
+        let tasksData = {};
 
         // 載入頁面
         document.addEventListener('DOMContentLoaded', function() {
@@ -204,87 +279,209 @@
             }
             
             try {
-                // 這裡應該調用 API 獲取所有任務
-                // 暫時使用模擬數據
-                const mockTasks = generateMockTasks();
-                displayTasks(mockTasks);
+                // 調用 API 獲取近3天任務
+                const response = await fetch(`/api/tasks/${userId}/recent`);
+                if (!response.ok) {
+                    throw new Error(`API 錯誤: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    tasksData = data.tasks;
+                    displayRecentTasks();
+                } else {
+                    throw new Error(data.error || '獲取任務失敗');
+                }
                 
                 // 隱藏載入畫面，顯示應用
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
             } catch (error) {
                 console.error('載入任務失敗:', error);
-                showEmptyState();
+                // 如果 API 失敗，使用模擬數據作為備案
+                const mockTasks = generateMockTasks();
+                tasksData = mockTasks;
+                displayRecentTasks();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
             }
         }
 
         function generateMockTasks() {
-            // 模擬數據，實際應從 API 獲取
+            // 生成近3天的任務數據
             const tasks = {};
             const today = new Date();
             
-            for (let i = 0; i < 7; i++) {
+            // 昨天、今天、明天
+            for (let i = -1; i <= 1; i++) {
                 const date = new Date(today);
-                date.setDate(today.getDate() - i);
+                date.setDate(today.getDate() + i);
                 const dateStr = date.toISOString().split('T')[0];
                 
-                if (i < 3) { // 只有前3天有任務
-                    tasks[dateStr] = [
-                        { text: `任務 ${i + 1}-1`, createdAt: new Date().toISOString() },
-                        { text: `任務 ${i + 1}-2`, createdAt: new Date().toISOString() }
-                    ];
+                const dayTasks = [];
+                const taskCount = Math.floor(Math.random() * 4) + 2; // 2-5個任務
+                
+                for (let j = 0; j < taskCount; j++) {
+                    const isCompleted = Math.random() < 0.3; // 30%完成率
+                    const taskTime = Math.random() < 0.6 ? `${String(Math.floor(Math.random() * 12) + 9).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}` : null;
+                    
+                    dayTasks.push({
+                        id: `task_${dateStr}_${j}`,
+                        text: `${taskTime ? taskTime + ' ' : ''}任務 ${j + 1} - ${i === -1 ? '昨天' : i === 0 ? '今天' : '明天'}的工作`,
+                        taskTime: taskTime,
+                        completed: isCompleted,
+                        createdAt: new Date(date.getTime() + j * 3600000).toISOString()
+                    });
+                }
+                
+                if (dayTasks.length > 0) {
+                    tasks[dateStr] = dayTasks;
                 }
             }
             
             return tasks;
         }
 
-        function displayTasks(tasksByDate) {
-            const container = document.getElementById('tasksByDate');
-            const dates = Object.keys(tasksByDate).sort().reverse(); // 最新日期在前
+        function displayRecentTasks() {
+            const container = document.getElementById('recentTasks');
+            const today = new Date();
             
-            if (dates.length === 0) {
-                showEmptyState();
-                return;
-            }
-            
-            let totalTasks = 0;
-            
-            dates.forEach(date => {
-                const tasks = tasksByDate[date];
-                totalTasks += tasks.length;
+            // 生成昨天、今天、明天的日期
+            for (let i = -1; i <= 1; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
                 
-                const dateGroup = document.createElement('div');
-                dateGroup.className = 'date-group';
+                const dayName = i === -1 ? '昨天' : i === 0 ? '今天' : '明天';
+                const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
                 
-                const formattedDate = new Date(date).toLocaleDateString('zh-TW', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'long'
-                });
+                const tasks = tasksData[dateStr] || [];
                 
-                dateGroup.innerHTML = `
-                    <div class="date-header">${formattedDate}</div>
-                    <div class="task-list">
-                        ${tasks.map((task, index) => `
-                            <div class="task-item">
-                                <div class="task-number">${index + 1}</div>
-                                <div class="task-content">
-                                    <div class="task-text">${task.text}</div>
-                                    <div class="task-time">${new Date(task.createdAt).toLocaleTimeString('zh-TW')}</div>
-                                </div>
-                            </div>
-                        `).join('')}
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-date-card';
+                
+                taskCard.innerHTML = `
+                    <div class="task-date-header" onclick="toggleDateCard('${dateStr}')">
+                        <div class="task-date-title">${formattedDate} 任務</div>
+                        <div class="dropdown-arrow" id="arrow-${dateStr}">▼</div>
+                    </div>
+                    <div class="task-date-content" id="content-${dateStr}">
+                        ${generateTaskStats(tasks)}
+                        <div class="task-list" id="tasks-${dateStr}">
+                            ${generateTaskList(tasks, dateStr)}
+                        </div>
                     </div>
                 `;
                 
-                container.appendChild(dateGroup);
+                container.appendChild(taskCard);
+            }
+        }
+
+        function generateTaskStats(tasks) {
+            const total = tasks.length;
+            const completed = tasks.filter(task => task.completed).length;
+            const incomplete = total - completed;
+            
+            return `
+                <div class="task-stats">
+                    <div class="stats-row">
+                        <span class="stats-label">總共任務</span>
+                        <span class="stats-value">${total} 件</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">已完成任務</span>
+                        <span class="stats-value">${completed} 件</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">未完成任務</span>
+                        <span class="stats-value">${incomplete} 件</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateTaskList(tasks, dateStr) {
+            if (tasks.length === 0) {
+                return '<div class="task-item" style="justify-content: center; color: #999;">今天沒有任務</div>';
+            }
+            
+            // 排序：未完成在前，已完成在後
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.completed === b.completed) return 0;
+                return a.completed ? 1 : -1;
             });
             
-            // 更新統計
-            document.getElementById('totalTasks').textContent = totalTasks;
-            document.getElementById('activeDays').textContent = dates.length;
+            return sortedTasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : 'incomplete'}">
+                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask('${task.id}', '${dateStr}')"></div>
+                    <div class="task-content">
+                        <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                        <div class="task-time">${new Date(task.createdAt).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDateCard(dateStr) {
+            const content = document.getElementById(`content-${dateStr}`);
+            const arrow = document.getElementById(`arrow-${dateStr}`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                arrow.classList.add('expanded');
+            }
+        }
+
+        async function toggleTask(taskId, dateStr) {
+            // 找到對應的任務並切換完成狀態
+            const tasks = tasksData[dateStr];
+            const task = tasks.find(t => t.id === taskId);
+            
+            if (task) {
+                const originalStatus = task.completed;
+                
+                // 樂觀更新 UI
+                task.completed = !task.completed;
+                
+                // 重新生成該日期的任務列表和統計
+                const statsContainer = document.querySelector(`#content-${dateStr} .task-stats`);
+                const taskListContainer = document.getElementById(`tasks-${dateStr}`);
+                
+                statsContainer.innerHTML = generateTaskStats(tasks).match(/<div class="task-stats">(.*?)<\/div>/s)[1];
+                taskListContainer.innerHTML = generateTaskList(tasks, dateStr);
+                
+                try {
+                    // 調用 API 更新任務狀態
+                    const response = await fetch(`/api/tasks/${userId}/${taskId}/toggle`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ date: dateStr })
+                    });
+                    
+                    const result = await response.json();
+                    if (!result.success) {
+                        // 如果 API 失敗，回滾狀態
+                        task.completed = originalStatus;
+                        statsContainer.innerHTML = generateTaskStats(tasks).match(/<div class="task-stats">(.*?)<\/div>/s)[1];
+                        taskListContainer.innerHTML = generateTaskList(tasks, dateStr);
+                        console.error('更新任務狀態失敗:', result.error);
+                    } else {
+                        console.log(`任務狀態更新成功: ${result.message}`);
+                    }
+                } catch (error) {
+                    // 如果網絡錯誤，回滾狀態
+                    task.completed = originalStatus;
+                    statsContainer.innerHTML = generateTaskStats(tasks).match(/<div class="task-stats">(.*?)<\/div>/s)[1];
+                    taskListContainer.innerHTML = generateTaskList(tasks, dateStr);
+                    console.error('網絡錯誤:', error);
+                }
+            }
         }
 
         function showEmptyState() {

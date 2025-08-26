@@ -201,18 +201,89 @@ app.delete('/api/task/:taskId', (req, res) => {
   res.status(404).json({ success: false, error: '任務不存在' });
 });
 
+// API 端點：更新任務完成狀態
+app.patch('/api/tasks/:userId/:taskId/toggle', (req, res) => {
+  const { userId, taskId } = req.params;
+  const { date } = req.body;
+  
+  if (!date) {
+    return res.status(400).json({ success: false, error: '缺少日期參數' });
+  }
+  
+  const userTaskMap = userTasks.get(userId);
+  if (!userTaskMap) {
+    return res.status(404).json({ success: false, error: '用戶不存在' });
+  }
+  
+  const dayTasks = userTaskMap.get(date);
+  if (!dayTasks) {
+    return res.status(404).json({ success: false, error: '該日期無任務' });
+  }
+  
+  const taskIndex = dayTasks.findIndex(task => task.id === taskId);
+  if (taskIndex === -1) {
+    return res.status(404).json({ success: false, error: '任務不存在' });
+  }
+  
+  // 切換任務完成狀態
+  dayTasks[taskIndex].completed = !dayTasks[taskIndex].completed;
+  dayTasks[taskIndex].completedAt = dayTasks[taskIndex].completed ? new Date().toISOString() : null;
+  
+  res.json({
+    success: true,
+    task: dayTasks[taskIndex],
+    message: `任務${dayTasks[taskIndex].completed ? '已完成' : '已取消完成'}`
+  });
+});
+
 // API 端點：取得用戶今天的所有任務
 app.get('/api/tasks/:userId', (req, res) => {
   const { userId } = req.params;
-  const today = new Date().toISOString().split('T')[0];
+  const { date } = req.query;
   
-  const todayTasks = userTasks.get(userId)?.get(today) || [];
+  if (date) {
+    // 獲取特定日期的任務
+    const tasks = userTasks.get(userId)?.get(date) || [];
+    res.json({ 
+      success: true, 
+      tasks: tasks,
+      date: date,
+      count: tasks.length
+    });
+  } else {
+    // 獲取今天的任務
+    const today = new Date().toISOString().split('T')[0];
+    const todayTasks = userTasks.get(userId)?.get(today) || [];
+    
+    res.json({ 
+      success: true, 
+      tasks: todayTasks,
+      date: today,
+      count: todayTasks.length 
+    });
+  }
+});
+
+// API 端點：取得用戶近3天的所有任務
+app.get('/api/tasks/:userId/recent', (req, res) => {
+  const { userId } = req.params;
+  const today = new Date();
+  const result = {};
   
-  res.json({ 
-    success: true, 
-    tasks: todayTasks,
-    date: today,
-    count: todayTasks.length 
+  // 獲取昨天、今天、明天的任務
+  for (let i = -1; i <= 1; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const tasks = userTasks.get(userId)?.get(dateStr) || [];
+    result[dateStr] = tasks;
+  }
+  
+  res.json({
+    success: true,
+    tasks: result,
+    dates: Object.keys(result)
   });
 });
 
