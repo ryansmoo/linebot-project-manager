@@ -647,14 +647,13 @@ async function handleEvent(event) {
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
-    console.log('🔧 todayTasks:', todayTasks);
-    console.log('🔧 todayTasks 是陣列:', Array.isArray(todayTasks));
     console.log('🔧 todayTasks 長度:', todayTasks ? todayTasks.length : 'undefined');
+    console.log('🔧 todayTasks 是陣列:', Array.isArray(todayTasks));
     
     // 建立任務清單內容
     console.log('🔧 開始建立任務清單內容...');
     const taskListItems = todayTasks.map((task, index) => {
-      console.log('🔧 處理任務', index, ':', task.text);
+      console.log('🔧 處理任務', index);
       return ({
       type: "box",
       layout: "baseline",
@@ -845,9 +844,7 @@ async function handleEvent(event) {
     replyMessages[1].quickReply = quickReply;
 
     console.log('📤 發送 2 則 FLEX 訊息 + Quick Reply...');
-    console.log('🔍 第一則訊息:', JSON.stringify(replyMessages[0], null, 2).substring(0, 500) + '...');
-    console.log('🔍 第二則訊息:', JSON.stringify(replyMessages[1], null, 2).substring(0, 500) + '...');
-    console.log('🔍 Quick Reply 結構:', JSON.stringify(quickReply, null, 2));
+    console.log('🔍 訊息陣列長度:', replyMessages.length);
     console.log('🔍 第二則訊息結構檢查:', replyMessages[1].quickReply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
     
     try {
