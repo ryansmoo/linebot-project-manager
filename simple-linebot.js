@@ -697,7 +697,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "✅ 記好了!",
+                text: "✅",
                 weight: "bold",
                 size: "md",
                 color: "#000000"
@@ -713,7 +713,7 @@ async function handleEvent(event) {
               {
                 type: "text",
                 text: messageText,
-                size: "lg",
+                size: "sm",
                 weight: "bold",
                 color: "#333333",
                 wrap: true
@@ -730,7 +730,7 @@ async function handleEvent(event) {
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "✏️ 編輯",
+                  label: "編輯",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
@@ -756,7 +756,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "📋 今天要做的事",
+                text: "📋",
                 weight: "bold",
                 size: "lg",
                 color: "#000000"
@@ -787,7 +787,7 @@ async function handleEvent(event) {
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "✏️ 編輯",
+                  label: "編輯",
                   uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
@@ -1062,7 +1062,7 @@ function createCurrentTaskFlex(task) {
       contents: [
         {
           type: "text",
-          text: "✅ 記好了!",
+          text: "✅",
           weight: "bold",
           size: "md",
           color: "#000000"
@@ -1078,7 +1078,7 @@ function createCurrentTaskFlex(task) {
         {
           type: "text",
           text: task.text,
-          size: "lg",
+          size: "sm",
           weight: "bold",
           color: "#333333",
           wrap: true
@@ -1120,7 +1120,7 @@ function createCurrentTaskFlex(task) {
           style: "primary",
           action: {
             type: "uri",
-            label: "✏️ 編輯任務",
+            label: "編輯任務",
             uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(task.userId || '')}`
           },
           color: "#DDA267",
@@ -1172,7 +1172,7 @@ function createTodayTasksFlex(userId, date) {
       contents: [
         {
           type: "text",
-          text: "📋 今天要做的事",
+          text: "📋",
           weight: "bold",
           size: "lg",
           color: "#ffffff"
@@ -1606,7 +1606,7 @@ async function handleAudioMessage(event) {
               style: "primary",
               action: {
                 type: "uri",
-                label: "✏️ 編輯任務",
+                label: "編輯任務",
                 uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
@@ -1633,7 +1633,7 @@ async function handleAudioMessage(event) {
           contents: [
             {
               type: "text",
-              text: "📋 今天要做的事",
+              text: "📋",
               weight: "bold",
               size: "lg",
               color: "#000000"
@@ -1664,7 +1664,7 @@ async function handleAudioMessage(event) {
               style: "primary",
               action: {
                 type: "uri",
-                label: "✏️ 編輯",
+                label: "編輯",
                 uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
