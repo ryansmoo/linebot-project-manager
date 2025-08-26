@@ -830,14 +830,14 @@ async function handleEvent(event) {
             {
               type: "text",
               text: "✏️",
-              size: "xs",
+              size: "md",
               color: "#333333",
               align: "start"
             },
             {
               type: "text",
               text: `已記錄:${messageText}`,
-              size: "xs",
+              size: "md",
               weight: "regular",
               wrap: true,
               margin: "xs"
