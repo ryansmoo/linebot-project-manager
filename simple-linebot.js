@@ -654,30 +654,38 @@ async function handleEvent(event) {
     console.log('🔧 開始建立任務清單內容...');
     const taskListItems = todayTasks.map((task, index) => {
       console.log('🔧 處理任務', index);
-      return ({
-      type: "box",
-      layout: "baseline",
-      contents: [
-        {
-          type: "text",
-          text: `${index + 1}.`,
-          size: "sm",
-          color: "#00B900",
-          weight: "bold",
-          flex: 0
-        },
-        {
-          type: "text",
-          text: formatTaskDisplayText(task),
-          size: "sm",
-          color: "#333333",
-          wrap: true,
-          flex: 1
-        }
-      ],
-      spacing: "xs",
-      margin: index === 0 ? "none" : "xs"
-      });
+      console.log('🔧 任務物件:', task ? 'exists' : 'null');
+      try {
+        const displayText = task.text; // 暫時簡化，不用 formatTaskDisplayText
+        console.log('🔧 任務文字:', displayText);
+        return ({
+        type: "box",
+        layout: "baseline",
+        contents: [
+          {
+            type: "text",
+            text: `${index + 1}.`,
+            size: "sm",
+            color: "#00B900",
+            weight: "bold",
+            flex: 0
+          },
+          {
+            type: "text",
+            text: displayText,
+            size: "sm",
+            color: "#333333",
+            wrap: true,
+            flex: 1
+          }
+        ],
+        spacing: "xs",
+        margin: index === 0 ? "none" : "xs"
+        });
+      } catch (error) {
+        console.error('🔧 map 函數錯誤:', error);
+        throw error;
+      }
     });
     console.log('🔧 任務清單內容建立完成，項目數:', taskListItems.length);
 
