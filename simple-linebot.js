@@ -828,10 +828,11 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: "✅ 任務已記錄",
+              text: "✏️",
               weight: "bold",
-              size: "md",
-              color: "#00AA00"
+              size: "xl",
+              color: "#333333",
+              align: "center"
             },
             {
               type: "text",
