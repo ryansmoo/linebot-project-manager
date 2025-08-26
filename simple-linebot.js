@@ -643,16 +643,7 @@ async function handleEvent(event) {
     userTasks.get(userId).get(today).push(newTask);
     
     console.log('📝 任務已儲存:', newTask);
-    console.log('📊 當前記憶體中的任務數量:');
-    for (const [uid, userDates] of userTasks) {
-      console.log(`  用戶 ${uid.substring(0, 10)}...:`);
-      for (const [date, tasks] of userDates) {
-        console.log(`    日期 ${date}: ${tasks.length} 個任務`);
-        tasks.forEach((task, index) => {
-          console.log(`      ${index + 1}. ID: ${task.id}, 內容: ${task.text}`);
-        });
-      }
-    }
+    console.log('📊 今天任務總數:', userTasks.get(userId).get(today).length);
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
