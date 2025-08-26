@@ -79,6 +79,195 @@
             margin: 0 auto;
         }
         
+        /* 任務設定區域 */
+        .task-settings {
+            margin-bottom: 20px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .settings-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .setting-label {
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .setting-value {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            min-width: 80px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .setting-value:hover {
+            background: #e8f4f8;
+            border-color: #007AFF;
+        }
+        
+        .setting-value.active {
+            background: #007AFF;
+            color: white;
+            border-color: #007AFF;
+        }
+        
+        /* 時間設定彈窗 */
+        .time-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .time-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 320px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .time-modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .time-input-group {
+            margin-bottom: 15px;
+        }
+        
+        .time-input-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .time-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .time-modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+        
+        .modal-btn-confirm {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .modal-btn-confirm:hover {
+            background: #005ecb;
+        }
+        
+        /* 提醒設定切換 */
+        .reminder-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #007AFF;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
         /* 標題輸入區域 */
         .title-section {
             margin-bottom: 30px;
@@ -283,6 +472,28 @@
         
         <!-- 編輯表單 -->
         <div id="editForm" style="display: none;">
+            <!-- 任務設定區域 -->
+            <div class="task-settings">
+                <div class="settings-row">
+                    <div class="setting-label">
+                        ⏰ 任務時間
+                    </div>
+                    <div class="setting-value" id="timeDisplay" onclick="openTimeModal()">無</div>
+                </div>
+                <div class="settings-row">
+                    <div class="setting-label">
+                        🔔 任務提醒
+                    </div>
+                    <div class="reminder-toggle">
+                        <span id="reminderStatus">關閉</span>
+                        <label class="switch">
+                            <input type="checkbox" id="reminderToggle" onchange="toggleReminder()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
             <!-- 標題區域 -->
             <div class="title-section">
                 <div class="title-label">標題</div>
@@ -333,6 +544,24 @@
         </div>
         <div class="toolbar-item" onclick="addList()">
             <div class="toolbar-icon">≡</div>
+        </div>
+    </div>
+    
+    <!-- 時間設定彈窗 -->
+    <div id="timeModal" class="time-modal">
+        <div class="time-modal-content">
+            <div class="time-modal-header">設定任務時間</div>
+            <div class="time-input-group">
+                <label class="time-input-label">選擇日期和時間</label>
+                <input type="datetime-local" id="taskTimeInput" class="time-input">
+            </div>
+            <div class="time-modal-buttons">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeTimeModal()">取消</button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmTimeModal()">確認</button>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="clearTaskTime()" style="width: 100%;">清除時間</button>
+            </div>
         </div>
     </div>
     
@@ -396,6 +625,12 @@
                     
                     // 更新分類顯示
                     updateCategoryDisplay(taskData.category);
+                    
+                    // 更新任務時間顯示
+                    updateTimeDisplay();
+                    
+                    // 更新提醒設定
+                    updateReminderDisplay();
                     
                     // 隱藏載入畫面，顯示編輯表單
                     document.getElementById('loading').style.display = 'none';
@@ -493,6 +728,117 @@
                 console.error('儲存任務失敗:', error);
                 showMessage('儲存失敗，請稍後再試');
             }
+        }
+        
+        // 任務時間相關函數
+        function updateTimeDisplay() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            if (taskData.taskTime) {
+                const taskDate = new Date(taskData.taskTime);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const taskDay = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+                
+                let dateStr = '';
+                if (taskDay.getTime() === today.getTime()) {
+                    dateStr = '今天';
+                } else if (taskDay.getTime() === today.getTime() + 24 * 60 * 60 * 1000) {
+                    dateStr = '明天';
+                } else if (taskDay.getTime() === today.getTime() - 24 * 60 * 60 * 1000) {
+                    dateStr = '昨天';
+                } else {
+                    dateStr = `${taskDate.getMonth() + 1}/${taskDate.getDate()}`;
+                }
+                
+                const timeStr = taskDate.toLocaleTimeString('zh-TW', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
+                timeDisplay.textContent = `${dateStr} ${timeStr}`;
+                timeDisplay.classList.add('active');
+            } else {
+                timeDisplay.textContent = '無';
+                timeDisplay.classList.remove('active');
+            }
+        }
+        
+        function openTimeModal() {
+            const modal = document.getElementById('timeModal');
+            const input = document.getElementById('taskTimeInput');
+            
+            // 設定當前時間或預設時間
+            if (taskData.taskTime) {
+                input.value = taskData.taskTime;
+            } else {
+                // 預設為當前時間
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                input.value = now.toISOString().slice(0, 16);
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeTimeModal() {
+            const modal = document.getElementById('timeModal');
+            modal.style.display = 'none';
+        }
+        
+        function confirmTimeModal() {
+            const input = document.getElementById('taskTimeInput');
+            const newTime = input.value;
+            
+            if (newTime) {
+                taskData.taskTime = newTime;
+                updateTimeDisplay();
+                markAsModified();
+            }
+            
+            closeTimeModal();
+        }
+        
+        function clearTaskTime() {
+            taskData.taskTime = null;
+            updateTimeDisplay();
+            markAsModified();
+            closeTimeModal();
+        }
+        
+        // 提醒功能相關函數
+        function updateReminderDisplay() {
+            const toggle = document.getElementById('reminderToggle');
+            const status = document.getElementById('reminderStatus');
+            
+            if (taskData.reminderEnabled) {
+                toggle.checked = true;
+                status.textContent = '開啟';
+            } else {
+                toggle.checked = false;
+                status.textContent = '關閉';
+            }
+        }
+        
+        function toggleReminder() {
+            const toggle = document.getElementById('reminderToggle');
+            const status = document.getElementById('reminderStatus');
+            
+            taskData.reminderEnabled = toggle.checked;
+            
+            if (toggle.checked) {
+                status.textContent = '開啟';
+                if (!taskData.taskTime) {
+                    showMessage('提醒功能需要先設定任務時間');
+                    setTimeout(() => {
+                        openTimeModal();
+                    }, 1000);
+                }
+            } else {
+                status.textContent = '關閉';
+            }
+            
+            markAsModified();
         }
 
         function goBack() {
