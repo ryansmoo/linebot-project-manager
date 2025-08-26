@@ -690,6 +690,7 @@ async function handleEvent(event) {
         altText: `已記錄任務: ${messageText}`,
         contents: {
           type: "bubble",
+          size: "kilo",
           header: {
             type: "box",
             layout: "vertical",
@@ -1047,6 +1048,7 @@ async function handleCompleteTask(event, userId, messageText) {
 function createCurrentTaskFlex(task) {
   return {
     type: "bubble",
+    size: "kilo",
     header: {
       type: "box",
       layout: "vertical",
@@ -1547,6 +1549,7 @@ async function handleAudioMessage(event) {
       altText: `🎤 語音已轉換: ${transcribedText}`,
       contents: {
         type: "bubble",
+        size: "kilo",
         header: {
           type: "box",
           layout: "vertical",
