@@ -836,7 +836,7 @@ async function handleEvent(event) {
             },
             {
               type: "text",
-              text: messageText,
+              text: `已記錄:${messageText}`,
               size: "xs",
               weight: "regular",
               wrap: true,
