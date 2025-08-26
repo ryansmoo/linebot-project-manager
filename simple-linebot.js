@@ -700,10 +700,10 @@ async function handleEvent(event) {
                 text: "✅ 記好了!",
                 weight: "bold",
                 size: "md",
-                color: "#ffffff"
+                color: "#000000"
               }
             ],
-            backgroundColor: "#00B900",
+            backgroundColor: "#FFFFFF",
             paddingAll: "6px"
           },
           body: {
@@ -733,12 +733,14 @@ async function handleEvent(event) {
                   label: "✏️ 編輯",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
                 },
-                color: "#00B900",
-                height: "sm"
+                color: "#DDA267",
+                height: "sm",
+                flex: 0
               }
             ],
             paddingAll: "8px",
-            spacing: "none"
+            spacing: "none",
+            alignItems: "center"
           }
         }
       },
@@ -757,16 +759,16 @@ async function handleEvent(event) {
                 text: "📋 今天要做的事",
                 weight: "bold",
                 size: "lg",
-                color: "#ffffff"
+                color: "#000000"
               },
               {
                 type: "text",
                 text: `今天任務 ${todayTasks.length} 項`,
                 size: "sm",
-                color: "#ffffff"
+                color: "#000000"
               }
             ],
-            backgroundColor: "#0084FF",
+            backgroundColor: "#FFFFFF",
             paddingAll: "6px"
           },
           body: {
@@ -788,12 +790,14 @@ async function handleEvent(event) {
                   label: "✏️ 編輯",
                   uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
                 },
-                color: "#0084FF",
-                height: "sm"
+                color: "#DDA267",
+                height: "sm",
+                flex: 0
               }
             ],
             paddingAll: "8px",
-            spacing: "none"
+            spacing: "none",
+            alignItems: "center"
           }
         }
       }
@@ -1061,10 +1065,10 @@ function createCurrentTaskFlex(task) {
           text: "✅ 記好了!",
           weight: "bold",
           size: "md",
-          color: "#ffffff"
+          color: "#000000"
         }
       ],
-      backgroundColor: "#00B900",
+      backgroundColor: "#FFFFFF",
       paddingAll: "6px"
     },
     body: {
@@ -1119,12 +1123,14 @@ function createCurrentTaskFlex(task) {
             label: "✏️ 編輯任務",
             uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(task.userId || '')}`
           },
-          color: "#00B900",
-          height: "sm"
+          color: "#DDA267",
+          height: "sm",
+          flex: 0
         }
       ],
       paddingAll: "8px",
-      spacing: "none"
+      spacing: "none",
+      alignItems: "center"
     }
   };
 }
@@ -1562,10 +1568,10 @@ async function handleAudioMessage(event) {
               text: "🎤 語音識別成功",
               weight: "bold",
               size: "md",
-              color: "#ffffff"
+              color: "#000000"
             }
           ],
-          backgroundColor: "#9C27B0",
+          backgroundColor: "#FFFFFF",
           paddingAll: "6px"
         },
         body: {
@@ -1603,12 +1609,14 @@ async function handleAudioMessage(event) {
                 label: "✏️ 編輯任務",
                 uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
               },
-              color: "#9C27B0",
-              height: "sm"
+              color: "#DDA267",
+              height: "sm",
+              flex: 0
             }
           ],
           paddingAll: "8px",
-          spacing: "none"
+          spacing: "none",
+          alignItems: "center"
         }
       }
     };
@@ -1628,16 +1636,16 @@ async function handleAudioMessage(event) {
               text: "📋 今天要做的事",
               weight: "bold",
               size: "lg",
-              color: "#ffffff"
+              color: "#000000"
             },
             {
               type: "text",
               text: `今天任務 ${todayTasks.length} 項`,
               size: "sm",
-              color: "#ffffff"
+              color: "#000000"
             }
           ],
-          backgroundColor: "#0084FF",
+          backgroundColor: "#FFFFFF",
           paddingAll: "6px"
         },
         body: {
@@ -1659,12 +1667,14 @@ async function handleAudioMessage(event) {
                 label: "✏️ 編輯",
                 uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
               },
-              color: "#0084FF",
-              height: "sm"
+              color: "#DDA267",
+              height: "sm",
+              flex: 0
             }
           ],
           paddingAll: "8px",
-          spacing: "none"
+          spacing: "none",
+          alignItems: "center"
         }
       }
     };
