@@ -796,10 +796,6 @@ async function handleEvent(event) {
                 flex: 1
               },
               {
-                type: "separator",
-                margin: "xs"
-              },
-              {
                 type: "button",
                 style: "primary",
                 action: {
@@ -1689,10 +1685,6 @@ async function handleAudioMessage(event) {
               flex: 1
             },
             {
-              type: "separator",
-              margin: "xs"
-            },
-            {
               type: "button",
               style: "primary",
               action: {
@@ -1706,7 +1698,7 @@ async function handleAudioMessage(event) {
             }
           ],
           paddingAll: "8px",
-          spacing: "xs",
+          spacing: "sm",
           alignItems: "center"
         }
       }
