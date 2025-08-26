@@ -872,17 +872,10 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: "📋 今天的任務",
+              text: `📋 今天有 ${todayTasks.length} 項任務`,
               weight: "bold",
               size: "lg",
               color: "#333333"
-            },
-            {
-              type: "text",
-              text: `共 ${todayTasks.length} 項任務`,
-              size: "sm",
-              color: "#666666",
-              margin: "sm"
             },
             ...taskItems
           ],
