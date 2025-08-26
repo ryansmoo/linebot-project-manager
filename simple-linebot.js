@@ -684,6 +684,7 @@ async function handleEvent(event) {
     }));
 
     // 建立兩則 FLEX MESSAGE
+    console.log('🔧 開始建立 FLEX MESSAGE，taskId:', taskId, 'userId:', userId);
     const replyMessages = [
       // 第一則：當前任務記錄
       {
@@ -839,6 +840,9 @@ async function handleEvent(event) {
     };
 
     // 將 Quick Reply 添加到第二則訊息
+    console.log('🔧 準備添加 Quick Reply 到第二則訊息');
+    console.log('🔧 replyMessages 長度:', replyMessages.length);
+    console.log('🔧 第二則訊息存在:', !!replyMessages[1]);
     replyMessages[1].quickReply = quickReply;
 
     console.log('📤 發送 2 則 FLEX 訊息 + Quick Reply...');
