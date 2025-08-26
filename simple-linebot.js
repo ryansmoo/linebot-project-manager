@@ -696,7 +696,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "✅ 任務已記錄",
+                text: "✅ 記好了!",
                 weight: "bold",
                 size: "md",
                 color: "#ffffff"
@@ -750,7 +750,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "📋 今天的任務",
+                text: "📋 今天要做的事",
                 weight: "bold",
                 size: "lg",
                 color: "#ffffff"
@@ -1050,7 +1050,7 @@ function createCurrentTaskFlex(task) {
       contents: [
         {
           type: "text",
-          text: "✅ 任務已記錄",
+          text: "✅ 記好了!",
           weight: "bold",
           size: "md",
           color: "#ffffff"
@@ -1155,7 +1155,7 @@ function createTodayTasksFlex(userId, date) {
       contents: [
         {
           type: "text",
-          text: "📋 今天的任務",
+          text: "📋 今天要做的事",
           weight: "bold",
           size: "lg",
           color: "#ffffff"
@@ -1610,7 +1610,7 @@ async function handleAudioMessage(event) {
           contents: [
             {
               type: "text",
-              text: "📋 今天的任務",
+              text: "📋 今天要做的事",
               weight: "bold",
               size: "lg",
               color: "#ffffff"
