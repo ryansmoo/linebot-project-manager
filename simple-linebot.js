@@ -732,9 +732,12 @@ async function handleEvent(event) {
                   label: "✏️ 編輯",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
                 },
-                color: "#00B900"
+                color: "#00B900",
+                height: "sm"
               }
-            ]
+            ],
+            paddingAll: "8px",
+            spacing: "none"
           }
         }
       },
@@ -1111,9 +1114,12 @@ function createCurrentTaskFlex(task) {
             label: "✏️ 編輯任務",
             uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(task.userId || '')}`
           },
-          color: "#00B900"
+          color: "#00B900",
+          height: "sm"
         }
-      ]
+      ],
+      paddingAll: "8px",
+      spacing: "none"
     }
   };
 }
@@ -1591,9 +1597,12 @@ async function handleAudioMessage(event) {
                 label: "✏️ 編輯任務",
                 uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
               },
-              color: "#9C27B0"
+              color: "#9C27B0",
+              height: "sm"
             }
-          ]
+          ],
+          paddingAll: "8px",
+          spacing: "none"
         }
       }
     };
