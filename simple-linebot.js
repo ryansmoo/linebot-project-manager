@@ -632,7 +632,7 @@ async function handleEvent(event) {
               }
             ],
             backgroundColor: "#00B900",
-            paddingAll: "15px"
+            paddingAll: "10px"
           },
           body: {
             type: "box",
@@ -692,14 +692,14 @@ async function handleEvent(event) {
               }
             ],
             backgroundColor: "#0084FF",
-            paddingAll: "20px"
+            paddingAll: "12px"
           },
           body: {
             type: "box",
             layout: "vertical",
             contents: taskListItems,
             spacing: "sm",
-            paddingAll: "15px"
+            paddingAll: "10px"
           }
         }
       }
@@ -893,7 +893,7 @@ async function handleCompleteTask(event, userId, messageText) {
             }
           ],
           backgroundColor: "#28a745",
-          paddingAll: "20px"
+          paddingAll: "12px"
         },
         body: {
           type: "box",
@@ -919,7 +919,7 @@ async function handleCompleteTask(event, userId, messageText) {
             }
           ],
           spacing: "sm",
-          paddingAll: "15px"
+          paddingAll: "10px"
         }
       }
     };
@@ -1098,7 +1098,7 @@ function createTodayTasksFlex(userId, date) {
         }
       ],
       backgroundColor: "#0084FF",
-      paddingAll: "20px"
+      paddingAll: "12px"
     },
     body: {
       type: "box",
@@ -1168,7 +1168,7 @@ function createTaskManagementFlex() {
         }
       ],
       backgroundColor: "#00B900",
-      paddingAll: "20px"
+      paddingAll: "12px"
     },
     body: {
       type: "box",
@@ -1483,7 +1483,7 @@ async function handleAudioMessage(event) {
             }
           ],
           backgroundColor: "#9C27B0",
-          paddingAll: "15px"
+          paddingAll: "10px"
         },
         body: {
           type: "box",
@@ -1552,14 +1552,14 @@ async function handleAudioMessage(event) {
             }
           ],
           backgroundColor: "#0084FF",
-          paddingAll: "20px"
+          paddingAll: "12px"
         },
         body: {
           type: "box",
           layout: "vertical",
           contents: taskListItems,
           spacing: "sm",
-          paddingAll: "15px"
+          paddingAll: "10px"
         }
       }
     };
