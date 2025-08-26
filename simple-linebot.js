@@ -775,6 +775,25 @@ async function handleEvent(event) {
             contents: taskListItems,
             spacing: "xs",
             paddingAll: "6px"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "uri",
+                  label: "✏️ 編輯",
+                  uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+                },
+                color: "#0084FF",
+                height: "sm"
+              }
+            ],
+            paddingAll: "8px",
+            spacing: "none"
           }
         }
       }
@@ -783,14 +802,6 @@ async function handleEvent(event) {
     // 建立 Quick Reply 按鈕
     const quickReply = {
       items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📅 今天',
-            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-          }
-        },
         {
           type: 'action',
           action: {
@@ -1002,14 +1013,6 @@ async function handleCompleteTask(event, userId, messageText) {
     // 建立 Quick Reply 按鈕
     const quickReply = {
       items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📅 今天',
-            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-          }
-        },
         {
           type: 'action',
           action: {
@@ -1635,7 +1638,7 @@ async function handleAudioMessage(event) {
             }
           ],
           backgroundColor: "#0084FF",
-          paddingAll: "12px"
+          paddingAll: "6px"
         },
         body: {
           type: "box",
@@ -1643,6 +1646,25 @@ async function handleAudioMessage(event) {
           contents: taskListItems,
           spacing: "xs",
           paddingAll: "6px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "✏️ 編輯",
+                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+              },
+              color: "#0084FF",
+              height: "sm"
+            }
+          ],
+          paddingAll: "8px",
+          spacing: "none"
         }
       }
     };
@@ -1650,14 +1672,6 @@ async function handleAudioMessage(event) {
     // 建立 Quick Reply 按鈕
     const quickReply = {
       items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📅 今天',
-            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-          }
-        },
         {
           type: 'action',
           action: {
