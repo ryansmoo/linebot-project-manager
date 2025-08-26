@@ -656,9 +656,15 @@ async function handleEvent(event) {
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
+    console.log('🔧 todayTasks:', todayTasks);
+    console.log('🔧 todayTasks 是陣列:', Array.isArray(todayTasks));
+    console.log('🔧 todayTasks 長度:', todayTasks ? todayTasks.length : 'undefined');
     
     // 建立任務清單內容
-    const taskListItems = todayTasks.map((task, index) => ({
+    console.log('🔧 開始建立任務清單內容...');
+    const taskListItems = todayTasks.map((task, index) => {
+      console.log('🔧 處理任務', index, ':', task.text);
+      return ({
       type: "box",
       layout: "baseline",
       contents: [
@@ -681,7 +687,9 @@ async function handleEvent(event) {
       ],
       spacing: "xs",
       margin: index === 0 ? "none" : "xs"
-    }));
+      });
+    });
+    console.log('🔧 任務清單內容建立完成，項目數:', taskListItems.length);
 
     // 建立兩則 FLEX MESSAGE
     console.log('🔧 開始建立 FLEX MESSAGE，taskId:', taskId, 'userId:', userId);
