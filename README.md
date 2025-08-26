@@ -70,7 +70,8 @@
 - `OPENAI_SETUP.md` - OpenAI API設定詳細指南
 - **`MEMO_BOT_GUIDE.md`** - **記事機器人完整指南**
 - **`WEB_INTERFACE_GUIDE.md`** - **任務網頁介面使用指南**
-- **`VOICE_RECOGNITION_GUIDE.md`** - **語音識別功能使用指南** ✨NEW✨
+- **`VOICE_RECOGNITION_GUIDE.md`** - **語音識別功能使用指南**
+- **`DEPLOYMENT_GUIDE.md`** - **自動部署指南** ✨NEW✨
 - `FLEX_MESSAGE_GUIDE.md` - Flex Message功能說明
 - `start-with-localtunnel.sh` - 自動化啟動腳本（推薦）
 - `stop-services.sh` - 停止服務腳本
@@ -94,6 +95,7 @@
 
 | 功能 | 指令 |
 |------|------|
+| 🚀 **一鍵自動部署** | `auto-deploy.bat` (Windows) / `./auto-deploy.sh` (Linux/Mac) |
 | 🚀 啟動服務 | `./start-bot-with-ngrok.sh` |
 | 🛑 停止服務 | `./stop-services.sh` |
 | 🔗 獲取 Webhook URL | `./get-webhook-url.sh` |
