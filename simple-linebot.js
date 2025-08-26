@@ -678,8 +678,8 @@ async function handleEvent(event) {
           flex: 1
         }
       ],
-      spacing: "sm",
-      margin: index === 0 ? "none" : "md"
+      spacing: "xs",
+      margin: index === 0 ? "none" : "xs"
     }));
 
     // 建立兩則 FLEX MESSAGE
@@ -703,7 +703,7 @@ async function handleEvent(event) {
               }
             ],
             backgroundColor: "#00B900",
-            paddingAll: "10px"
+            paddingAll: "6px"
           },
           body: {
             type: "box",
@@ -718,7 +718,7 @@ async function handleEvent(event) {
                 wrap: true
               }
             ],
-            spacing: "sm"
+            spacing: "xs"
           },
           footer: {
             type: "box",
@@ -766,14 +766,14 @@ async function handleEvent(event) {
               }
             ],
             backgroundColor: "#0084FF",
-            paddingAll: "12px"
+            paddingAll: "6px"
           },
           body: {
             type: "box",
             layout: "vertical",
             contents: taskListItems,
-            spacing: "sm",
-            paddingAll: "10px"
+            spacing: "xs",
+            paddingAll: "6px"
           }
         }
       }
@@ -938,8 +938,8 @@ async function handleCompleteTask(event, userId, messageText) {
           flex: 1
         }
       ],
-      spacing: "sm",
-      margin: index === 0 ? "none" : "md"
+      spacing: "xs",
+      margin: index === 0 ? "none" : "xs"
     }));
     
     // 建立完成任務後的 FLEX MESSAGE
@@ -967,7 +967,7 @@ async function handleCompleteTask(event, userId, messageText) {
             }
           ],
           backgroundColor: "#28a745",
-          paddingAll: "12px"
+          paddingAll: "6px"
         },
         body: {
           type: "box",
@@ -979,7 +979,7 @@ async function handleCompleteTask(event, userId, messageText) {
               size: "md",
               weight: "bold",
               color: "#333333",
-              margin: "md"
+              margin: "xs"
             },
             ...taskListItems
           ] : [
@@ -992,8 +992,8 @@ async function handleCompleteTask(event, userId, messageText) {
               weight: "bold"
             }
           ],
-          spacing: "sm",
-          paddingAll: "10px"
+          spacing: "xs",
+          paddingAll: "6px"
         }
       }
     };
@@ -1060,7 +1060,7 @@ function createCurrentTaskFlex(task) {
         }
       ],
       backgroundColor: "#00B900",
-      paddingAll: "15px"
+      paddingAll: "6px"
     },
     body: {
       type: "box",
@@ -1076,7 +1076,7 @@ function createCurrentTaskFlex(task) {
         },
         {
           type: "separator",
-          margin: "md"
+          margin: "xs"
         },
         {
           type: "box",
@@ -1097,7 +1097,7 @@ function createCurrentTaskFlex(task) {
               flex: 0
             }
           ],
-          margin: "md"
+          margin: "xs"
         }
       ],
       spacing: "sm"
@@ -1149,8 +1149,8 @@ function createTodayTasksFlex(userId, date) {
         wrap: true
       }
     ],
-    spacing: "sm",
-    margin: "md"
+    spacing: "xs",
+    margin: "xs"
   }));
 
   return {
@@ -1206,8 +1206,8 @@ function createTodayTasksFlex(userId, date) {
           margin: "sm"
         }
       ],
-      spacing: "sm",
-      paddingAll: "15px"
+      spacing: "xs",
+      paddingAll: "6px"
     },
     footer: {
       type: "box",
@@ -1259,7 +1259,7 @@ function createTaskManagementFlex() {
         },
         {
           type: "separator",
-          margin: "md"
+          margin: "xs"
         },
         {
           type: "box",
@@ -1270,7 +1270,7 @@ function createTaskManagementFlex() {
               text: "🎯 點擊下方按鈕開始使用：",
               size: "sm",
               color: "#333333",
-              margin: "md"
+              margin: "xs"
             }
           ]
         }
@@ -1537,8 +1537,8 @@ async function handleAudioMessage(event) {
           flex: 1
         }
       ],
-      spacing: "sm",
-      margin: index === 0 ? "none" : "md"
+      spacing: "xs",
+      margin: index === 0 ? "none" : "xs"
     }));
 
     // 建立語音識別成功的 FLEX MESSAGE
@@ -1560,7 +1560,7 @@ async function handleAudioMessage(event) {
             }
           ],
           backgroundColor: "#9C27B0",
-          paddingAll: "10px"
+          paddingAll: "6px"
         },
         body: {
           type: "box",
@@ -1638,8 +1638,8 @@ async function handleAudioMessage(event) {
           type: "box",
           layout: "vertical",
           contents: taskListItems,
-          spacing: "sm",
-          paddingAll: "10px"
+          spacing: "xs",
+          paddingAll: "6px"
         }
       }
     };
