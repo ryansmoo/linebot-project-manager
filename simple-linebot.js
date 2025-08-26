@@ -40,9 +40,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // 基本設定
 const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || process.env.RAILWAY_PUBLIC_DOMAIN 
-  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
-  : `http://localhost:${PORT}`;
+const BASE_URL = process.env.BASE_URL || 
+  (process.env.RAILWAY_PUBLIC_DOMAIN 
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
+    : `http://localhost:${PORT}`);
 
 // 靜態檔案服務 - 提供 LIFF APP
 app.use('/liff', express.static(path.join(__dirname, 'liff-simple')));
