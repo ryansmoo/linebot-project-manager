@@ -697,7 +697,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "✅",
+                text: "✏️",
                 weight: "bold",
                 size: "md",
                 color: "#000000"
@@ -714,7 +714,7 @@ async function handleEvent(event) {
                 type: "text",
                 text: messageText,
                 size: "sm",
-                weight: "bold",
+                weight: "normal",
                 color: "#333333",
                 wrap: true
               }
@@ -780,23 +780,39 @@ async function handleEvent(event) {
           },
           footer: {
             type: "box",
-            layout: "vertical",
+            layout: "horizontal",
             contents: [
               {
                 type: "button",
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "編輯",
-                  uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+                  label: "新增",
+                  uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
                 height: "sm",
-                flex: 0
+                flex: 1
+              },
+              {
+                type: "separator",
+                margin: "xs"
+              },
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "uri",
+                  label: "刪除",
+                  uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
+                },
+                color: "#DDA267",
+                height: "sm",
+                flex: 1
               }
             ],
             paddingAll: "8px",
-            spacing: "none",
+            spacing: "xs",
             alignItems: "center"
           }
         }
@@ -1079,7 +1095,7 @@ function createCurrentTaskFlex(task) {
           type: "text",
           text: task.text,
           size: "sm",
-          weight: "bold",
+          weight: "normal",
           color: "#333333",
           wrap: true
         },
@@ -1657,23 +1673,39 @@ async function handleAudioMessage(event) {
         },
         footer: {
           type: "box",
-          layout: "vertical",
+          layout: "horizontal",
           contents: [
             {
               type: "button",
               style: "primary",
               action: {
                 type: "uri",
-                label: "編輯",
-                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+                label: "新增",
+                uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
               height: "sm",
-              flex: 0
+              flex: 1
+            },
+            {
+              type: "separator",
+              margin: "xs"
+            },
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "刪除",
+                uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
+              },
+              color: "#DDA267",
+              height: "sm",
+              flex: 1
             }
           ],
           paddingAll: "8px",
-          spacing: "none",
+          spacing: "xs",
           alignItems: "center"
         }
       }
