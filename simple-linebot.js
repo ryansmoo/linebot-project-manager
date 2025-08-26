@@ -643,54 +643,37 @@ async function handleEvent(event) {
     userTasks.get(userId).get(today).push(newTask);
     
     console.log('📝 任務已儲存:', newTask);
-    console.log('📊 今天任務總數:', userTasks.get(userId).get(today).length);
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
-    console.log('🔧 todayTasks 長度:', todayTasks ? todayTasks.length : 'undefined');
-    console.log('🔧 todayTasks 是陣列:', Array.isArray(todayTasks));
     
     // 建立任務清單內容
-    console.log('🔧 開始建立任務清單內容...');
-    const taskListItems = todayTasks.map((task, index) => {
-      console.log('🔧 處理任務', index);
-      console.log('🔧 任務物件:', task ? 'exists' : 'null');
-      try {
-        const displayText = task.text; // 暫時簡化，不用 formatTaskDisplayText
-        console.log('🔧 任務文字:', displayText);
-        return ({
-        type: "box",
-        layout: "baseline",
-        contents: [
-          {
-            type: "text",
-            text: `${index + 1}.`,
-            size: "sm",
-            color: "#00B900",
-            weight: "bold",
-            flex: 0
-          },
-          {
-            type: "text",
-            text: displayText,
-            size: "sm",
-            color: "#333333",
-            wrap: true,
-            flex: 1
-          }
-        ],
-        spacing: "xs",
-        margin: index === 0 ? "none" : "xs"
-        });
-      } catch (error) {
-        console.error('🔧 map 函數錯誤:', error);
-        throw error;
-      }
-    });
-    console.log('🔧 任務清單內容建立完成，項目數:', taskListItems.length);
+    const taskListItems = todayTasks.map((task, index) => ({
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+          text: `${index + 1}.`,
+          size: "sm",
+          color: "#00B900",
+          weight: "bold",
+          flex: 0
+        },
+        {
+          type: "text",
+          text: formatTaskDisplayText(task),
+          size: "sm",
+          color: "#333333",
+          wrap: true,
+          flex: 1
+        }
+      ],
+      spacing: "xs",
+      margin: index === 0 ? "none" : "xs"
+    }));
 
     // 建立兩則 FLEX MESSAGE
-    console.log('🔧 開始建立 FLEX MESSAGE，taskId:', taskId, 'userId:', userId);
     const replyMessages = [
       // 第一則：當前任務記錄
       {
@@ -705,7 +688,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "✏️",
+                text: "✅",
                 weight: "bold",
                 size: "md",
                 color: "#000000"
@@ -764,7 +747,7 @@ async function handleEvent(event) {
             contents: [
               {
                 type: "text",
-                text: "📋",
+                text: "📋 今天任務",
                 weight: "bold",
                 size: "lg",
                 color: "#000000"
@@ -788,35 +771,23 @@ async function handleEvent(event) {
           },
           footer: {
             type: "box",
-            layout: "horizontal",
+            layout: "vertical",
             contents: [
               {
                 type: "button",
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "新增",
-                  uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
+                  label: "編輯",
+                  uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
                 height: "sm",
-                flex: 1
-              },
-              {
-                type: "button",
-                style: "primary",
-                action: {
-                  type: "uri",
-                  label: "刪除",
-                  uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
-                },
-                color: "#DDA267",
-                height: "sm",
-                flex: 1
+                flex: 0
               }
             ],
             paddingAll: "8px",
-            spacing: "xs",
+            spacing: "none",
             alignItems: "center"
           }
         }
@@ -846,23 +817,11 @@ async function handleEvent(event) {
     };
 
     // 將 Quick Reply 添加到第二則訊息
-    console.log('🔧 準備添加 Quick Reply 到第二則訊息');
-    console.log('🔧 replyMessages 長度:', replyMessages.length);
-    console.log('🔧 第二則訊息存在:', !!replyMessages[1]);
     replyMessages[1].quickReply = quickReply;
 
-    console.log('📤 發送 2 則 FLEX 訊息 + Quick Reply...');
-    console.log('🔍 訊息陣列長度:', replyMessages.length);
-    console.log('🔍 第二則訊息結構檢查:', replyMessages[1].quickReply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
+    const result = await client.replyMessage(event.replyToken, replyMessages);
     
-    try {
-      const result = await client.replyMessage(event.replyToken, replyMessages);
-      console.log('✅ 訊息發送成功');
-      return result;
-    } catch (error) {
-      console.error('❌ LINE API 錯誤詳情:', error.response?.data || error.message);
-      throw error;
-    }
+    return result;
   } catch (error) {
     console.error('❌ 事件處理錯誤:', error);
     
