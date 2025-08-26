@@ -829,16 +829,15 @@ async function handleEvent(event) {
             {
               type: "text",
               text: "✏️",
-              weight: "bold",
-              size: "xl",
+              size: "sm",
               color: "#333333",
-              align: "center"
+              align: "end"
             },
             {
               type: "text",
               text: messageText,
-              size: "lg",
-              weight: "bold",
+              size: "sm",
+              weight: "regular",
               wrap: true,
               margin: "sm"
             }
