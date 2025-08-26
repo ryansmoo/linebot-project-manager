@@ -840,7 +840,7 @@ async function handleEvent(event) {
                 },
                 {
                   type: "text",
-                  text: "記好了!",
+                  text: "記好了",
                   size: "lg",
                   weight: "bold",
                   color: "#333333",
@@ -852,7 +852,7 @@ async function handleEvent(event) {
             {
               type: "text",
               text: messageText,
-              size: "md",
+              size: "sm",
               weight: "regular",
               wrap: true,
               margin: "xs"
