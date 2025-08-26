@@ -845,23 +845,6 @@ async function handleEvent(event) {
           spacing: "sm",
           paddingAll: "20px"
         },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              action: {
-                type: "uri",
-                label: "編輯",
-                uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
-              },
-              color: "#DDA267"
-            }
-          ],
-          paddingAll: "20px"
-        }
       }
     };
 
