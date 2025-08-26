@@ -690,7 +690,7 @@ async function handleEvent(event) {
         altText: `已記錄任務: ${messageText}`,
         contents: {
           type: "bubble",
-          size: "kilo",
+          size: "nano",
           header: {
             type: "box",
             layout: "vertical",
