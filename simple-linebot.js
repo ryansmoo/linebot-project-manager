@@ -2,6 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const line = require('@line/bot-sdk');
 const path = require('path');
+const fs = require('fs');
+const FormData = require('form-data');
+const { OpenAI } = require('openai');
 
 // LINE Bot 設定
 const config = {
@@ -20,6 +23,16 @@ if (!config.channelSecret || config.channelSecret === 'your_channel_secret_here'
 
 const client = new line.Client(config);
 const app = express();
+
+// OpenAI 設定
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+// 驗證 OpenAI API Key
+if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key_here') {
+  console.error('❌ OPENAI_API_KEY 未設定！語音識別功能將無法使用');
+}
 
 // Express 中間件設定
 app.use(express.json());
@@ -455,8 +468,20 @@ async function handleEvent(event) {
   try {
     console.log('🔄 處理事件:', event.type);
     
-    if (event.type !== 'message' || event.message.type !== 'text') {
-      console.log('⏭️ 跳過非文字訊息事件');
+    if (event.type !== 'message') {
+      console.log('⏭️ 跳過非訊息事件');
+      return null;
+    }
+
+    // 處理語音訊息
+    if (event.message.type === 'audio') {
+      console.log('🎤 收到語音訊息，開始處理...');
+      return handleAudioMessage(event);
+    }
+
+    // 處理文字訊息
+    if (event.message.type !== 'text') {
+      console.log('⏭️ 跳過非文字/語音訊息事件');
       return null;
     }
 
@@ -1292,6 +1317,344 @@ function startReminderChecker() {
   }, 60000); // 每60秒檢查一次
 }
 
+// 語音訊息處理函數
+async function handleAudioMessage(event) {
+  const userId = event.source.userId;
+  const audioId = event.message.id;
+  
+  try {
+    console.log('🎵 開始處理語音訊息...');
+    console.log('📋 語音 ID:', audioId);
+    console.log('👤 用戶 ID:', userId.substring(0, 10) + '...');
+    
+    // 先發送處理中的回應
+    await client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '🎤 正在處理您的語音訊息，請稍候...'
+    });
+    
+    // 下載語音檔案
+    console.log('📥 下載語音檔案...');
+    const audioBuffer = await downloadAudioFile(audioId);
+    
+    if (!audioBuffer) {
+      throw new Error('無法下載語音檔案');
+    }
+    
+    // 轉換語音為文字
+    console.log('🔄 轉換語音為文字...');
+    const transcribedText = await transcribeAudio(audioBuffer);
+    
+    if (!transcribedText || transcribedText.trim() === '') {
+      // 無法識別語音內容
+      await client.pushMessage(userId, {
+        type: 'text',
+        text: '😅 抱歉，無法識別您的語音內容，請嘗試說得更清楚一點或使用文字輸入。'
+      });
+      return;
+    }
+    
+    console.log('✅ 語音轉文字成功:', transcribedText);
+    
+    // 建立虛擬的文字訊息事件，重用現有的文字處理邏輯
+    const textEvent = {
+      ...event,
+      message: {
+        type: 'text',
+        text: transcribedText
+      },
+      replyToken: null // 清空 replyToken，避免重複回應
+    };
+    
+    // 建立任務（重用現有邏輯）
+    const today = new Date().toISOString().split('T')[0];
+    const taskId = Date.now().toString();
+    
+    // 確保用戶的任務結構存在
+    if (!userTasks.has(userId)) {
+      userTasks.set(userId, new Map());
+    }
+    if (!userTasks.get(userId).has(today)) {
+      userTasks.get(userId).set(today, []);
+    }
+    
+    // 添加新任務
+    const newTask = {
+      id: taskId,
+      text: transcribedText,
+      createdAt: new Date().toISOString(),
+      date: today,
+      userId: userId,
+      taskTime: null,
+      category: 'work',
+      customCategory: '',
+      notes: '📢 透過語音輸入',
+      reminderEnabled: false,
+      reminderTime: 30,
+      reminderSent: false
+    };
+    
+    userTasks.get(userId).get(today).push(newTask);
+    console.log('📝 語音任務已儲存:', newTask);
+    
+    // 取得今天所有任務來顯示
+    const todayTasks = userTasks.get(userId).get(today);
+    
+    // 建立任務清單內容
+    const taskListItems = todayTasks.map((task, index) => ({
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+          text: `${index + 1}.`,
+          size: "sm",
+          color: "#00B900",
+          weight: "bold",
+          flex: 0
+        },
+        {
+          type: "text",
+          text: task.text,
+          size: "sm",
+          color: "#333333",
+          wrap: true,
+          flex: 1
+        }
+      ],
+      spacing: "sm",
+      margin: index === 0 ? "none" : "md"
+    }));
+
+    // 建立語音識別成功的 FLEX MESSAGE
+    const audioResultMessage = {
+      type: 'flex',
+      altText: `🎤 語音已轉換: ${transcribedText}`,
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🎤 語音識別成功",
+              weight: "bold",
+              size: "md",
+              color: "#ffffff"
+            }
+          ],
+          backgroundColor: "#9C27B0",
+          paddingAll: "15px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "識別結果：",
+              size: "sm",
+              color: "#666666",
+              margin: "none"
+            },
+            {
+              type: "text",
+              text: transcribedText,
+              size: "lg",
+              weight: "bold",
+              color: "#333333",
+              wrap: true,
+              margin: "sm"
+            }
+          ],
+          spacing: "sm"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "✏️ 編輯任務",
+                uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
+              },
+              color: "#9C27B0"
+            }
+          ]
+        }
+      }
+    };
+    
+    // 第二則：今天所有任務清單
+    const taskListMessage = {
+      type: 'flex',
+      altText: `今天的任務清單`,
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 今天的任務",
+              weight: "bold",
+              size: "lg",
+              color: "#ffffff"
+            },
+            {
+              type: "text",
+              text: `今天任務 ${todayTasks.length} 項`,
+              size: "sm",
+              color: "#ffffff"
+            }
+          ],
+          backgroundColor: "#0084FF",
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: taskListItems,
+          spacing: "sm",
+          paddingAll: "15px"
+        }
+      }
+    };
+
+    // 建立 Quick Reply 按鈕
+    const quickReply = {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📅 今天',
+            uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '📋 全部',
+            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
+          }
+        },
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '👤 帳戶',
+            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
+          }
+        }
+      ]
+    };
+
+    // 將 Quick Reply 添加到第二則訊息
+    taskListMessage.quickReply = quickReply;
+    
+    // 發送兩則訊息
+    await client.pushMessage(userId, [audioResultMessage, taskListMessage]);
+    
+    console.log('✅ 語音任務處理完成');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ 語音訊息處理錯誤:', error);
+    
+    // 發送錯誤訊息
+    try {
+      await client.pushMessage(userId, {
+        type: 'text',
+        text: '😅 語音處理失敗，請稍後再試或使用文字輸入。錯誤：' + error.message
+      });
+    } catch (pushError) {
+      console.error('❌ 發送錯誤訊息失敗:', pushError);
+    }
+    
+    throw error;
+  }
+}
+
+// 下載語音檔案
+async function downloadAudioFile(messageId) {
+  try {
+    console.log('📥 開始下載語音檔案，ID:', messageId);
+    
+    const stream = await client.getMessageContent(messageId);
+    const chunks = [];
+    
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      
+      stream.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        console.log('✅ 語音檔案下載完成，大小:', buffer.length, 'bytes');
+        resolve(buffer);
+      });
+      
+      stream.on('error', (error) => {
+        console.error('❌ 下載語音檔案失敗:', error);
+        reject(error);
+      });
+    });
+  } catch (error) {
+    console.error('❌ 下載語音檔案錯誤:', error);
+    throw error;
+  }
+}
+
+// 使用 OpenAI Whisper API 轉換語音為文字
+async function transcribeAudio(audioBuffer) {
+  try {
+    if (!openai) {
+      throw new Error('OpenAI 未初始化，請檢查 API Key 設定');
+    }
+    
+    console.log('🔄 使用 OpenAI Whisper API 轉換語音...');
+    
+    // 建立臨時檔案
+    const tempFilePath = path.join(__dirname, `temp_audio_${Date.now()}.m4a`);
+    fs.writeFileSync(tempFilePath, audioBuffer);
+    
+    try {
+      // 使用 OpenAI Whisper API
+      const transcription = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(tempFilePath),
+        model: 'whisper-1',
+        language: 'zh', // 指定中文
+        response_format: 'text'
+      });
+      
+      console.log('✅ Whisper API 轉換成功:', transcription);
+      
+      return transcription.trim();
+    } finally {
+      // 清理臨時檔案
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+        console.log('🗑️ 已清理臨時語音檔案');
+      }
+    }
+  } catch (error) {
+    console.error('❌ 語音轉文字失敗:', error);
+    
+    if (error.response) {
+      console.error('API 錯誤詳情:', error.response.data);
+    }
+    
+    throw new Error(`語音轉文字失敗: ${error.message}`);
+  }
+}
+
 // 啟動服務器
 app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 精簡版 LINE Bot 啟動成功！');
@@ -1300,6 +1663,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`📱 LIFF 任務頁面: ${BASE_URL}/liff/tasks.html`);
   console.log(`👤 LIFF 個人頁面: ${BASE_URL}/liff/profile.html`);
   console.log('📝 請將 Webhook URL 設定到 LINE Developer Console');
+  console.log('🎤 語音識別功能已啟用 (使用 OpenAI Whisper)');
   console.log('⚡ 準備接收 LINE 訊息...');
   
   // 啟動後恢復提醒任務
