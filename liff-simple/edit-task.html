@@ -297,7 +297,9 @@
                             id="taskTime" 
                             type="datetime-local"
                             class="form-input" 
+                            placeholder="無"
                         />
+                        <small style="color: #666; margin-top: 5px; display: block;">預設：無（可選擇設定特定時間）</small>
                     </div>
                     
                     <!-- 提醒任務 -->
@@ -419,10 +421,8 @@
                     if (taskData.taskTime) {
                         document.getElementById('taskTime').value = taskData.taskTime;
                     } else {
-                        // 如果沒有設定時間，使用創建時間
-                        const createdDate = new Date(taskData.createdAt);
-                        const localDateTime = new Date(createdDate.getTime() - createdDate.getTimezoneOffset() * 60000);
-                        document.getElementById('taskTime').value = localDateTime.toISOString().slice(0, 16);
+                        // 如果沒有設定時間，保持空白（預設為「無」）
+                        document.getElementById('taskTime').value = '';
                     }
                     
                     // 任務類別
@@ -461,7 +461,7 @@
         async function saveTask() {
             const taskText = document.getElementById('taskText').value || document.getElementById('taskTextDisplay').textContent;
             const taskNotes = document.getElementById('taskNotes').value;
-            const taskTime = document.getElementById('taskTime').value;
+            const taskTime = document.getElementById('taskTime').value || null; // 空值時設為 null
             const taskCategory = document.getElementById('taskCategory').value;
             const customCategory = taskCategory === 'custom' ? document.getElementById('customCategory').value : '';
             const reminderEnabled = document.getElementById('reminderEnabled').checked;
@@ -615,7 +615,7 @@
                     body: JSON.stringify({
                         text: newText,
                         notes: document.getElementById('taskNotes').value,
-                        taskTime: document.getElementById('taskTime').value,
+                        taskTime: document.getElementById('taskTime').value || null,
                         category: document.getElementById('taskCategory').value,
                         customCategory: document.getElementById('taskCategory').value === 'custom' ? document.getElementById('customCategory').value : '',
                         reminderEnabled: document.getElementById('reminderEnabled').checked,
@@ -669,7 +669,7 @@
             const preview = document.getElementById('reminderPreview');
             
             if (!taskTime) {
-                preview.innerHTML = '<small>📅 請先設定任務時間</small>';
+                preview.innerHTML = '<small>⚠️ 任務時間目前為「無」，請先設定時間才能啟用提醒</small>';
                 return;
             }
             

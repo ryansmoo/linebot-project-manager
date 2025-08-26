@@ -337,6 +337,34 @@ app.post('/api/test-reminder/:taskId', async (req, res) => {
 // 任務儲存（記憶體，按用戶ID和日期分組）
 const userTasks = new Map(); // userId -> { date -> [tasks] }
 
+// 格式化任務顯示文字
+function formatTaskDisplayText(task) {
+  if (!task.taskTime) {
+    return task.text; // 沒有時間，直接顯示任務文字
+  }
+  
+  try {
+    // 解析任務時間
+    let taskDate;
+    if (task.taskTime.includes('T')) {
+      taskDate = new Date(task.taskTime);
+    } else {
+      taskDate = new Date(task.taskTime.replace('T', ' '));
+    }
+    
+    // 格式化為 M/D HH:MM 格式
+    const month = taskDate.getMonth() + 1; // getMonth() 返回 0-11
+    const day = taskDate.getDate();
+    const hours = taskDate.getHours().toString().padStart(2, '0');
+    const minutes = taskDate.getMinutes().toString().padStart(2, '0');
+    
+    return `${month}/${day} ${hours}:${minutes} ${task.text}`;
+  } catch (error) {
+    console.error('解析任務時間錯誤:', error);
+    return task.text; // 解析失敗，返回原始文字
+  }
+}
+
 // 提醒任務管理
 const reminderTimeouts = new Map(); // taskId -> timeoutId
 
@@ -562,7 +590,7 @@ async function handleEvent(event) {
         },
         {
           type: "text",
-          text: task.text,
+          text: formatTaskDisplayText(task),
           size: "sm",
           color: "#333333",
           wrap: true,
@@ -819,7 +847,7 @@ async function handleCompleteTask(event, userId, messageText) {
         },
         {
           type: "text",
-          text: task.text,
+          text: formatTaskDisplayText(task),
           size: "sm",
           color: "#333333",
           wrap: true,
@@ -1027,7 +1055,7 @@ function createTodayTasksFlex(userId, date) {
       },
       {
         type: "text",
-        text: task.text,
+        text: formatTaskDisplayText(task),
         size: "sm",
         color: "#333333",
         flex: 1,
@@ -1415,7 +1443,7 @@ async function handleAudioMessage(event) {
         },
         {
           type: "text",
-          text: task.text,
+          text: formatTaskDisplayText(task),
           size: "sm",
           color: "#333333",
           wrap: true,
