@@ -830,21 +830,21 @@ async function handleEvent(event) {
             {
               type: "text",
               text: "✏️",
-              size: "sm",
+              size: "xs",
               color: "#333333",
               align: "start"
             },
             {
               type: "text",
               text: messageText,
-              size: "sm",
+              size: "xs",
               weight: "regular",
               wrap: true,
-              margin: "sm"
+              margin: "xs"
             }
           ],
-          spacing: "sm",
-          paddingAll: "20px"
+          spacing: "xs",
+          paddingAll: "8px"
         },
       }
     };
