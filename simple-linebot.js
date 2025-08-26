@@ -865,7 +865,68 @@ async function handleEvent(event) {
       }
     };
 
-    const result = await client.replyMessage(event.replyToken, firstMessage);
+    // 建立任務列表內容
+    const taskItems = todayTasks.map((task, index) => {
+      return {
+        type: "text",
+        text: `${index + 1}. ${task.text}`,
+        size: "sm",
+        wrap: true,
+        margin: "xs"
+      };
+    });
+
+    // 第二則 FLEX MESSAGE：任務堆疊
+    const secondMessage = {
+      type: 'flex',
+      altText: `今天的任務清單`,
+      contents: {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 今天的任務",
+              weight: "bold",
+              size: "lg",
+              color: "#333333"
+            },
+            {
+              type: "text",
+              text: `共 ${todayTasks.length} 項任務`,
+              size: "sm",
+              color: "#666666",
+              margin: "sm"
+            },
+            ...taskItems
+          ],
+          spacing: "sm",
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "編輯",
+                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+              },
+              color: "#DDA267"
+            }
+          ],
+          paddingAll: "20px"
+        }
+      }
+    };
+
+    // 一次發送兩則 FLEX MESSAGE
+    const result = await client.replyMessage(event.replyToken, [firstMessage, secondMessage]);
     
     return result;
   } catch (error) {
