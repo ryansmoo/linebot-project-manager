@@ -816,10 +816,11 @@ async function handleEvent(event) {
       ]
     };
 
-    // 將 Quick Reply 添加到第二則訊息
-    replyMessages[1].quickReply = quickReply;
-
-    const result = await client.replyMessage(event.replyToken, replyMessages);
+    // 暫時使用簡單文字訊息測試
+    const result = await client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `✅ 已記錄任務：${messageText}\n\n📋 今天任務 ${todayTasks.length} 項\n1. ${messageText}`
+    });
     
     return result;
   } catch (error) {
