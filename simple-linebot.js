@@ -816,11 +816,56 @@ async function handleEvent(event) {
       ]
     };
 
-    // 暫時使用簡單文字訊息測試
-    const result = await client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `✅ 已記錄任務：${messageText}\n\n📋 今天任務 ${todayTasks.length} 項\n1. ${messageText}`
-    });
+    // 第一則 FLEX MESSAGE：任務記錄
+    const firstMessage = {
+      type: 'flex',
+      altText: `已記錄任務: ${messageText}`,
+      contents: {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "✅ 任務已記錄",
+              weight: "bold",
+              size: "md",
+              color: "#00AA00"
+            },
+            {
+              type: "text",
+              text: messageText,
+              size: "lg",
+              weight: "bold",
+              wrap: true,
+              margin: "sm"
+            }
+          ],
+          spacing: "sm",
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "編輯",
+                uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
+              },
+              color: "#DDA267"
+            }
+          ],
+          paddingAll: "20px"
+        }
+      }
+    };
+
+    const result = await client.replyMessage(event.replyToken, firstMessage);
     
     return result;
   } catch (error) {
