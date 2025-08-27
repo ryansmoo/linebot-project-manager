@@ -48,30 +48,6 @@ function createStandardQuickReply(baseUrl, userId) {
       {
         type: 'action',
         action: {
-          type: 'uri',
-          label: '今天',
-          uri: `${baseUrl}/liff/tasks?filter=today`
-        }
-      },
-      {
-        type: 'action',
-        action: {
-          type: 'uri', 
-          label: '所有',
-          uri: `${baseUrl}/liff/tasks?filter=all`
-        }
-      },
-      {
-        type: 'action',
-        action: {
-          type: 'uri',
-          label: '帳戶',
-          uri: `${baseUrl}/liff/profile`
-        }
-      },
-      {
-        type: 'action',
-        action: {
           type: 'message',
           label: '全部紀錄',
           text: '全部紀錄'
