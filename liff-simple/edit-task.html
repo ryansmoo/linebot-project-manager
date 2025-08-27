@@ -52,13 +52,18 @@
             color: #000000;
         }
         
-        .nav-title {
+        .nav-title-input {
             font-size: 20px;
             color: #000000;
             font-weight: 600;
             text-align: left;
             position: absolute;
             left: 60px;
+            border: none;
+            background: transparent;
+            outline: none;
+            min-width: 200px;
+            max-width: 250px;
         }
         
         .nav-right {
@@ -366,7 +371,7 @@
         <div class="nav-left">
             <div class="nav-back" onclick="goBack()">‹</div>
         </div>
-        <div class="nav-title" id="taskTitle">嗨</div>
+        <input type="text" class="nav-title-input" id="taskTitleInput" placeholder="任務標題" oninput="onTitleChange()">
         <div class="nav-right">
             <div class="nav-share">Share</div>
             <div class="nav-star" onclick="toggleStar()">☆</div>
@@ -502,8 +507,8 @@
                 if (result.success) {
                     taskData = result.task;
                     
-                    // 顯示任務標題在導航列
-                    document.getElementById('taskTitle').textContent = taskData.text;
+                    // 顯示任務標題在標題輸入框
+                    document.getElementById('taskTitleInput').value = taskData.text;
                     
                     // 內容區域顯示現有內容
                     document.getElementById('contentTextarea').value = taskData.notes || '';
@@ -575,6 +580,7 @@
 
         async function autoSaveTask() {
             const contentValue = document.getElementById('contentTextarea').value;
+            const titleValue = document.getElementById('taskTitleInput').value;
             
             console.log('🔄 自動儲存任務...');
             
@@ -585,7 +591,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        text: taskData.text, // 保持原標題
+                        text: titleValue, // 使用新的標題
                         notes: contentValue,
                         taskTime: taskData.taskTime,
                         category: taskData.category || 'travel',
@@ -599,6 +605,7 @@
                 
                 if (result.success) {
                     console.log('✅ 自動儲存成功');
+                    taskData.text = titleValue; // 更新本地數據
                     isModified = false;
                     // 不顯示儲存成功訊息，保持靜默
                 } else {
@@ -607,6 +614,10 @@
             } catch (error) {
                 console.error('❌ 自動儲存失敗:', error);
             }
+        }
+        
+        function onTitleChange() {
+            markAsModified();
         }
         
         // 日期顯示相關函數
