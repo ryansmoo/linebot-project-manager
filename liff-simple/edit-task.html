@@ -569,13 +569,8 @@
         });
 
         function updateCurrentTime() {
-            const now = new Date();
-            const timeString = now.toLocaleString('zh-TW', {
-                weekday: 'long',
-                hour: '2-digit',
-                minute: '2-digit'
-            }).replace(/星期/, '');
-            document.getElementById('currentDate').textContent = `${timeString.includes('週') ? timeString : '今天'}, ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            // 不再需要更新時間顯示，因為我們移除了 currentDate 元素
+            // 這個函數保留是為了避免其他地方的調用錯誤
         }
 
         async function loadTaskData() {
@@ -606,8 +601,8 @@
                     // 更新分類顯示
                     updateCategoryDisplay(taskData.category);
                     
-                    // 更新任務時間顯示
-                    updateTimeDisplay();
+                    // 更新日期顯示 
+                    updateDateDisplay();
                     
                     // 更新提醒設定
                     updateReminderDisplay();
@@ -644,19 +639,18 @@
 
         function updateCategoryDisplay(category) {
             const categoryMap = {
-                'work': '💼 工作',
-                'family': '🏠 家庭', 
-                'study': '📚 學習',
-                'travel': '✈️ 旅遊',
-                'custom': '🎯 自定義'
+                'work': '工作',
+                'family': '家庭', 
+                'study': '學習',
+                'travel': '旅遊',
+                'custom': '自定義'
             };
             
-            const categoryText = categoryMap[category] || '📁 未分類';
-            document.getElementById('categoryDisplay').innerHTML = `
-                <span>${categoryText.split(' ')[0]}</span>
-                <span>${categoryText.split(' ')[1]}</span>
-                <span>▼</span>
-            `;
+            const categoryText = categoryMap[category] || '未分類';
+            const categoryElement = document.getElementById('categoryDisplay');
+            if (categoryElement) {
+                categoryElement.textContent = categoryText;
+            }
         }
 
         function markAsModified() {
@@ -720,37 +714,19 @@
             }
         }
         
-        // 任務時間相關函數
-        function updateTimeDisplay() {
-            const timeDisplay = document.getElementById('timeDisplay');
-            if (taskData.taskTime) {
+        // 日期顯示相關函數
+        function updateDateDisplay() {
+            const dateDisplay = document.getElementById('dateDisplay');
+            if (dateDisplay && taskData.taskTime) {
                 const taskDate = new Date(taskData.taskTime);
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const taskDay = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
-                
-                let dateStr = '';
-                if (taskDay.getTime() === today.getTime()) {
-                    dateStr = '今天';
-                } else if (taskDay.getTime() === today.getTime() + 24 * 60 * 60 * 1000) {
-                    dateStr = '明天';
-                } else if (taskDay.getTime() === today.getTime() - 24 * 60 * 60 * 1000) {
-                    dateStr = '昨天';
-                } else {
-                    dateStr = `${taskDate.getMonth() + 1}/${taskDate.getDate()}`;
-                }
-                
-                const timeStr = taskDate.toLocaleTimeString('zh-TW', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false
+                const dateStr = taskDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
                 });
-                
-                timeDisplay.textContent = `${dateStr} ${timeStr}`;
-                timeDisplay.classList.add('active');
-            } else {
-                timeDisplay.textContent = '無';
-                timeDisplay.classList.remove('active');
+                dateDisplay.textContent = dateStr;
+            } else if (dateDisplay) {
+                dateDisplay.textContent = 'August 13, 2025';
             }
         }
         
@@ -782,7 +758,7 @@
             
             if (newTime) {
                 taskData.taskTime = newTime;
-                updateTimeDisplay();
+                updateDateDisplay();
                 markAsModified();
             }
             
@@ -791,44 +767,25 @@
         
         function clearTaskTime() {
             taskData.taskTime = null;
-            updateTimeDisplay();
+            updateDateDisplay();
             markAsModified();
             closeTimeModal();
         }
         
         // 提醒功能相關函數
         function updateReminderDisplay() {
-            const toggle = document.getElementById('reminderToggle');
-            const status = document.getElementById('reminderStatus');
-            
-            if (taskData.reminderEnabled) {
-                toggle.checked = true;
-                status.textContent = '開啟';
-            } else {
-                toggle.checked = false;
-                status.textContent = '關閉';
+            const checkbox = document.getElementById('reminderCheckbox');
+            if (checkbox) {
+                checkbox.checked = taskData.reminderEnabled || false;
             }
         }
         
         function toggleReminder() {
-            const toggle = document.getElementById('reminderToggle');
-            const status = document.getElementById('reminderStatus');
-            
-            taskData.reminderEnabled = toggle.checked;
-            
-            if (toggle.checked) {
-                status.textContent = '開啟';
-                if (!taskData.taskTime) {
-                    showMessage('提醒功能需要先設定任務時間');
-                    setTimeout(() => {
-                        openTimeModal();
-                    }, 1000);
-                }
-            } else {
-                status.textContent = '關閉';
+            const checkbox = document.getElementById('reminderCheckbox');
+            if (checkbox) {
+                taskData.reminderEnabled = checkbox.checked;
+                markAsModified();
             }
-            
-            markAsModified();
         }
 
         function goBack() {
@@ -854,6 +811,21 @@
             }, 3000);
         }
 
+        // 模態框函數
+        function openDateModal() {
+            openTimeModal(); // 重複使用時間選擇器
+        }
+        
+        function openCategoryModal() {
+            console.log('開啟分類選擇器');
+            // 暫時為空實現
+        }
+        
+        function toggleStar() {
+            console.log('切換收藏狀態');
+            // 暫時為空實現
+        }
+        
         // 工具列功能 (暫時為空實現)
         function changeFont() { console.log('變更字體'); }
         function addAttachment() { console.log('添加附件'); }
