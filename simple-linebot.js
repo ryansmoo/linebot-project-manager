@@ -711,7 +711,7 @@ async function handleEvent(event) {
               {
                 type: "text",
                 text: messageText,
-                size: "sm",
+                size: "md",
                 weight: "normal",
                 color: "#333333",
                 wrap: true
@@ -762,7 +762,7 @@ async function handleEvent(event) {
               {
                 type: "text",
                 text: `今天任務 ${todayTasks.length} 項`,
-                size: "sm",
+                size: "md",
                 color: "#000000"
               }
             ],
@@ -862,7 +862,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link",
-              height: "sm",
+              height: "md",
               action: {
                 type: "message",
                 label: "提醒",
@@ -872,7 +872,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link", 
-              height: "sm",
+              height: "md",
               action: {
                 type: "message",
                 label: "備註",
@@ -899,7 +899,7 @@ async function handleEvent(event) {
           {
             type: "text",
             text: `${index + 1}. ${task.text}`,
-            size: "sm",
+            size: "md",
             wrap: true,
             color: textColor,
             flex: 4,
@@ -973,7 +973,7 @@ async function handleEvent(event) {
               type: "text",
               text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
               weight: "regular",
-              size: "sm",
+              size: "md",
               color: "#666666",
               align: "center",
               margin: "xs"
@@ -981,7 +981,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link",
-              height: "sm",
+              height: "md",
               action: {
                 type: "uri",
                 label: "查看細節",
@@ -1141,7 +1141,7 @@ async function handleCompleteTask(event, userId, messageText) {
             {
               type: "text",
               text: `完成：${taskToRemove.text}`,
-              size: "sm",
+              size: "md",
               color: "#ffffff"
             }
           ],
@@ -1257,14 +1257,14 @@ function createCurrentTaskFlex(task) {
             {
               type: "text",
               text: "記錄時間:",
-              size: "sm",
+              size: "md",
               color: "#666666",
               flex: 0
             },
             {
               type: "text", 
               text: new Date(task.createdAt).toLocaleString('zh-TW'),
-              size: "sm",
+              size: "md",
               color: "#666666",
               flex: 0
             }
@@ -1442,7 +1442,7 @@ function createTaskManagementFlex() {
             {
               type: "text",
               text: "🎯 點擊下方按鈕開始使用：",
-              size: "sm",
+              size: "md",
               color: "#333333",
               margin: "xs"
             }
@@ -1745,7 +1745,7 @@ async function handleAudioMessage(event) {
             {
               type: "text",
               text: "識別結果：",
-              size: "sm",
+              size: "md",
               color: "#666666",
               margin: "none"
             },
@@ -1774,7 +1774,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "sm",
+              height: "md",
               flex: 0
             }
           ],
@@ -1805,7 +1805,7 @@ async function handleAudioMessage(event) {
             {
               type: "text",
               text: `今天任務 ${todayTasks.length} 項`,
-              size: "sm",
+              size: "md",
               color: "#000000"
             }
           ],
@@ -1832,7 +1832,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "sm",
+              height: "md",
               flex: 1
             },
             {
@@ -1844,7 +1844,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "sm",
+              height: "md",
               flex: 1
             }
           ],
@@ -1979,7 +1979,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           {
             type: "text",
             text: `${index + 1}. ${t.text}`,
-            size: "sm",
+            size: "md",
             wrap: true,
             color: textColor,
             flex: 4,
@@ -1989,7 +1989,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           {
             type: "button",
             style: "link",
-            height: "sm",
+            height: "md",
             flex: 4,
             action: {
               type: "uri",
@@ -2000,7 +2000,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           {
             type: "button",
             style: "link",
-            height: "sm",
+            height: "md",
             flex: 4,
             action: {
               type: "message",
@@ -2053,7 +2053,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
               type: "text",
               text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
               weight: "regular",
-              size: "sm",
+              size: "md",
               color: "#666666",
               align: "center",
               margin: "xs"
@@ -2061,7 +2061,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             {
               type: "button",
               style: "link",
-              height: "sm",
+              height: "md",
               action: {
                 type: "uri",
                 label: "查看細節",
