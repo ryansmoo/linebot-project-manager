@@ -832,7 +832,7 @@ async function handleEvent(event) {
               text: "✏️",
               size: "lg",
               color: "#333333",
-              align: "center",
+              align: "start",
               margin: "xs"
             },
             {
