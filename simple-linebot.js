@@ -1990,24 +1990,28 @@ async function handleTodoToggle(event, userId, action, taskId) {
             decoration: t.completed ? "line-through" : "none"
           },
           {
-            type: "button",
-            style: "link",
-            height: "sm",
-            flex: 8,
+            type: "text",
+            text: "✎",
+            size: "lg",
+            color: "#333333",
+            flex: 2,
+            align: "center",
+            gravity: "center",
             action: {
               type: "uri",
-              label: "✏",
               uri: `${BASE_URL}/liff/edit-task.html?taskId=${t.id}&userId=${encodeURIComponent(userId)}`
             }
           },
           {
-            type: "button",
-            style: "link",
-            height: "sm",
-            flex: 8,
+            type: "text",
+            text: buttonLabel,
+            size: "lg",
+            color: "#333333",
+            flex: 2,
+            align: "center",
+            gravity: "center",
             action: {
               type: "message",
-              label: buttonLabel,
               text: t.completed ? `取消完成 ${t.id}` : `完成任務 ${t.id}`
             }
           }
