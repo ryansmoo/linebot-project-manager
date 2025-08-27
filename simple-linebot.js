@@ -909,7 +909,7 @@ async function handleEvent(event) {
           {
             type: "button",
             style: "link",
-            flex: 2,
+            flex: 3,
             action: {
               type: "uri",
               label: "✎",
@@ -919,7 +919,7 @@ async function handleEvent(event) {
           {
             type: "button",
             style: "link",
-            flex: 2,
+            flex: 3,
             action: {
               type: "message",
               label: buttonLabel,
