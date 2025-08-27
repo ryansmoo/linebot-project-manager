@@ -861,6 +861,33 @@ async function handleEvent(event) {
           spacing: "xs",
           paddingAll: "8px"
         },
+        footer: {
+          type: "box",
+          layout: "horizontal",
+          spacing: "sm",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              height: "sm",
+              action: {
+                type: "message",
+                label: "提醒",
+                text: "設定提醒"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary", 
+              height: "sm",
+              action: {
+                type: "message",
+                label: "備註",
+                text: "添加備註"
+              }
+            }
+          ]
+        },
       }
     };
 
