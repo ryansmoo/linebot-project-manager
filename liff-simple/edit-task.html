@@ -14,9 +14,10 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(to bottom, #f5f2e9 0%, #f5f2e9 100%);
+            background: #2C2C2E;
             min-height: 100vh;
             padding: 0;
+            color: #FFFFFF;
         }
         
         /* 頂部狀態列區域 */
@@ -27,15 +28,18 @@
         
         /* 導航列 */
         .nav-bar {
-            background: transparent;
-            padding: 8px 16px;
+            background: #DDA267;
+            padding: 20px 16px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: none;
+            position: relative;
         }
         
         .nav-left {
+            position: absolute;
+            left: 16px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -45,31 +49,35 @@
             font-size: 18px;
             cursor: pointer;
             padding: 4px;
+            color: #FFFFFF;
         }
         
-        .nav-date {
-            font-size: 16px;
-            color: #666;
+        .nav-title {
+            font-size: 20px;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-align: center;
         }
         
         .nav-right {
+            position: absolute;
+            right: 16px;
             display: flex;
             align-items: center;
             gap: 15px;
         }
         
-        .nav-category {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .nav-share {
             font-size: 16px;
-            color: #666;
+            color: #FFFFFF;
+            cursor: pointer;
         }
         
-        .nav-menu {
+        .nav-star {
             font-size: 20px;
             cursor: pointer;
             padding: 4px;
+            color: #FFFFFF;
         }
         
         /* 主要內容區域 */
@@ -81,11 +89,11 @@
         
         /* 任務設定區域 */
         .task-settings {
-            margin-bottom: 20px;
-            background: #f8f8f8;
+            margin: 20px 20px;
+            background: #1C1C1E;
             border-radius: 12px;
-            padding: 15px;
-            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border: none;
         }
         
         .settings-row {
@@ -101,7 +109,7 @@
         
         .setting-label {
             font-size: 16px;
-            color: #333;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -109,12 +117,12 @@
         
         .setting-value {
             font-size: 14px;
-            color: #666;
+            color: #FFFFFF;
             cursor: pointer;
             padding: 6px 12px;
             border-radius: 20px;
-            background: #fff;
-            border: 1px solid #ddd;
+            background: #3A3A3C;
+            border: 1px solid #48484A;
             min-width: 80px;
             text-align: center;
             transition: all 0.2s;
@@ -268,51 +276,23 @@
             transform: translateX(20px);
         }
         
-        /* 標題輸入區域 */
-        .title-section {
-            margin-bottom: 30px;
-        }
-        
-        .title-label {
-            font-size: 16px;
-            color: #999;
-            margin-bottom: 10px;
-            font-weight: normal;
-        }
-        
-        .title-input {
-            width: 100%;
-            font-size: 18px;
-            font-weight: normal;
-            color: #333;
-            border: none;
-            background: transparent;
-            padding: 8px 0;
-            outline: none;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .title-input:focus {
-            border-bottom-color: #007AFF;
-        }
-        
-        /* 內容輸入區域 */
+        /* 內容輸入區域 - 移到最下方 */
         .content-section {
-            margin-bottom: 40px;
+            margin: 40px 20px 120px 20px;
         }
         
         .content-label {
             font-size: 16px;
-            color: #999;
+            color: #8E8E93;
             margin-bottom: 15px;
             font-weight: normal;
         }
         
         .content-textarea {
             width: 100%;
-            min-height: 200px;
+            min-height: 300px;
             font-size: 16px;
-            color: #333;
+            color: #FFFFFF;
             border: none;
             background: transparent;
             padding: 0;
@@ -322,8 +302,9 @@
             font-family: inherit;
         }
         
+        
         .content-textarea::placeholder {
-            color: #c7c7cc;
+            color: #8E8E93;
             font-size: 16px;
         }
         
@@ -446,16 +427,12 @@
     <!-- 導航列 -->
     <div class="nav-bar">
         <div class="nav-left">
-            <div class="nav-back" onclick="goBack()">✓</div>
-            <div class="nav-date" id="currentDate">今天, 13:31</div>
+            <div class="nav-back" onclick="goBack()">‹</div>
         </div>
+        <div class="nav-title" id="taskTitle">嗨</div>
         <div class="nav-right">
-            <div class="nav-category" id="categoryDisplay">
-                <span>📁</span>
-                <span>未分類</span>
-                <span>▼</span>
-            </div>
-            <div class="nav-menu" onclick="showMenu()">⋯</div>
+            <div class="nav-share">Share</div>
+            <div class="nav-star" onclick="toggleStar()">☆</div>
         </div>
     </div>
     
@@ -476,43 +453,30 @@
             <div class="task-settings">
                 <div class="settings-row">
                     <div class="setting-label">
-                        ⏰ 任務時間
+                        📅 Date
                     </div>
-                    <div class="setting-value" id="timeDisplay" onclick="openTimeModal()">無</div>
+                    <div class="setting-value" id="dateDisplay" onclick="openDateModal()">August 13, 2025</div>
                 </div>
                 <div class="settings-row">
                     <div class="setting-label">
-                        🔔 任務提醒
+                        📋 Select
                     </div>
-                    <div class="reminder-toggle">
-                        <span id="reminderStatus">關閉</span>
-                        <label class="switch">
-                            <input type="checkbox" id="reminderToggle" onchange="toggleReminder()">
-                            <span class="slider"></span>
-                        </label>
+                    <div class="setting-value" id="categoryDisplay" onclick="openCategoryModal()">旅遊</div>
+                </div>
+                <div class="settings-row">
+                    <div class="setting-label">
+                        <input type="checkbox" id="reminderCheckbox" onchange="toggleReminder()" style="margin-right: 8px; transform: scale(1.2);">
+                        是否需要提醒？
                     </div>
                 </div>
-            </div>
-            
-            <!-- 標題區域 -->
-            <div class="title-section">
-                <div class="title-label">標題</div>
-                <input 
-                    type="text" 
-                    id="titleInput" 
-                    class="title-input" 
-                    placeholder=""
-                    oninput="markAsModified()"
-                />
             </div>
             
             <!-- 內容區域 -->
             <div class="content-section">
-                <div class="content-label">在此處輸入筆記內容</div>
                 <textarea 
                     id="contentTextarea" 
                     class="content-textarea"
-                    placeholder=""
+                    placeholder="Press '/' for commands..."
                     oninput="markAsModified()"
                 ></textarea>
             </div>
@@ -617,10 +581,10 @@
                 if (result.success) {
                     taskData = result.task;
                     
-                    // 填充表單 - 原本記錄的文案成為標題
-                    document.getElementById('titleInput').value = taskData.text;
+                    // 顯示任務標題在導航列
+                    document.getElementById('taskTitle').textContent = taskData.text;
                     
-                    // 內容區域初始為空，用戶可以添加備註
+                    // 內容區域顯示現有內容
                     document.getElementById('contentTextarea').value = taskData.notes || '';
                     
                     // 更新分類顯示
@@ -683,13 +647,9 @@
         }
 
         async function saveTask() {
-            const titleValue = document.getElementById('titleInput').value;
             const contentValue = document.getElementById('contentTextarea').value;
             
-            if (!titleValue.trim()) {
-                showMessage('請輸入標題');
-                return;
-            }
+            // 標題不變，只更新內容
             
             showMessage('正在儲存...');
             
@@ -700,10 +660,10 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        text: titleValue,
+                        text: taskData.text, // 保持原標題
                         notes: contentValue,
                         taskTime: taskData.taskTime,
-                        category: taskData.category || 'work',
+                        category: taskData.category || 'travel',
                         customCategory: taskData.customCategory || '',
                         reminderEnabled: taskData.reminderEnabled || false,
                         reminderTime: taskData.reminderTime || 30
