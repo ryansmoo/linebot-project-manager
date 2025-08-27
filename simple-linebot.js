@@ -958,11 +958,21 @@ async function handleEvent(event) {
           layout: "vertical",
           contents: [
             {
-              type: "text",
-              text: `📋 今天有 ${todayTasks.length} 項任務`,
-              weight: "bold",
-              size: "lg",
-              color: "#333333"
+              type: "box",
+              layout: "vertical",
+              backgroundColor: "#DDA267",
+              paddingAll: "12px",
+              cornerRadius: "8px",
+              margin: "none",
+              contents: [
+                {
+                  type: "text",
+                  text: `今天有 ${todayTasks.length} 項任務`,
+                  weight: "bold",
+                  size: "lg",
+                  color: "#FFFFFF"
+                }
+              ]
             },
             ...taskItems
           ],
@@ -2038,11 +2048,21 @@ async function handleTodoToggle(event, userId, action, taskId) {
           layout: "vertical",
           contents: [
             {
-              type: "text",
-              text: `📋 今天有 ${todayTasks.length} 項任務`,
-              weight: "bold",
-              size: "lg",
-              color: "#333333"
+              type: "box",
+              layout: "vertical",
+              backgroundColor: "#DDA267",
+              paddingAll: "12px",
+              cornerRadius: "8px",
+              margin: "none",
+              contents: [
+                {
+                  type: "text",
+                  text: `今天有 ${todayTasks.length} 項任務`,
+                  weight: "bold",
+                  size: "lg",
+                  color: "#FFFFFF"
+                }
+              ]
             },
             ...taskItems
           ],
