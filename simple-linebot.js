@@ -848,7 +848,7 @@ async function handleEvent(event) {
           },
           {
             type: "text",
-            text: "🖋",
+            text: "✒",
             size: "lg",
             color: "#333333",
             flex: 2,
@@ -1931,7 +1931,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           },
           {
             type: "text",
-            text: "🖋",
+            text: "✒",
             size: "lg",
             color: "#333333",
             flex: 2,
