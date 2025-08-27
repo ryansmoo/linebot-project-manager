@@ -828,26 +828,12 @@ async function handleEvent(event) {
           layout: "vertical",
           contents: [
             {
-              type: "box",
-              layout: "horizontal",
-              contents: [
-                {
-                  type: "text",
-                  text: "✏️",
-                  size: "lg",
-                  color: "#333333",
-                  flex: 0
-                },
-                {
-                  type: "text",
-                  text: "記好了",
-                  size: "lg",
-                  weight: "bold",
-                  color: "#333333",
-                  flex: 1,
-                  margin: "sm"
-                }
-              ]
+              type: "text",
+              text: "✏️",
+              size: "lg",
+              color: "#333333",
+              align: "center",
+              margin: "xs"
             },
             {
               type: "text",
