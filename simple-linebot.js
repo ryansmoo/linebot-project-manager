@@ -924,13 +924,13 @@ async function handleEvent(event) {
           contents: [
             {
               type: "button",
-              style: "primary",
+              style: "link",
+              height: "sm",
               action: {
                 type: "uri",
                 label: "編輯",
                 uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-              },
-              color: "#DDA267"
+              }
             }
           ],
           paddingAll: "20px"
