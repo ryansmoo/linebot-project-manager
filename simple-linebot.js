@@ -932,7 +932,7 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: `📋 今天有 ${todayTasks.length} 項任務`,
+              text: completedCount === todayTasks.length ? `🎉 今天有 ${todayTasks.length} 項任務` : `📋 今天有 ${todayTasks.length} 項任務`,
               weight: "bold",
               size: "lg",
               color: "#333333"
