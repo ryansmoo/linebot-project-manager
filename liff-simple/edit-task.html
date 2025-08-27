@@ -520,9 +520,11 @@
             
             try {
                 console.log('📡 發送 API 請求到:', `/api/task/${taskId}`);
+                console.log('📡 完整請求URL:', window.location.origin + `/api/task/${taskId}`);
                 // 從 API 獲取任務資料
                 const response = await fetch(`/api/task/${taskId}`);
                 console.log('📡 收到響應，狀態:', response.status);
+                console.log('📡 響應headers:', [...response.headers.entries()]);
                 const result = await response.json();
                 console.log('📋 API 響應資料:', result);
                 
