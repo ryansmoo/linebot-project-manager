@@ -902,14 +902,14 @@ async function handleEvent(event) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 5,
+            flex: 4,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
           {
             type: "box",
             layout: "horizontal",
-            flex: 3,
+            flex: 4,
             contents: [
               {
                 type: "button",
@@ -918,7 +918,7 @@ async function handleEvent(event) {
                 flex: 1,
                 action: {
                   type: "uri",
-                  label: "☑",
+                  label: "✎",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
                 }
               },
@@ -1990,7 +1990,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 3,
+            flex: 4,
             gravity: "center",
             decoration: t.completed ? "line-through" : "none"
           },
@@ -1998,7 +1998,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 3,
+            flex: 4,
             action: {
               type: "uri",
               label: "✏",
@@ -2009,7 +2009,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 3,
+            flex: 4,
             action: {
               type: "message",
               label: buttonLabel,
