@@ -2624,15 +2624,6 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
     });
   }
   
-  // 添加複製按鈕
-  buttons.push({
-    type: 'button',
-    action: {
-      type: 'message',
-      label: '複製',
-      text: '複製功能測試'
-    }
-  });
 
   return {
     type: 'flex',
@@ -2819,26 +2810,11 @@ function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
 }
 
 // 任務清單 Flex Message
-// 生成任務清單文字的輔助函數
-function generateTaskListText(tasks, title = '📋 待辦事項') {
-  if (!tasks || tasks.length === 0) {
-    return `${title}\n\n目前沒有任務。`;
-  }
-
-  let text = `${title}\n\n`;
-  tasks.forEach((task, index) => {
-    const status = task.status === 'completed' ? '✅' : '⭕';
-    text += `${index + 1}. ${status} ${task.text}\n`;
-  });
-  
-  text += `\n共 ${tasks.length} 項任務`;
-  return text;
-}
 
 function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   return {
     type: 'flex',
-    altText: '待辦事項',
+    altText: `${taskCount}個待辦事項`,
     contents: {
       type: 'bubble',
       body: {
@@ -2847,25 +2823,88 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
         contents: [
           {
             type: 'text',
-            text: '測試按鈕',
+            text: `📋 ${taskCount}個待辦事項`,
             weight: 'bold',
-            size: 'lg'
+            size: 'xl',
+            color: '#2196F3',
+            align: 'center',
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'md'
+          },
+          {
+            type: 'text',
+            text: `今日共有 ${taskCount} 項任務`,
+            size: 'sm',
+            color: '#666666',
+            margin: 'lg',
+            align: 'center'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: tasks.slice(0, 3).map((task, index) => ({
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                {
+                  type: 'text',
+                  text: `${index + 1}.`,
+                  size: 'sm',
+                  color: '#888888',
+                  flex: 0
+                },
+                {
+                  type: 'text',
+                  text: task.status === 'completed' ? `~~${task.text}~~` : task.text,
+                  size: 'sm',
+                  color: task.status === 'completed' ? '#888888' : '#333333',
+                  margin: 'xs',
+                  wrap: true,
+                  flex: 1
+                }
+              ],
+              margin: 'sm'
+            })).concat(taskCount > 3 ? [{
+              type: 'text',
+              text: `...還有 ${taskCount - 3} 項任務`,
+              size: 'xs',
+              color: '#aaaaaa',
+              align: 'center',
+              margin: 'sm'
+            }] : []),
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'lg'
           }
-        ]
+        ],
+        paddingAll: 'lg'
       },
       footer: {
         type: 'box',
         layout: 'vertical',
+        spacing: 'sm',
         contents: [
           {
-            type: 'button',
-            action: {
-              type: 'message',
-              label: '複製',
-              text: '按鈕測試成功！'
-            }
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '📱 點擊查看詳細任務資訊',
+                size: 'xs',
+                color: '#888888',
+                align: 'center'
+              }
+            ],
+            margin: 'sm'
           }
-        ]
+        ],
+        paddingAll: 'lg'
       }
     }
   };
@@ -2975,21 +3014,27 @@ function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
         ],
         paddingAll: 'lg'
       },
-      "footer": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
           {
-            "type": "button",
-            "style": "primary",
-            "action": {
-              "type": "message",
-              "label": "複製",
-              "text": "複製測試成功！"
-            }
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '📱 完整任務清單請使用 LIFF 應用',
+                size: 'xs',
+                color: '#888888',
+                align: 'center'
+              }
+            ],
+            margin: 'sm'
           }
         ],
-        "spacing": "sm"
+        paddingAll: 'lg'
       }
     }
   };
@@ -3116,48 +3161,7 @@ async function handlePostbackEvent(event, baseUrl) {
     const postbackData = JSON.parse(event.postback.data);
     console.log('Postback data:', postbackData);
     
-    if (postbackData.action === 'copy_tasks') {
-      console.log('📋 處理複製任務請求...');
-      const { userId: targetUserId, type } = postbackData;
-      
-      // 獲取對應的任務
-      let tasks = [];
-      let title = '';
-      
-      if (type === 'today') {
-        tasks = getTodayTasks(targetUserId);
-        title = '📋 今日待辦事項';
-      } else if (type === 'all') {
-        tasks = getAllTasks(targetUserId);
-        title = '📋 所有待辦事項';
-      }
-      
-      // 生成任務文字
-      const taskText = generateTaskListText(tasks, title);
-      
-      // 返回包含所有任務文字的訊息，用戶可以複製
-      return client.replyMessage(event.replyToken, [
-        {
-          type: 'text',
-          text: '✅ 任務清單已生成，請複製以下內容：'
-        },
-        {
-          type: 'text',
-          text: taskText
-        }
-      ]);
-      
-    } else if (postbackData.action === 'copy_single_task') {
-      console.log('📋 處理複製單個任務請求...');
-      const { taskText } = postbackData;
-      
-      // 返回單個任務文字供用戶複製
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: `✅ 任務內容已準備複製：\n\n${taskText}`
-      });
-      
-    } else if (postbackData.action === 'add_to_calendar') {
+    if (postbackData.action === 'add_to_calendar') {
       console.log('📅 處理上傳日曆請求...');
       // 檢查用戶是否已授權 Google Calendar
       console.log('🔍 檢查用戶授權狀態...');
@@ -3314,44 +3318,6 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
-    } else if (userMessage === 'test' || userMessage === 'TEST') {
-      // 測試 FLEX MESSAGE 按鈕
-      const testFlexMessage = {
-        type: 'flex',
-        altText: '測試按鈕',
-        contents: {
-          type: 'bubble',
-          body: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '按鈕測試',
-                weight: 'bold',
-                size: 'lg'
-              }
-            ]
-          },
-          footer: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'button',
-                action: {
-                  type: 'message',
-                  label: '複製',
-                  text: '測試成功！'
-                }
-              }
-            ]
-          }
-        }
-      };
-      
-      return client.replyMessage(event.replyToken, testFlexMessage);
-      
     } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
       // 清除對話記憶功能
       intentDetected = 'clear_memory';
@@ -3402,6 +3368,7 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
+      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3534,6 +3501,7 @@ async function handleEvent(event, baseUrl) {
             
             // 生成 Flex Message 顯示更新後的任務列表
             const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
+            flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
