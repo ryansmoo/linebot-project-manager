@@ -857,7 +857,7 @@ async function handleEvent(event) {
         footer: {
           type: "box",
           layout: "horizontal",
-          spacing: "md",
+          spacing: "xs",
           contents: [
             {
               type: "button",
@@ -902,7 +902,7 @@ async function handleEvent(event) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 4,
+            flex: 6,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
@@ -910,7 +910,7 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 2,
+            flex: 1,
             action: {
               type: "uri",
               label: "✎",
@@ -921,7 +921,7 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 2,
+            flex: 1,
             action: {
               type: "message",
               label: buttonLabel,
@@ -929,7 +929,7 @@ async function handleEvent(event) {
             }
           }
         ],
-        spacing: "md",
+        spacing: "xs",
         margin: "xs"
       });
       
@@ -962,7 +962,7 @@ async function handleEvent(event) {
             },
             ...taskItems
           ],
-          spacing: "md",
+          spacing: "xs",
           paddingAll: "20px"
         },
         footer: {
@@ -1849,7 +1849,7 @@ async function handleAudioMessage(event) {
             }
           ],
           paddingAll: "8px",
-          spacing: "md",
+          spacing: "xs",
           alignItems: "center"
         }
       }
@@ -1982,7 +1982,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 4,
+            flex: 6,
             gravity: "center",
             decoration: t.completed ? "line-through" : "none"
           },
@@ -1990,7 +1990,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 4,
+            flex: 6,
             action: {
               type: "uri",
               label: "✏",
@@ -2001,7 +2001,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 4,
+            flex: 6,
             action: {
               type: "message",
               label: buttonLabel,
@@ -2009,7 +2009,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             }
           }
         ],
-        spacing: "md",
+        spacing: "xs",
         margin: "xs"
       });
       
@@ -2042,7 +2042,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             },
             ...taskItems
           ],
-          spacing: "md",
+          spacing: "xs",
           paddingAll: "20px"
         },
         footer: {
