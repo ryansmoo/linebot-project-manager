@@ -856,7 +856,6 @@ async function handleEvent(event) {
               type: "button",
               style: "secondary",
               height: "sm",
-              size: "sm",
               action: {
                 type: "message",
                 label: "提醒",
@@ -867,7 +866,6 @@ async function handleEvent(event) {
               type: "button",
               style: "secondary", 
               height: "sm",
-              size: "sm",
               action: {
                 type: "message",
                 label: "備註",
