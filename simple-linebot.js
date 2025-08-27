@@ -902,31 +902,39 @@ async function handleEvent(event) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 3,
+            flex: 5,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
           {
-            type: "button",
-            style: "link",
-            height: "sm",
+            type: "box",
+            layout: "horizontal",
             flex: 2,
-            action: {
-              type: "uri",
-              label: "✏",
-              uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
-            }
-          },
-          {
-            type: "button",
-            style: "link",
-            height: "sm",
-            flex: 2,
-            action: {
-              type: "message",
-              label: buttonLabel,
-              text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
-            }
+            contents: [
+              {
+                type: "button",
+                style: "link",
+                height: "sm",
+                flex: 1,
+                action: {
+                  type: "uri",
+                  label: "☑",
+                  uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
+                }
+              },
+              {
+                type: "button",
+                style: "link",
+                height: "sm",
+                flex: 1,
+                action: {
+                  type: "message",
+                  label: buttonLabel,
+                  text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
+                }
+              }
+            ],
+            spacing: "xs"
           }
         ],
         spacing: "sm",
