@@ -773,7 +773,7 @@ async function handleEvent(event) {
             type: "box",
             layout: "vertical",
             contents: taskListItems,
-            spacing: "xs",
+            spacing: "sm",
             paddingAll: "6px"
           },
           footer: {
@@ -851,13 +851,13 @@ async function handleEvent(event) {
               margin: "xs"
             }
           ],
-          spacing: "xs",
+          spacing: "sm",
           paddingAll: "8px"
         },
         footer: {
           type: "box",
           layout: "horizontal",
-          spacing: "xs",
+          spacing: "sm",
           contents: [
             {
               type: "button",
@@ -902,7 +902,7 @@ async function handleEvent(event) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 6,
+            flex: 4,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
@@ -910,7 +910,7 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 1,
+            flex: 2,
             action: {
               type: "uri",
               label: "✎",
@@ -921,7 +921,7 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 1,
+            flex: 2,
             action: {
               type: "message",
               label: buttonLabel,
@@ -929,7 +929,7 @@ async function handleEvent(event) {
             }
           }
         ],
-        spacing: "xs",
+        spacing: "sm",
         margin: "xs"
       });
       
@@ -962,7 +962,7 @@ async function handleEvent(event) {
             },
             ...taskItems
           ],
-          spacing: "xs",
+          spacing: "sm",
           paddingAll: "20px"
         },
         footer: {
@@ -1171,7 +1171,7 @@ async function handleCompleteTask(event, userId, messageText) {
               weight: "bold"
             }
           ],
-          spacing: "xs",
+          spacing: "sm",
           paddingAll: "6px"
         }
       }
@@ -1816,7 +1816,7 @@ async function handleAudioMessage(event) {
           type: "box",
           layout: "vertical",
           contents: taskListItems,
-          spacing: "xs",
+          spacing: "sm",
           paddingAll: "6px"
         },
         footer: {
@@ -1849,7 +1849,7 @@ async function handleAudioMessage(event) {
             }
           ],
           paddingAll: "8px",
-          spacing: "xs",
+          spacing: "sm",
           alignItems: "center"
         }
       }
@@ -1982,7 +1982,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 6,
+            flex: 4,
             gravity: "center",
             decoration: t.completed ? "line-through" : "none"
           },
@@ -1990,7 +1990,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 6,
+            flex: 4,
             action: {
               type: "uri",
               label: "✏",
@@ -2001,7 +2001,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "md",
-            flex: 6,
+            flex: 4,
             action: {
               type: "message",
               label: buttonLabel,
@@ -2009,7 +2009,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             }
           }
         ],
-        spacing: "xs",
+        spacing: "sm",
         margin: "xs"
       });
       
@@ -2042,7 +2042,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             },
             ...taskItems
           ],
-          spacing: "xs",
+          spacing: "sm",
           paddingAll: "20px"
         },
         footer: {
