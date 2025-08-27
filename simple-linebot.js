@@ -990,16 +990,6 @@ async function handleEvent(event) {
               color: "#666666",
               align: "center",
               margin: "xs"
-            },
-            {
-              type: "button",
-              style: "link",
-              height: "sm",
-              action: {
-                type: "uri",
-                label: "查看細節",
-                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-              }
             }
           ],
           paddingAll: "20px"
@@ -2079,16 +2069,6 @@ async function handleTodoToggle(event, userId, action, taskId) {
               color: "#666666",
               align: "center",
               margin: "xs"
-            },
-            {
-              type: "button",
-              style: "link",
-              height: "sm",
-              action: {
-                type: "uri",
-                label: "查看細節",
-                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
-              }
             }
           ],
           paddingAll: "20px"
