@@ -857,7 +857,7 @@ async function handleEvent(event) {
         footer: {
           type: "box",
           layout: "horizontal",
-          spacing: "sm",
+          spacing: "md",
           contents: [
             {
               type: "button",
@@ -907,37 +907,29 @@ async function handleEvent(event) {
             decoration: task.completed ? "line-through" : "none"
           },
           {
-            type: "box",
-            layout: "horizontal",
-            flex: 4,
-            contents: [
-              {
-                type: "button",
-                style: "link",
-                height: "md",
-                flex: 1,
-                action: {
-                  type: "uri",
-                  label: "✎",
-                  uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
-                }
-              },
-              {
-                type: "button",
-                style: "link",
-                height: "md",
-                flex: 1,
-                action: {
-                  type: "message",
-                  label: buttonLabel,
-                  text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
-                }
-              }
-            ],
-            spacing: "xs"
+            type: "button",
+            style: "link",
+            height: "md",
+            flex: 2,
+            action: {
+              type: "uri",
+              label: "✎",
+              uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
+            }
+          },
+          {
+            type: "button",
+            style: "link",
+            height: "md",
+            flex: 2,
+            action: {
+              type: "message",
+              label: buttonLabel,
+              text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
+            }
           }
         ],
-        spacing: "sm",
+        spacing: "md",
         margin: "xs"
       });
       
@@ -970,7 +962,7 @@ async function handleEvent(event) {
             },
             ...taskItems
           ],
-          spacing: "sm",
+          spacing: "md",
           paddingAll: "20px"
         },
         footer: {
@@ -1857,7 +1849,7 @@ async function handleAudioMessage(event) {
             }
           ],
           paddingAll: "8px",
-          spacing: "sm",
+          spacing: "md",
           alignItems: "center"
         }
       }
@@ -2017,7 +2009,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             }
           }
         ],
-        spacing: "sm",
+        spacing: "md",
         margin: "xs"
       });
       
@@ -2050,7 +2042,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             },
             ...taskItems
           ],
-          spacing: "sm",
+          spacing: "md",
           paddingAll: "20px"
         },
         footer: {
