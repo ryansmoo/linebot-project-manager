@@ -2705,34 +2705,21 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
         type: 'box',
         layout: 'vertical',
         spacing: 'sm',
-        contents: [
-          ...buttons.map((button, index) => [
-            ...(index > 0 ? [{
-              type: 'separator',
-              margin: 'sm'
-            }] : []),
-            button
-          ]).flat(),
+        contents: buttons.concat([
           {
             type: 'separator',
             margin: 'md'
           },
           {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: timeInfo.hasTime ? '✅ 任務已記錄，可同步到 Google 日曆' : '✅ 任務已加入今日待辦清單',
-                size: 'xs',
-                color: '#888888',
-                align: 'center'
-              }
-            ],
+            type: 'text',
+            text: timeInfo.hasTime ? '✅ 任務已記錄，可同步到 Google 日曆' : '✅ 任務已加入今日待辦清單',
+            size: 'xs',
+            color: '#888888',
+            align: 'center',
             margin: 'sm'
           }
-        ],
-        paddingAll: 'lg'
+        ]),
+        paddingAll: 'md'
       }
     }
   };
@@ -2920,10 +2907,6 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
               margin: 'sm'
             }] : []),
             margin: 'md'
-          },
-          {
-            type: 'separator',
-            margin: 'lg'
           }
         ],
         paddingAll: 'lg'
@@ -2931,38 +2914,23 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
       footer: {
         type: 'box',
         layout: 'vertical',
-        spacing: 'sm',
         contents: [
           {
             type: 'button',
             style: 'secondary',
-            height: 'sm',
             action: {
               type: 'postback',
-              label: '📋 複製',
+              label: '📋 複製任務清單',
               data: JSON.stringify({
                 action: 'copy_tasks',
                 userId: userId,
                 type: 'today'
               })
             }
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '📱 點擊查看詳細任務資訊',
-                size: 'xs',
-                color: '#888888',
-                align: 'center'
-              }
-            ],
-            margin: 'sm'
           }
         ],
-        paddingAll: 'lg'
+        spacing: 'sm',
+        paddingAll: 'md'
       }
     }
   };
@@ -3075,38 +3043,23 @@ function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
       footer: {
         type: 'box',
         layout: 'vertical',
-        spacing: 'sm',
         contents: [
           {
             type: 'button',
             style: 'secondary',
-            height: 'sm',
             action: {
               type: 'postback',
-              label: '📋 複製',
+              label: '📋 複製所有任務',
               data: JSON.stringify({
                 action: 'copy_tasks',
                 userId: userId,
                 type: 'all'
               })
             }
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-              {
-                type: 'text',
-                text: '📱 完整任務清單請使用 LIFF 應用',
-                size: 'xs',
-                color: '#888888',
-                align: 'center'
-              }
-            ],
-            margin: 'sm'
           }
         ],
-        paddingAll: 'lg'
+        spacing: 'sm',
+        paddingAll: 'md'
       }
     }
   };
