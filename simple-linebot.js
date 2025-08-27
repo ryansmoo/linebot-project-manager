@@ -918,7 +918,7 @@ async function handleEvent(event) {
                 flex: 1,
                 action: {
                   type: "uri",
-                  label: "📝",
+                  label: "✎",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
                 }
               },
