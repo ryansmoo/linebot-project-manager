@@ -938,14 +938,6 @@ async function handleEvent(event) {
               size: "lg",
               color: "#333333"
             },
-            {
-              type: "text",
-              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
-              weight: "regular",
-              size: "md",
-              color: "#666666",
-              margin: "xs"
-            },
             ...taskItems
           ],
           spacing: "sm",
@@ -955,6 +947,15 @@ async function handleEvent(event) {
           type: "box",
           layout: "vertical",
           contents: [
+            {
+              type: "text",
+              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
+              weight: "regular",
+              size: "md",
+              color: "#666666",
+              align: "center",
+              margin: "xs"
+            },
             {
               type: "button",
               style: "link",
@@ -1995,14 +1996,6 @@ async function handleTodoToggle(event, userId, action, taskId) {
               size: "lg",
               color: "#333333"
             },
-            {
-              type: "text",
-              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
-              weight: "regular",
-              size: "md",
-              color: "#666666",
-              margin: "xs"
-            },
             ...taskItems
           ],
           spacing: "sm",
@@ -2012,6 +2005,15 @@ async function handleTodoToggle(event, userId, action, taskId) {
           type: "box",
           layout: "vertical",
           contents: [
+            {
+              type: "text",
+              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
+              weight: "regular",
+              size: "md",
+              color: "#666666",
+              align: "center",
+              margin: "xs"
+            },
             {
               type: "button",
               style: "link",
