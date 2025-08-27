@@ -892,7 +892,7 @@ async function handleEvent(event) {
       
       return {
         type: "box",
-        layout: "baseline",
+        layout: "horizontal",
         contents: [
           {
             type: "text",
@@ -900,14 +900,14 @@ async function handleEvent(event) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 3
+            flex: 3,
+            gravity: "center"
           },
           {
             type: "button",
             style: "link",
             height: "sm",
             flex: 1,
-            gravity: "center",
             action: {
               type: "message",
               label: buttonLabel,
@@ -1948,7 +1948,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
       
       return {
         type: "box",
-        layout: "baseline",
+        layout: "horizontal",
         contents: [
           {
             type: "text",
@@ -1956,14 +1956,14 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 3
+            flex: 3,
+            gravity: "center"
           },
           {
             type: "button",
             style: "link",
             height: "sm",
             flex: 1,
-            gravity: "center",
             action: {
               type: "message",
               label: buttonLabel,
