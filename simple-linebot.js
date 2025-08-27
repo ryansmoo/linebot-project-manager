@@ -902,7 +902,7 @@ async function handleEvent(event) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 4,
+            flex: 3,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
@@ -910,10 +910,10 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 1,
+            flex: 2,
             action: {
               type: "uri",
-              label: "✏️",
+              label: "✏",
               uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
             }
           },
@@ -921,7 +921,7 @@ async function handleEvent(event) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 1,
+            flex: 2,
             action: {
               type: "message",
               label: buttonLabel,
@@ -1982,7 +1982,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "sm",
             wrap: true,
             color: textColor,
-            flex: 4,
+            flex: 3,
             gravity: "center",
             decoration: t.completed ? "line-through" : "none"
           },
@@ -1990,10 +1990,10 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 1,
+            flex: 2,
             action: {
               type: "uri",
-              label: "✏️",
+              label: "✏",
               uri: `${BASE_URL}/liff/edit-task.html?taskId=${t.id}&userId=${encodeURIComponent(userId)}`
             }
           },
@@ -2001,7 +2001,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 1,
+            flex: 2,
             action: {
               type: "message",
               label: buttonLabel,
