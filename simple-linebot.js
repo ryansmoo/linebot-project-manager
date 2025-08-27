@@ -888,7 +888,7 @@ async function handleEvent(event) {
     const completedCount = todayTasks.filter(task => task.completed).length;
     const taskItems = todayTasks.map((task, index) => {
       const textColor = task.completed ? "#999999" : "#333333";
-      const buttonLabel = task.completed ? "☑️" : "☐";
+      const buttonLabel = task.completed ? "✓" : "☐";
       
       return {
         type: "box",
@@ -1944,7 +1944,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
     const completedCount = todayTasks.filter(t => t.completed).length;
     const taskItems = todayTasks.map((t, index) => {
       const textColor = t.completed ? "#999999" : "#333333";
-      const buttonLabel = t.completed ? "☑️" : "☐";
+      const buttonLabel = t.completed ? "✓" : "☐";
       
       return {
         type: "box",
