@@ -961,7 +961,7 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: `今天有 ${todayTasks.length} 件事要做`,
+              text: `今天 ${todayTasks.length} 件事要做`,
               weight: "bold",
               size: "lg",
               color: "#FFFFFF",
@@ -2050,7 +2050,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           contents: [
             {
               type: "text",
-              text: `今天有 ${todayTasks.length} 件事要做`,
+              text: `今天 ${todayTasks.length} 件事要做`,
               weight: "bold",
               size: "lg",
               color: "#FFFFFF",
