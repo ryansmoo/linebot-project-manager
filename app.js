@@ -2623,6 +2623,23 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
       }
     });
   }
+  
+  // 添加複製按鈕
+  buttons.push({
+    type: 'button',
+    style: 'secondary',
+    height: 'sm',
+    action: {
+      type: 'postback',
+      label: '📋 複製',
+      data: JSON.stringify({
+        action: 'copy_single_task',
+        userId: userId,
+        taskText: taskText,
+        taskId: taskId
+      })
+    }
+  });
 
   return {
     type: 'flex',
@@ -2822,6 +2839,22 @@ function createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl) {
 }
 
 // 任務清單 Flex Message
+// 生成任務清單文字的輔助函數
+function generateTaskListText(tasks, title = '📋 待辦事項') {
+  if (!tasks || tasks.length === 0) {
+    return `${title}\n\n目前沒有任務。`;
+  }
+
+  let text = `${title}\n\n`;
+  tasks.forEach((task, index) => {
+    const status = task.status === 'completed' ? '✅' : '⭕';
+    text += `${index + 1}. ${status} ${task.text}\n`;
+  });
+  
+  text += `\n共 ${tasks.length} 項任務`;
+  return text;
+}
+
 function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   return {
     type: 'flex',
@@ -2900,6 +2933,20 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
         layout: 'vertical',
         spacing: 'sm',
         contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'sm',
+            action: {
+              type: 'postback',
+              label: '📋 複製',
+              data: JSON.stringify({
+                action: 'copy_tasks',
+                userId: userId,
+                type: 'today'
+              })
+            }
+          },
           {
             type: 'box',
             layout: 'vertical',
@@ -3030,6 +3077,20 @@ function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
         layout: 'vertical',
         spacing: 'sm',
         contents: [
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'sm',
+            action: {
+              type: 'postback',
+              label: '📋 複製',
+              data: JSON.stringify({
+                action: 'copy_tasks',
+                userId: userId,
+                type: 'all'
+              })
+            }
+          },
           {
             type: 'box',
             layout: 'vertical',
@@ -3172,7 +3233,48 @@ async function handlePostbackEvent(event, baseUrl) {
     const postbackData = JSON.parse(event.postback.data);
     console.log('Postback data:', postbackData);
     
-    if (postbackData.action === 'add_to_calendar') {
+    if (postbackData.action === 'copy_tasks') {
+      console.log('📋 處理複製任務請求...');
+      const { userId: targetUserId, type } = postbackData;
+      
+      // 獲取對應的任務
+      let tasks = [];
+      let title = '';
+      
+      if (type === 'today') {
+        tasks = getTodayTasks(targetUserId);
+        title = '📋 今日待辦事項';
+      } else if (type === 'all') {
+        tasks = getAllTasks(targetUserId);
+        title = '📋 所有待辦事項';
+      }
+      
+      // 生成任務文字
+      const taskText = generateTaskListText(tasks, title);
+      
+      // 返回包含所有任務文字的訊息，用戶可以複製
+      return client.replyMessage(event.replyToken, [
+        {
+          type: 'text',
+          text: '✅ 任務清單已生成，請複製以下內容：'
+        },
+        {
+          type: 'text',
+          text: taskText
+        }
+      ]);
+      
+    } else if (postbackData.action === 'copy_single_task') {
+      console.log('📋 處理複製單個任務請求...');
+      const { taskText } = postbackData;
+      
+      // 返回單個任務文字供用戶複製
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `✅ 任務內容已準備複製：\n\n${taskText}`
+      });
+      
+    } else if (postbackData.action === 'add_to_calendar') {
       console.log('📅 處理上傳日曆請求...');
       // 檢查用戶是否已授權 Google Calendar
       console.log('🔍 檢查用戶授權狀態...');
