@@ -2627,17 +2627,10 @@ function createTaskRecordFlexMessage(taskText, userId, taskId, baseUrl) {
   // 添加複製按鈕
   buttons.push({
     type: 'button',
-    style: 'secondary',
-    height: 'sm',
     action: {
-      type: 'postback',
-      label: '📋 複製',
-      data: JSON.stringify({
-        action: 'copy_single_task',
-        userId: userId,
-        taskText: taskText,
-        taskId: taskId
-      })
+      type: 'message',
+      label: '複製',
+      text: '複製功能測試'
     }
   });
 
@@ -2917,20 +2910,13 @@ function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
         contents: [
           {
             type: 'button',
-            style: 'secondary',
             action: {
-              type: 'postback',
-              label: '📋 複製任務清單',
-              data: JSON.stringify({
-                action: 'copy_tasks',
-                userId: userId,
-                type: 'today'
-              })
+              type: 'message',
+              label: '複製',
+              text: '複製功能測試'
             }
           }
-        ],
-        spacing: 'sm',
-        paddingAll: 'md'
+        ]
       }
     }
   };
@@ -3046,20 +3032,13 @@ function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
         contents: [
           {
             type: 'button',
-            style: 'secondary',
             action: {
-              type: 'postback',
-              label: '📋 複製所有任務',
-              data: JSON.stringify({
-                action: 'copy_tasks',
-                userId: userId,
-                type: 'all'
-              })
+              type: 'message',
+              label: '複製',
+              text: '複製功能測試'
             }
           }
-        ],
-        spacing: 'sm',
-        paddingAll: 'md'
+        ]
       }
     }
   };
