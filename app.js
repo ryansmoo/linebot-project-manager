@@ -68,6 +68,22 @@ function createStandardQuickReply(baseUrl, userId) {
           label: '帳戶',
           uri: `${baseUrl}/liff/profile`
         }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: '全部紀錄',
+          text: '全部紀錄'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: '個人帳戶',
+          text: '個人帳戶'
+        }
       }
     ]
   };
