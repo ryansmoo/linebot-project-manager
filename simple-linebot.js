@@ -984,7 +984,7 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
+              text: `已完成 ${completedCount} 件、待完成 ${todayTasks.length - completedCount} 件`,
               weight: "regular",
               size: "md",
               color: "#666666",
@@ -2073,7 +2073,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           contents: [
             {
               type: "text",
-              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
+              text: `已完成 ${completedCount} 件、待完成 ${todayTasks.length - completedCount} 件`,
               weight: "regular",
               size: "md",
               color: "#666666",
