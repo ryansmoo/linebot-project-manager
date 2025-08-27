@@ -2012,14 +2012,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           type: "box",
           layout: "vertical",
           contents: [
-            completedCount === todayTasks.length ? {
-              type: "text",
-              text: "🎊 全部任務完成！",
-              weight: "bold",
-              size: "md",
-              color: "#4CAF50",
-              align: "center"
-            } : {
+            {
               type: "button",
               style: "link",
               height: "sm",
