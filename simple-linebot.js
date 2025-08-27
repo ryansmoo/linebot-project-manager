@@ -605,6 +605,12 @@ async function handleEvent(event) {
       return handleTestReminder(event, userId, messageText);
     }
 
+    // 檢查是否為todolist樣式的完成任務指令
+    const todoCompleteMatch = messageText.match(/^(完成任務|取消完成)\s+(.+)$/);
+    if (todoCompleteMatch) {
+      return handleTodoToggle(event, userId, todoCompleteMatch[1], todoCompleteMatch[2]);
+    }
+
     // 檢查是否為完成/刪除任務的指令
     const isCompleteCommand = /已完成|完成了|刪掉|刪除|完成(\d+)/.test(messageText);
     
@@ -634,6 +640,7 @@ async function handleEvent(event) {
       taskTime: null,
       category: 'work',
       customCategory: '',
+      completed: false,
       notes: '',
       reminderEnabled: false,
       reminderTime: 30,
@@ -877,13 +884,38 @@ async function handleEvent(event) {
       }
     };
 
-    // 建立任務列表內容
+    // 建立任務列表內容 - todolist樣式
+    const completedCount = todayTasks.filter(task => task.completed).length;
     const taskItems = todayTasks.map((task, index) => {
+      const checkIcon = task.completed ? "✅" : "☐";
+      const textColor = task.completed ? "#999999" : "#333333";
+      const buttonLabel = task.completed ? "已完成" : "完成";
+      
       return {
-        type: "text",
-        text: `${index + 1}. ${task.text}`,
-        size: "sm",
-        wrap: true,
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          {
+            type: "text",
+            text: `${checkIcon} ${index + 1}. ${task.text}`,
+            size: "sm",
+            wrap: true,
+            color: textColor,
+            flex: 3
+          },
+          {
+            type: "button",
+            style: task.completed ? "link" : "link",
+            height: "sm",
+            flex: 1,
+            action: {
+              type: "message",
+              label: buttonLabel,
+              text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
+            }
+          }
+        ],
+        spacing: "sm",
         margin: "xs"
       };
     });
@@ -907,7 +939,7 @@ async function handleEvent(event) {
             },
             {
               type: "text",
-              text: `已完成 0 項、待完成 ${todayTasks.length} 項`,
+              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
               weight: "regular",
               size: "md",
               color: "#666666",
@@ -1621,6 +1653,7 @@ async function handleAudioMessage(event) {
       taskTime: null,
       category: 'work',
       customCategory: '',
+      completed: false,
       notes: '📢 透過語音輸入',
       reminderEnabled: false,
       reminderTime: 30,
@@ -1873,6 +1906,141 @@ async function downloadAudioFile(messageId) {
   } catch (error) {
     console.error('❌ 下載語音檔案錯誤:', error);
     throw error;
+  }
+}
+
+// 處理todolist樣式的任務切換
+async function handleTodoToggle(event, userId, action, taskId) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (!userTasks.has(userId) || !userTasks.get(userId).has(today)) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '📋 今天還沒有任務呢！'
+      });
+    }
+    
+    const todayTasks = userTasks.get(userId).get(today);
+    const taskIndex = todayTasks.findIndex(task => task.id === taskId);
+    
+    if (taskIndex === -1) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '❌ 找不到指定的任務'
+      });
+    }
+    
+    const task = todayTasks[taskIndex];
+    const isCompleting = action === '完成任務';
+    
+    // 切換任務狀態
+    task.completed = isCompleting;
+    task.completedAt = isCompleting ? new Date().toISOString() : null;
+    
+    console.log(`${isCompleting ? '✅' : '◯'} 任務狀態已更新: ${task.text} - ${isCompleting ? '已完成' : '未完成'}`);
+    
+    // 重新生成更新後的任務列表
+    const completedCount = todayTasks.filter(t => t.completed).length;
+    const taskItems = todayTasks.map((t, index) => {
+      const checkIcon = t.completed ? "✅" : "☐";
+      const textColor = t.completed ? "#999999" : "#333333";
+      const buttonLabel = t.completed ? "已完成" : "完成";
+      
+      return {
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          {
+            type: "text",
+            text: `${checkIcon} ${index + 1}. ${t.text}`,
+            size: "sm",
+            wrap: true,
+            color: textColor,
+            flex: 3
+          },
+          {
+            type: "button",
+            style: "link",
+            height: "sm",
+            flex: 1,
+            action: {
+              type: "message",
+              label: buttonLabel,
+              text: t.completed ? `取消完成 ${t.id}` : `完成任務 ${t.id}`
+            }
+          }
+        ],
+        spacing: "sm",
+        margin: "xs"
+      };
+    });
+
+    // 生成更新後的Flex Message
+    const updatedMessage = {
+      type: 'flex',
+      altText: `任務清單已更新`,
+      contents: {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: completedCount === todayTasks.length ? `🎉 今天有 ${todayTasks.length} 項任務` : `📋 今天有 ${todayTasks.length} 項任務`,
+              weight: "bold",
+              size: "lg",
+              color: "#333333"
+            },
+            {
+              type: "text",
+              text: `已完成 ${completedCount} 項、待完成 ${todayTasks.length - completedCount} 項`,
+              weight: "regular",
+              size: "md",
+              color: "#666666",
+              margin: "xs"
+            },
+            ...taskItems
+          ],
+          spacing: "sm",
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            completedCount === todayTasks.length ? {
+              type: "text",
+              text: "🎊 全部任務完成！",
+              weight: "bold",
+              size: "md",
+              color: "#4CAF50",
+              align: "center"
+            } : {
+              type: "button",
+              style: "link",
+              height: "sm",
+              action: {
+                type: "uri",
+                label: "編輯",
+                uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
+              }
+            }
+          ],
+          paddingAll: "20px"
+        }
+      }
+    };
+    
+    return client.replyMessage(event.replyToken, updatedMessage);
+    
+  } catch (error) {
+    console.error('❌ Todolist切換錯誤:', error);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '❌ 操作失敗，請稍後再試'
+    });
   }
 }
 
