@@ -838,7 +838,7 @@ async function handleEvent(event) {
             {
               type: "text",
               text: messageText,
-              size: "sm",
+              size: "md",
               weight: "regular",
               wrap: true,
               margin: "xs"
