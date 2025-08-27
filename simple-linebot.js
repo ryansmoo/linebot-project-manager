@@ -728,7 +728,7 @@ async function handleEvent(event) {
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "編輯",
+                  label: "查看細節",
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
@@ -785,7 +785,7 @@ async function handleEvent(event) {
                 style: "primary",
                 action: {
                   type: "uri",
-                  label: "編輯",
+                  label: "查看細節",
                   uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
@@ -962,7 +962,7 @@ async function handleEvent(event) {
               height: "sm",
               action: {
                 type: "uri",
-                label: "編輯",
+                label: "查看細節",
                 uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
               }
             }
@@ -2020,7 +2020,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
               height: "sm",
               action: {
                 type: "uri",
-                label: "編輯",
+                label: "查看細節",
                 uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
               }
             }
