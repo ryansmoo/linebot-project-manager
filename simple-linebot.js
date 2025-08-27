@@ -907,22 +907,28 @@ async function handleEvent(event) {
             decoration: task.completed ? "line-through" : "none"
           },
           {
-            type: "button",
-            style: "link",
+            type: "text",
+            text: "✎",
+            size: "lg",
+            color: "#0066CC",
             flex: 3,
+            align: "center",
+            gravity: "center",
             action: {
               type: "uri",
-              label: "✎",
               uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
             }
           },
           {
-            type: "button",
-            style: "link",
+            type: "text",
+            text: buttonLabel,
+            size: "lg",
+            color: "#0066CC",
             flex: 3,
+            align: "center",
+            gravity: "center",
             action: {
               type: "message",
-              label: buttonLabel,
               text: task.completed ? `取消完成 ${task.id}` : `完成任務 ${task.id}`
             }
           }
