@@ -551,10 +551,21 @@
             // 設定當前時間
             updateCurrentTime();
             
-            // 模擬載入過程
+            // 如果沒有 taskId，顯示錯誤並退出
+            if (!taskId) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="loading-text" style="color: #FF3B30;">❌ 缺少任務 ID</div>
+                    <div style="margin-top: 20px;">
+                        <button onclick="goBack()" style="background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">返回</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 載入任務資料
             setTimeout(() => {
                 loadTaskData();
-            }, 1000);
+            }, 500);
         });
 
         function updateCurrentTime() {
@@ -568,15 +579,20 @@
         }
 
         async function loadTaskData() {
+            console.log('🚀 開始載入任務資料，taskId:', taskId);
             if (!taskId) {
+                console.log('❌ 缺少任務 ID');
                 showMessage('缺少任務 ID');
                 return;
             }
             
             try {
+                console.log('📡 發送 API 請求到:', `/api/task/${taskId}`);
                 // 從 API 獲取任務資料
                 const response = await fetch(`/api/task/${taskId}`);
+                console.log('📡 收到響應，狀態:', response.status);
                 const result = await response.json();
+                console.log('📋 API 響應資料:', result);
                 
                 if (result.success) {
                     taskData = result.task;
@@ -604,11 +620,25 @@
                     isModified = false;
                     updateSaveButton();
                 } else {
-                    showMessage('找不到任務資料');
+                    console.log('❌ API 返回失敗:', result);
+                    document.getElementById('loading').innerHTML = `
+                        <div class="loading-text" style="color: #FF3B30;">❌ 找不到任務資料</div>
+                        <div style="margin-top: 10px; color: #8E8E93; font-size: 14px;">任務 ID: ${taskId}</div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="goBack()" style="background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">返回</button>
+                        </div>
+                    `;
                 }
             } catch (error) {
-                console.error('載入任務失敗:', error);
-                showMessage('載入任務失敗，請稍後再試');
+                console.error('❌ 載入任務失敗:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="loading-text" style="color: #FF3B30;">❌ 載入任務失敗</div>
+                    <div style="margin-top: 10px; color: #8E8E93; font-size: 14px;">網路錯誤或伺服器無響應</div>
+                    <div style="margin-top: 20px;">
+                        <button onclick="loadTaskData()" style="background: #34C759; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-right: 10px;">重試</button>
+                        <button onclick="goBack()" style="background: #8E8E93; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">返回</button>
+                    </div>
+                `;
             }
         }
 
