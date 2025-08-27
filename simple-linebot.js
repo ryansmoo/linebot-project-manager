@@ -932,7 +932,7 @@ async function handleEvent(event) {
           contents: [
             {
               type: "text",
-              text: completedCount === todayTasks.length ? `🎉 今天有 ${todayTasks.length} 項任務` : `📋 今天有 ${todayTasks.length} 項任務`,
+              text: `📋 今天有 ${todayTasks.length} 項任務`,
               weight: "bold",
               size: "lg",
               color: "#333333"
@@ -1988,7 +1988,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           contents: [
             {
               type: "text",
-              text: completedCount === todayTasks.length ? `🎉 今天有 ${todayTasks.length} 項任務` : `📋 今天有 ${todayTasks.length} 項任務`,
+              text: `📋 今天有 ${todayTasks.length} 項任務`,
               weight: "bold",
               size: "lg",
               color: "#333333"
