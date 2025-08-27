@@ -2837,86 +2837,44 @@ function generateTaskListText(tasks, title = '📋 待辦事項') {
 
 function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   return {
-    type: 'flex',
-    altText: `${taskCount}個待辦事項`,
-    contents: {
-      type: 'bubble',
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
+    "type": "flex",
+    "altText": `${taskCount}個待辦事項`,
+    "contents": {
+      "type": "bubble",
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
           {
-            type: 'text',
-            text: `📋 ${taskCount}個待辦事項`,
-            weight: 'bold',
-            size: 'xl',
-            color: '#2196F3',
-            align: 'center',
-            margin: 'md'
+            "type": "text",
+            "text": "📋 待辦事項",
+            "weight": "bold",
+            "size": "lg"
           },
           {
-            type: 'separator',
-            margin: 'md'
-          },
-          {
-            type: 'text',
-            text: `今日共有 ${taskCount} 項任務`,
-            size: 'sm',
-            color: '#666666',
-            margin: 'lg',
-            align: 'center'
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            contents: tasks.slice(0, 3).map((task, index) => ({
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                {
-                  type: 'text',
-                  text: `${index + 1}.`,
-                  size: 'sm',
-                  color: '#888888',
-                  flex: 0
-                },
-                {
-                  type: 'text',
-                  text: task.status === 'completed' ? `~~${task.text}~~` : task.text,
-                  size: 'sm',
-                  color: task.status === 'completed' ? '#888888' : '#333333',
-                  margin: 'xs',
-                  wrap: true,
-                  flex: 1
-                }
-              ],
-              margin: 'sm'
-            })).concat(taskCount > 3 ? [{
-              type: 'text',
-              text: `...還有 ${taskCount - 3} 項任務`,
-              size: 'xs',
-              color: '#aaaaaa',
-              align: 'center',
-              margin: 'sm'
-            }] : []),
-            margin: 'md'
-          }
-        ],
-        paddingAll: 'lg'
-      },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'button',
-            action: {
-              type: 'message',
-              label: '複製',
-              text: '複製功能測試'
-            }
+            "type": "text",
+            "text": `共有 ${taskCount} 項任務`,
+            "size": "sm",
+            "color": "#666666",
+            "margin": "md"
           }
         ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "message",
+              "label": "複製",
+              "text": "複製測試成功！"
+            }
+          }
+        ],
+        "spacing": "sm"
       }
     }
   };
@@ -3026,19 +2984,21 @@ function createAllTasksFlexMessage(taskCount, tasks, userId, baseUrl) {
         ],
         paddingAll: 'lg'
       },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
           {
-            type: 'button',
-            action: {
-              type: 'message',
-              label: '複製',
-              text: '複製功能測試'
+            "type": "button",
+            "style": "primary",
+            "action": {
+              "type": "message",
+              "label": "複製",
+              "text": "複製測試成功！"
             }
           }
-        ]
+        ],
+        "spacing": "sm"
       }
     }
   };
