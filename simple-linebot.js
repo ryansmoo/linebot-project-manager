@@ -953,27 +953,26 @@ async function handleEvent(event) {
       altText: `今天的任務清單`,
       contents: {
         type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          backgroundColor: "#DDA267",
+          paddingAll: "16px",
+          contents: [
+            {
+              type: "text",
+              text: `今天有 ${todayTasks.length} 項任務`,
+              weight: "bold",
+              size: "lg",
+              color: "#FFFFFF",
+              align: "center"
+            }
+          ]
+        },
         body: {
           type: "box",
           layout: "vertical",
           contents: [
-            {
-              type: "box",
-              layout: "vertical",
-              backgroundColor: "#DDA267",
-              paddingAll: "12px",
-              cornerRadius: "8px",
-              margin: "none",
-              contents: [
-                {
-                  type: "text",
-                  text: `今天有 ${todayTasks.length} 項任務`,
-                  weight: "bold",
-                  size: "lg",
-                  color: "#FFFFFF"
-                }
-              ]
-            },
             ...taskItems
           ],
           spacing: "sm",
@@ -2043,27 +2042,26 @@ async function handleTodoToggle(event, userId, action, taskId) {
       altText: `任務清單已更新`,
       contents: {
         type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          backgroundColor: "#DDA267",
+          paddingAll: "16px",
+          contents: [
+            {
+              type: "text",
+              text: `今天有 ${todayTasks.length} 項任務`,
+              weight: "bold",
+              size: "lg",
+              color: "#FFFFFF",
+              align: "center"
+            }
+          ]
+        },
         body: {
           type: "box",
           layout: "vertical",
           contents: [
-            {
-              type: "box",
-              layout: "vertical",
-              backgroundColor: "#DDA267",
-              paddingAll: "12px",
-              cornerRadius: "8px",
-              margin: "none",
-              contents: [
-                {
-                  type: "text",
-                  text: `今天有 ${todayTasks.length} 項任務`,
-                  weight: "bold",
-                  size: "lg",
-                  color: "#FFFFFF"
-                }
-              ]
-            },
             ...taskItems
           ],
           spacing: "sm",
