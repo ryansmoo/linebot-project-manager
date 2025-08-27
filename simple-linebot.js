@@ -901,7 +901,8 @@ async function handleEvent(event) {
             wrap: true,
             color: textColor,
             flex: 3,
-            gravity: "center"
+            gravity: "center",
+            decoration: task.completed ? "line-through" : "none"
           },
           {
             type: "button",
@@ -1957,7 +1958,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
             wrap: true,
             color: textColor,
             flex: 3,
-            gravity: "center"
+            gravity: "center",
+            decoration: t.completed ? "line-through" : "none"
           },
           {
             type: "button",
