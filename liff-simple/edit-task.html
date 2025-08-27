@@ -278,9 +278,9 @@
             transform: translateX(20px);
         }
         
-        /* 內容輸入區域 - 移到最下方 */
+        /* 內容輸入區域 */
         .content-section {
-            margin: 40px 20px 120px 20px;
+            margin: 40px 20px 40px 20px;
         }
         
         .content-label {
@@ -310,44 +310,6 @@
             font-size: 16px;
         }
         
-        /* 底部工具列 */
-        .toolbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #2c2c2e;
-            padding: 10px 20px 30px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #3a3a3c;
-        }
-        
-        .toolbar-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 8px;
-            transition: background-color 0.2s;
-        }
-        
-        .toolbar-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .toolbar-icon {
-            font-size: 24px;
-            color: #fff;
-        }
-        
-        .toolbar-label {
-            font-size: 10px;
-            color: #8e8e93;
-        }
         
         /* 載入狀態 */
         .loading {
@@ -485,33 +447,6 @@
         </div>
     </div>
     
-    <!-- 底部工具列 -->
-    <div class="toolbar">
-        <div class="toolbar-item" onclick="changeFont()">
-            <div class="toolbar-icon">Aa</div>
-        </div>
-        <div class="toolbar-item" onclick="addAttachment()">
-            <div class="toolbar-icon">✓</div>
-        </div>
-        <div class="toolbar-item" onclick="recordVoice()">
-            <div class="toolbar-icon">🎤</div>
-        </div>
-        <div class="toolbar-item" onclick="addPhoto()">
-            <div class="toolbar-icon">🖼</div>
-        </div>
-        <div class="toolbar-item" onclick="showEmojis()">
-            <div class="toolbar-icon">😊</div>
-        </div>
-        <div class="toolbar-item" onclick="addHashtag()">
-            <div class="toolbar-icon">#</div>
-        </div>
-        <div class="toolbar-item" onclick="showMore()">
-            <div class="toolbar-icon">⋯</div>
-        </div>
-        <div class="toolbar-item" onclick="addList()">
-            <div class="toolbar-icon">≡</div>
-        </div>
-    </div>
     
     <!-- 時間設定彈窗 -->
     <div id="timeModal" class="time-modal">
@@ -828,16 +763,6 @@
             // 暫時為空實現
         }
         
-        // 工具列功能 (暫時為空實現)
-        function changeFont() { console.log('變更字體'); }
-        function addAttachment() { console.log('添加附件'); }
-        function recordVoice() { console.log('錄音'); }
-        function addPhoto() { console.log('添加照片'); }
-        function showEmojis() { console.log('顯示表情符號'); }
-        function addHashtag() { console.log('添加標籤'); }
-        function showMore() { console.log('顯示更多'); }
-        function addList() { console.log('添加清單'); }
-        function showMenu() { console.log('顯示選單'); }
 
         // 錯誤處理
         window.addEventListener('error', function(e) {
