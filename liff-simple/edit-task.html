@@ -355,33 +355,6 @@
             display: none;
         }
         
-        /* 特殊工具按鈕樣式 */
-        .save-button {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            z-index: 100;
-            transition: all 0.2s;
-        }
-        
-        .save-button:hover {
-            background: #005ecb;
-            transform: scale(1.05);
-        }
-        
-        .save-button:disabled {
-            background: #c7c7cc;
-            cursor: not-allowed;
-            transform: none;
-        }
     </style>
 </head>
 <body>
@@ -400,8 +373,6 @@
         </div>
     </div>
     
-    <!-- 儲存按鈕 -->
-    <button class="save-button" id="saveButton" onclick="saveTask()">儲存</button>
     
     <!-- 主要內容 -->
     <div class="content">
@@ -550,9 +521,8 @@
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('editForm').style.display = 'block';
                     
-                    // 重置修改狀態
+                    // 載入完成
                     isModified = false;
-                    updateSaveButton();
                 } else {
                     console.log('❌ API 返回失敗:', result);
                     document.getElementById('loading').innerHTML = `
@@ -595,26 +565,18 @@
         function markAsModified() {
             if (!isModified) {
                 isModified = true;
-                updateSaveButton();
+                // 延遲自動儲存，避免頻繁請求
+                clearTimeout(window.autoSaveTimer);
+                window.autoSaveTimer = setTimeout(() => {
+                    autoSaveTask();
+                }, 1000); // 1秒後自動儲存
             }
         }
 
-        function updateSaveButton() {
-            const saveButton = document.getElementById('saveButton');
-            if (isModified) {
-                saveButton.style.display = 'block';
-                saveButton.disabled = false;
-            } else {
-                saveButton.style.display = 'none';
-            }
-        }
-
-        async function saveTask() {
+        async function autoSaveTask() {
             const contentValue = document.getElementById('contentTextarea').value;
             
-            // 標題不變，只更新內容
-            
-            showMessage('正在儲存...');
+            console.log('🔄 自動儲存任務...');
             
             try {
                 const response = await fetch(`/api/task/${taskId}`, {
@@ -636,20 +598,14 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('✓ 已儲存');
+                    console.log('✅ 自動儲存成功');
                     isModified = false;
-                    updateSaveButton();
-                    
-                    // 2 秒後自動返回
-                    setTimeout(() => {
-                        goBack();
-                    }, 2000);
+                    // 不顯示儲存成功訊息，保持靜默
                 } else {
-                    showMessage('儲存失敗：' + result.error);
+                    console.error('❌ 自動儲存失敗:', result.error);
                 }
             } catch (error) {
-                console.error('儲存任務失敗:', error);
-                showMessage('儲存失敗，請稍後再試');
+                console.error('❌ 自動儲存失敗:', error);
             }
         }
         
