@@ -823,66 +823,6 @@ async function handleEvent(event) {
       ]
     };
 
-    // 第一則 FLEX MESSAGE：任務記錄
-    const firstMessage = {
-      type: 'flex',
-      altText: `已記錄任務: ${messageText}`,
-      contents: {
-        type: "bubble",
-        size: "kilo",
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "✏️",
-              size: "lg",
-              color: "#333333",
-              align: "start",
-              margin: "xs"
-            },
-            {
-              type: "text",
-              text: messageText,
-              size: "md",
-              weight: "regular",
-              wrap: true,
-              margin: "xs"
-            }
-          ],
-          spacing: "sm",
-          paddingAll: "8px"
-        },
-        footer: {
-          type: "box",
-          layout: "horizontal",
-          spacing: "sm",
-          contents: [
-            {
-              type: "button",
-              style: "link",
-              height: "sm",
-              action: {
-                type: "message",
-                label: "提醒",
-                text: "設定提醒"
-              }
-            },
-            {
-              type: "button",
-              style: "link", 
-              height: "sm",
-              action: {
-                type: "message",
-                label: "備註",
-                text: "添加備註"
-              }
-            }
-          ]
-        },
-      }
-    };
 
     // 建立任務列表內容 - todolist樣式
     const completedCount = todayTasks.filter(task => task.completed).length;
@@ -997,8 +937,8 @@ async function handleEvent(event) {
       }
     };
 
-    // 一次發送兩則 FLEX MESSAGE
-    const result = await client.replyMessage(event.replyToken, [firstMessage, secondMessage]);
+    // 只發送任務列表 FLEX MESSAGE
+    const result = await client.replyMessage(event.replyToken, secondMessage);
     
     return result;
   } catch (error) {
