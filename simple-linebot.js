@@ -907,7 +907,7 @@ async function handleEvent(event) {
             },
             {
               type: "text",
-              text: `已完成任務 0 項　待完成 ${todayTasks.length} 項`,
+              text: `已完成 0 項、待完成 ${todayTasks.length} 項`,
               weight: "regular",
               size: "md",
               color: "#666666",
