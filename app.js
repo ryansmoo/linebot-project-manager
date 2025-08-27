@@ -3310,6 +3310,16 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
+    } else if (userMessage === 'testquick' || userMessage === 'TESTQUICK') {
+      // 測試 QUICK REPLY 按鈕的純文字訊息
+      const testMessage = {
+        type: 'text',
+        text: '📱 測試 QUICK REPLY 按鈕',
+        quickReply: createStandardQuickReply(baseUrl, userId)
+      };
+      
+      return client.replyMessage(event.replyToken, testMessage);
+      
     } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
       // 清除對話記憶功能
       intentDetected = 'clear_memory';
@@ -3361,6 +3371,8 @@ async function handleEvent(event, baseUrl) {
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
       flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
+      
+      console.log('📱 FLEX MESSAGE with quickReply:', JSON.stringify(flexMessage, null, 2));
       
       return client.replyMessage(event.replyToken, flexMessage);
       
