@@ -887,9 +887,8 @@ async function handleEvent(event) {
     // 建立任務列表內容 - todolist樣式
     const completedCount = todayTasks.filter(task => task.completed).length;
     const taskItems = todayTasks.map((task, index) => {
-      const checkIcon = task.completed ? "✅" : "☐";
       const textColor = task.completed ? "#999999" : "#333333";
-      const buttonLabel = task.completed ? "已完成" : "完成";
+      const buttonLabel = task.completed ? "☑️" : "☐";
       
       return {
         type: "box",
@@ -897,7 +896,7 @@ async function handleEvent(event) {
         contents: [
           {
             type: "text",
-            text: `${checkIcon} ${index + 1}. ${task.text}`,
+            text: `${index + 1}. ${task.text}`,
             size: "sm",
             wrap: true,
             color: textColor,
@@ -905,7 +904,7 @@ async function handleEvent(event) {
           },
           {
             type: "button",
-            style: task.completed ? "link" : "link",
+            style: "link",
             height: "sm",
             flex: 1,
             action: {
@@ -1943,9 +1942,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
     // 重新生成更新後的任務列表
     const completedCount = todayTasks.filter(t => t.completed).length;
     const taskItems = todayTasks.map((t, index) => {
-      const checkIcon = t.completed ? "✅" : "☐";
       const textColor = t.completed ? "#999999" : "#333333";
-      const buttonLabel = t.completed ? "已完成" : "完成";
+      const buttonLabel = t.completed ? "☑️" : "☐";
       
       return {
         type: "box",
@@ -1953,7 +1951,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
         contents: [
           {
             type: "text",
-            text: `${checkIcon} ${index + 1}. ${t.text}`,
+            text: `${index + 1}. ${t.text}`,
             size: "sm",
             wrap: true,
             color: textColor,
