@@ -732,7 +732,7 @@ async function handleEvent(event) {
                   uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
-                height: "md",
+                height: "sm",
                 flex: 0
               }
             ],
@@ -789,7 +789,7 @@ async function handleEvent(event) {
                   uri: `${BASE_URL}/liff/tasks.html?date=${today}&userId=${encodeURIComponent(userId)}`
                 },
                 color: "#DDA267",
-                height: "md",
+                height: "sm",
                 flex: 0
               }
             ],
@@ -862,7 +862,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link",
-              height: "md",
+              height: "sm",
               action: {
                 type: "message",
                 label: "提醒",
@@ -872,7 +872,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link", 
-              height: "md",
+              height: "sm",
               action: {
                 type: "message",
                 label: "備註",
@@ -909,7 +909,6 @@ async function handleEvent(event) {
           {
             type: "button",
             style: "link",
-            height: "md",
             flex: 2,
             action: {
               type: "uri",
@@ -920,7 +919,6 @@ async function handleEvent(event) {
           {
             type: "button",
             style: "link",
-            height: "md",
             flex: 2,
             action: {
               type: "message",
@@ -981,7 +979,7 @@ async function handleEvent(event) {
             {
               type: "button",
               style: "link",
-              height: "md",
+              height: "sm",
               action: {
                 type: "uri",
                 label: "查看細節",
@@ -1774,7 +1772,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "md",
+              height: "sm",
               flex: 0
             }
           ],
@@ -1832,7 +1830,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "md",
+              height: "sm",
               flex: 1
             },
             {
@@ -1844,7 +1842,7 @@ async function handleAudioMessage(event) {
                 uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
               },
               color: "#DDA267",
-              height: "md",
+              height: "sm",
               flex: 1
             }
           ],
@@ -1989,7 +1987,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           {
             type: "button",
             style: "link",
-            height: "md",
+            height: "sm",
             flex: 4,
             action: {
               type: "uri",
@@ -2000,7 +1998,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
           {
             type: "button",
             style: "link",
-            height: "md",
+            height: "sm",
             flex: 4,
             action: {
               type: "message",
@@ -2061,7 +2059,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             {
               type: "button",
               style: "link",
-              height: "md",
+              height: "sm",
               action: {
                 type: "uri",
                 label: "查看細節",
