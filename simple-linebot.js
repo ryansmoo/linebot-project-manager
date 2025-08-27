@@ -902,7 +902,7 @@ async function handleEvent(event) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 6,
+            flex: 8,
             gravity: "center",
             decoration: task.completed ? "line-through" : "none"
           },
@@ -1985,7 +1985,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             size: "md",
             wrap: true,
             color: textColor,
-            flex: 6,
+            flex: 8,
             gravity: "center",
             decoration: t.completed ? "line-through" : "none"
           },
@@ -1993,7 +1993,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 6,
+            flex: 8,
             action: {
               type: "uri",
               label: "✏",
@@ -2004,7 +2004,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
             type: "button",
             style: "link",
             height: "sm",
-            flex: 6,
+            flex: 8,
             action: {
               type: "message",
               label: buttonLabel,
