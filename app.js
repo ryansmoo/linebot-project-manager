@@ -2837,44 +2837,35 @@ function generateTaskListText(tasks, title = '📋 待辦事項') {
 
 function createTaskListFlexMessage(taskCount, tasks, userId, baseUrl) {
   return {
-    "type": "flex",
-    "altText": `${taskCount}個待辦事項`,
-    "contents": {
-      "type": "bubble",
-      "body": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
+    type: 'flex',
+    altText: '待辦事項',
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
           {
-            "type": "text",
-            "text": "📋 待辦事項",
-            "weight": "bold",
-            "size": "lg"
-          },
-          {
-            "type": "text",
-            "text": `共有 ${taskCount} 項任務`,
-            "size": "sm",
-            "color": "#666666",
-            "margin": "md"
+            type: 'text',
+            text: '測試按鈕',
+            weight: 'bold',
+            size: 'lg'
           }
         ]
       },
-      "footer": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
           {
-            "type": "button",
-            "style": "primary",
-            "action": {
-              "type": "message",
-              "label": "複製",
-              "text": "複製測試成功！"
+            type: 'button',
+            action: {
+              type: 'message',
+              label: '複製',
+              text: '按鈕測試成功！'
             }
           }
-        ],
-        "spacing": "sm"
+        ]
       }
     }
   };
@@ -3323,6 +3314,44 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
+    } else if (userMessage === 'test' || userMessage === 'TEST') {
+      // 測試 FLEX MESSAGE 按鈕
+      const testFlexMessage = {
+        type: 'flex',
+        altText: '測試按鈕',
+        contents: {
+          type: 'bubble',
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'text',
+                text: '按鈕測試',
+                weight: 'bold',
+                size: 'lg'
+              }
+            ]
+          },
+          footer: {
+            type: 'box',
+            layout: 'vertical',
+            contents: [
+              {
+                type: 'button',
+                action: {
+                  type: 'message',
+                  label: '複製',
+                  text: '測試成功！'
+                }
+              }
+            ]
+          }
+        }
+      };
+      
+      return client.replyMessage(event.replyToken, testFlexMessage);
+      
     } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
       // 清除對話記憶功能
       intentDetected = 'clear_memory';
@@ -3373,7 +3402,6 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
-      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3506,7 +3534,6 @@ async function handleEvent(event, baseUrl) {
             
             // 生成 Flex Message 顯示更新後的任務列表
             const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
-            flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
