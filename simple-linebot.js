@@ -822,7 +822,7 @@ async function handleEvent(event) {
       altText: `已記錄任務: ${messageText}`,
       contents: {
         type: "bubble",
-        size: "nano",
+        size: "kilo",
         body: {
           type: "box",
           layout: "vertical",
