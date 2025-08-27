@@ -886,11 +886,13 @@ async function handleEvent(event) {
 
     // 建立任務列表內容 - todolist樣式
     const completedCount = todayTasks.filter(task => task.completed).length;
-    const taskItems = todayTasks.map((task, index) => {
+    const taskItems = [];
+    todayTasks.forEach((task, index) => {
       const textColor = task.completed ? "#999999" : "#333333";
       const buttonLabel = task.completed ? "☑" : "☐";
       
-      return {
+      // 添加任務項目
+      taskItems.push({
         type: "box",
         layout: "horizontal",
         contents: [
@@ -918,7 +920,16 @@ async function handleEvent(event) {
         ],
         spacing: "sm",
         margin: "xs"
-      };
+      });
+      
+      // 在非最後一個任務後添加分隔線
+      if (index < todayTasks.length - 1) {
+        taskItems.push({
+          type: "separator",
+          margin: "md",
+          color: "#E0E0E0"
+        });
+      }
     });
 
     // 第二則 FLEX MESSAGE：任務堆疊
@@ -1944,11 +1955,13 @@ async function handleTodoToggle(event, userId, action, taskId) {
     
     // 重新生成更新後的任務列表
     const completedCount = todayTasks.filter(t => t.completed).length;
-    const taskItems = todayTasks.map((t, index) => {
+    const taskItems = [];
+    todayTasks.forEach((t, index) => {
       const textColor = t.completed ? "#999999" : "#333333";
       const buttonLabel = t.completed ? "☑" : "☐";
       
-      return {
+      // 添加任務項目
+      taskItems.push({
         type: "box",
         layout: "horizontal",
         contents: [
@@ -1976,7 +1989,16 @@ async function handleTodoToggle(event, userId, action, taskId) {
         ],
         spacing: "sm",
         margin: "xs"
-      };
+      });
+      
+      // 在非最後一個任務後添加分隔線
+      if (index < todayTasks.length - 1) {
+        taskItems.push({
+          type: "separator",
+          margin: "md",
+          color: "#E0E0E0"
+        });
+      }
     });
 
     // 生成更新後的Flex Message
