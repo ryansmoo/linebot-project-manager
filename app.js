@@ -41,6 +41,29 @@ const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
+// 創建 QUICK REPLY 按鈕
+function createQuickReply() {
+  return {
+    items: [
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: '紀錄',
+          text: '紀錄'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: '帳戶',
+          text: '帳戶'
+        }
+      }
+    ]
+  };
+}
 
 function createMember(email, name, lineUserId = null) {
   const memberId = 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -3336,6 +3359,7 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
+      flexMessage.quickReply = createQuickReply();
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3357,6 +3381,7 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
+      flexMessage.quickReply = createQuickReply();
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3466,6 +3491,7 @@ async function handleEvent(event, baseUrl) {
             
             // 生成 Flex Message 顯示更新後的任務列表
             const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
+            flexMessage.quickReply = createQuickReply();
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
@@ -3527,6 +3553,7 @@ async function handleEvent(event, baseUrl) {
         
         // 創建累積任務列表訊息
         const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
+        cumulativeTasksMessage.quickReply = createQuickReply();
         
         // 發送兩則訊息：1.任務記錄確認（含日曆按鈕） 2.累積任務列表
         try {
