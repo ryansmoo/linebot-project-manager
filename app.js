@@ -41,24 +41,24 @@ const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
-// 創建 QUICK REPLY 按鈕
+// 創建 QUICK REPLY 按鈕 - 按照 LINE 官方規格
 function createQuickReply() {
   return {
-    items: [
+    "items": [
       {
-        type: 'action',
-        action: {
-          type: 'message',
-          label: '紀錄',
-          text: '紀錄'
+        "type": "action",
+        "action": {
+          "type": "message",
+          "label": "紀錄",
+          "text": "紀錄"
         }
       },
       {
-        type: 'action',
-        action: {
-          type: 'message',
-          label: '帳戶',
-          text: '帳戶'
+        "type": "action", 
+        "action": {
+          "type": "message",
+          "label": "帳戶",
+          "text": "帳戶"
         }
       }
     ]
@@ -3310,6 +3310,18 @@ async function handleEvent(event, baseUrl) {
       return client.replyMessage(event.replyToken, flexMessage);
       
       
+    } else if (userMessage === 'testqr' || userMessage === 'TESTQR') {
+      // 測試 QUICK REPLY 按鈕的純文字訊息
+      const testMessage = {
+        type: 'text',
+        text: '📱 測試 QUICK REPLY 按鈕',
+        quickReply: createQuickReply()
+      };
+      
+      console.log('🔍 測試訊息結構:', JSON.stringify(testMessage, null, 2));
+      
+      return client.replyMessage(event.replyToken, testMessage);
+      
     } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
       // 清除對話記憶功能
       intentDetected = 'clear_memory';
@@ -3514,7 +3526,11 @@ async function handleEvent(event, baseUrl) {
                     userMessage.includes('去') || 
                     userMessage.includes('做') || 
                     userMessage.includes('完成') ||
-                    userMessage.length > 3; // 簡單判斷：長度大於3可能是任務
+                    (userMessage.length > 3 && 
+                     !userMessage.includes('TESTQR') && 
+                     !userMessage.includes('testqr') &&
+                     !userMessage.includes('紀錄') &&
+                     !userMessage.includes('帳戶')); // 排除特殊關鍵字
       
       if (isTask && !userMessage.includes('？') && !userMessage.includes('?') && !userMessage.includes('什麼') && !userMessage.includes('如何')) {
         intentDetected = 'task_create';
