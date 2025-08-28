@@ -41,24 +41,32 @@ const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
-// 創建 QUICK REPLY 按鈕 - 恢復早期成功的 URI action 方式
+// 創建 QUICK REPLY 按鈕 - 修正版本
 function createStandardQuickReply(baseUrl, userId) {
   return {
     items: [
       {
         type: 'action',
         action: {
-          type: 'uri',
-          label: '紀錄',
-          uri: `${baseUrl}/liff/tasks?filter=all`
+          type: 'message',
+          label: '📅 今日任務',
+          text: '任務'
         }
       },
       {
         type: 'action',
         action: {
-          type: 'uri',
-          label: '帳戶', 
-          uri: `${baseUrl}/liff/profile`
+          type: 'message',
+          label: '📋 全部任務',
+          text: '全部'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: '❓ 幫助',
+          text: '/help'
         }
       }
     ]
