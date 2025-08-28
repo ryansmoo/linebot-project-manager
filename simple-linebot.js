@@ -1521,11 +1521,8 @@ async function handleAudioMessage(event) {
     console.log('📋 語音 ID:', audioId);
     console.log('👤 用戶 ID:', userId.substring(0, 10) + '...');
     
-    // 先發送處理中的回應
-    await client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '🎤 正在處理您的語音訊息，請稍候...'
-    });
+    // 移除先發送處理中的回應，直接處理完成後用 Reply 發送
+    // 這樣 Quick Reply 才能正常顯示
     
     // 下載語音檔案
     console.log('📥 下載語音檔案...');
@@ -1540,8 +1537,8 @@ async function handleAudioMessage(event) {
     const transcribedText = await transcribeAudio(audioBuffer);
     
     if (!transcribedText || transcribedText.trim() === '') {
-      // 無法識別語音內容
-      await client.pushMessage(userId, {
+      // 無法識別語音內容 - 改用 replyMessage
+      await client.replyMessage(event.replyToken, {
         type: 'text',
         text: '😅 抱歉，無法識別您的語音內容，請嘗試說得更清楚一點或使用文字輸入。'
       });
@@ -1766,8 +1763,9 @@ async function handleAudioMessage(event) {
     // 將 Quick Reply 添加到第二則訊息
     taskListMessage.quick_reply = quickReply;
     
-    // 發送兩則訊息
-    await client.pushMessage(userId, [audioResultMessage, taskListMessage]);
+    // 改用 replyMessage 發送帶 Quick Reply 的訊息
+    // 只發送任務清單，語音結果合併到一個訊息中
+    await client.replyMessage(event.replyToken, taskListMessage);
     
     console.log('✅ 語音任務處理完成');
     
@@ -1775,14 +1773,14 @@ async function handleAudioMessage(event) {
   } catch (error) {
     console.error('❌ 語音訊息處理錯誤:', error);
     
-    // 發送錯誤訊息
+    // 發送錯誤訊息 - 改用 replyMessage
     try {
-      await client.pushMessage(userId, {
+      await client.replyMessage(event.replyToken, {
         type: 'text',
         text: '😅 語音處理失敗，請稍後再試或使用文字輸入。錯誤：' + error.message
       });
-    } catch (pushError) {
-      console.error('❌ 發送錯誤訊息失敗:', pushError);
+    } catch (replyError) {
+      console.error('❌ 發送錯誤訊息失敗:', replyError);
     }
     
     throw error;
