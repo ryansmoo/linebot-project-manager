@@ -600,6 +600,49 @@ async function handleEvent(event) {
 
     console.log('💬 收到訊息:', messageText, 'from user:', userId.substring(0, 10) + '...');
 
+    // ✅ 最簡單的 Quick Reply 測試
+    if (messageText === '測試qr' || messageText === 'testqr' || messageText === 'TESTQR') {
+      console.log('🧪 執行最簡單的 Quick Reply 測試');
+      
+      const simpleQuickReplyMessage = {
+        type: 'text',
+        text: '🧪 最簡單的 Quick Reply 測試\n\n如果看到下方有按鈕，代表 Quick Reply 功能正常！',
+        quick_reply: {
+          items: [
+            {
+              type: 'action',
+              action: {
+                type: 'message',
+                label: '✅ 成功',
+                text: '✅ Quick Reply 成功！'
+              }
+            },
+            {
+              type: 'action', 
+              action: {
+                type: 'message',
+                label: '❌ 失敗',
+                text: '❌ Quick Reply 失敗'
+              }
+            },
+            {
+              type: 'action',
+              action: {
+                type: 'message', 
+                label: '🔄 重試',
+                text: '測試qr'
+              }
+            }
+          ]
+        }
+      };
+
+      console.log('📤 發送最簡單 Quick Reply 測試訊息...');
+      console.log('🔍 Quick Reply 結構:', JSON.stringify(simpleQuickReplyMessage.quick_reply, null, 2));
+      
+      return client.replyMessage(event.replyToken, simpleQuickReplyMessage);
+    }
+
     // 檢查是否為測試提醒指令
     if (messageText.includes('測試提醒')) {
       return handleTestReminder(event, userId, messageText);
