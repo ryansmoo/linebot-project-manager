@@ -1104,11 +1104,11 @@ async function handleCompleteTask(event, userId, messageText) {
     // 使用統一的 Quick Reply 函數
     const quickReply = createQuickReply();
     
-    replyMessage.quickReply = quickReply;
+    replyMessage.quick_reply = quickReply;
     
     console.log('📤 發送完成任務 FLEX 訊息...');
     console.log('🔍 完成任務 Quick Reply 結構:', JSON.stringify(quickReply, null, 2));
-    console.log('🔍 完成任務訊息結構檢查:', replyMessage.quickReply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
+    console.log('🔍 完成任務訊息結構檢查:', replyMessage.quick_reply ? '✅ Quick Reply 已添加' : '❌ Quick Reply 遺失');
     const result = await client.replyMessage(event.replyToken, replyMessage);
     console.log('✅ 訊息發送成功');
     
@@ -1764,7 +1764,7 @@ async function handleAudioMessage(event) {
     const quickReply = createQuickReply();
 
     // 將 Quick Reply 添加到第二則訊息
-    taskListMessage.quickReply = quickReply;
+    taskListMessage.quick_reply = quickReply;
     
     // 發送兩則訊息
     await client.pushMessage(userId, [audioResultMessage, taskListMessage]);
