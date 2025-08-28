@@ -3528,7 +3528,12 @@ async function handleEvent(event, baseUrl) {
                     userMessage.includes('去') || 
                     userMessage.includes('做') || 
                     userMessage.includes('完成') ||
-                    userMessage.length > 3; // 簡單判斷：長度大於3可能是任務
+                    (userMessage.length > 3 && 
+                     !userMessage.includes('TESTQUICK') && 
+                     !userMessage.includes('testquick') &&
+                     !userMessage.includes('今日任務') &&
+                     !userMessage.includes('全部紀錄') &&
+                     !userMessage.includes('個人帳戶')); // 排除特殊關鍵字
       
       if (isTask && !userMessage.includes('？') && !userMessage.includes('?') && !userMessage.includes('什麼') && !userMessage.includes('如何')) {
         intentDetected = 'task_create';
