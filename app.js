@@ -3561,30 +3561,17 @@ async function handleEvent(event, baseUrl) {
           }
         }
         
-        // 創建任務記錄確認訊息（包含日曆按鈕）
-        const taskRecordMessage = createTaskRecordFlexMessage(userMessage, userId, task.id, baseUrl);
-        
         // 獲取今天所有任務（包含剛新增的）
         const todayTasks = await getTodayTasks(userId);
         
-        // 創建累積任務列表訊息
+        // 只發送累積任務列表訊息（包含 QUICK REPLY）
         const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
         cumulativeTasksMessage.quickReply = createQuickReply();
         
-        // 發送兩則訊息：1.任務記錄確認（含日曆按鈕） 2.累積任務列表
-        try {
-          // 先回覆任務記錄確認訊息
-          await client.replyMessage(event.replyToken, taskRecordMessage);
-          
-          // 再推送累積任務訊息
-          await client.pushMessage(userId, cumulativeTasksMessage);
-          
-          return Promise.resolve();
-        } catch (pushError) {
-          console.error('Error sending multiple messages:', pushError);
-          // 如果推送失敗，至少確保單個任務訊息已發送
-          return Promise.resolve();
-        }
+        console.log('🔍 任務創建訊息結構:', JSON.stringify(cumulativeTasksMessage, null, 2));
+        
+        // 只發送一個訊息，避免多訊息衝突
+        return client.replyMessage(event.replyToken, cumulativeTasksMessage);
         
       } else {
         // 其他訊息使用ChatGPT回覆（支持持續對話）
