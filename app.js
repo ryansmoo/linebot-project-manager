@@ -41,24 +41,24 @@ const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
-// 創建 QUICK REPLY 按鈕 - 按照 LINE 官方規格
-function createQuickReply() {
+// 創建 QUICK REPLY 按鈕 - 恢復早期成功的 URI action 方式
+function createStandardQuickReply(baseUrl, userId) {
   return {
-    "items": [
+    items: [
       {
-        "type": "action",
-        "action": {
-          "type": "message",
-          "label": "紀錄",
-          "text": "紀錄"
+        type: 'action',
+        action: {
+          type: 'uri',
+          label: '紀錄',
+          uri: `${baseUrl}/liff/tasks?filter=all`
         }
       },
       {
-        "type": "action", 
-        "action": {
-          "type": "message",
-          "label": "帳戶",
-          "text": "帳戶"
+        type: 'action',
+        action: {
+          type: 'uri',
+          label: '帳戶', 
+          uri: `${baseUrl}/liff/profile`
         }
       }
     ]
@@ -3315,11 +3315,11 @@ async function handleEvent(event, baseUrl) {
       const testMessage = {
         type: 'text',
         text: '📱 測試 QUICK REPLY 按鈕',
-        quickReply: createQuickReply()
+        quickReply: createStandardQuickReply(baseUrl, userId)
       };
       
       console.log('🔍 測試訊息結構:', JSON.stringify(testMessage, null, 2));
-      console.log('🔍 createQuickReply() 結構:', JSON.stringify(createQuickReply(), null, 2));
+      console.log('🔍 createStandardQuickReply() 結構:', JSON.stringify(createStandardQuickReply(baseUrl, userId), null, 2));
       
       return client.replyMessage(event.replyToken, testMessage);
       
@@ -3371,11 +3371,8 @@ async function handleEvent(event, baseUrl) {
         });
       }
       
-      const baseFlexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
-      const flexMessage = {
-        ...baseFlexMessage,
-        quickReply: createQuickReply()
-      };
+      const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
+      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3396,11 +3393,8 @@ async function handleEvent(event, baseUrl) {
         });
       }
       
-      const baseFlexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
-      const flexMessage = {
-        ...baseFlexMessage,
-        quickReply: createQuickReply()
-      };
+      const flexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
+      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3509,11 +3503,8 @@ async function handleEvent(event, baseUrl) {
             replyMessage = taskListText.trim();
             
             // 生成 Flex Message 顯示更新後的任務列表
-            const baseFlexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
-            const flexMessage = {
-              ...baseFlexMessage,
-              quickReply: createQuickReply()
-            };
+            const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
+            flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
@@ -3575,11 +3566,8 @@ async function handleEvent(event, baseUrl) {
         const todayTasks = await getTodayTasks(userId);
         
         // 只發送累積任務列表訊息（包含 QUICK REPLY）
-        const baseCumulativeMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
-        const cumulativeTasksMessage = {
-          ...baseCumulativeMessage,
-          quickReply: createQuickReply()
-        };
+        const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
+        cumulativeTasksMessage.quickReply = createStandardQuickReply(baseUrl, userId);
         
         console.log('🔍 任務創建訊息結構:', JSON.stringify(cumulativeTasksMessage, null, 2));
         
