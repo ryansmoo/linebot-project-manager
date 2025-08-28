@@ -3319,6 +3319,7 @@ async function handleEvent(event, baseUrl) {
       };
       
       console.log('🔍 測試訊息結構:', JSON.stringify(testMessage, null, 2));
+      console.log('🔍 createQuickReply() 結構:', JSON.stringify(createQuickReply(), null, 2));
       
       return client.replyMessage(event.replyToken, testMessage);
       
@@ -3370,8 +3371,11 @@ async function handleEvent(event, baseUrl) {
         });
       }
       
-      const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
-      flexMessage.quickReply = createQuickReply();
+      const baseFlexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
+      const flexMessage = {
+        ...baseFlexMessage,
+        quickReply: createQuickReply()
+      };
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3392,8 +3396,11 @@ async function handleEvent(event, baseUrl) {
         });
       }
       
-      const flexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
-      flexMessage.quickReply = createQuickReply();
+      const baseFlexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
+      const flexMessage = {
+        ...baseFlexMessage,
+        quickReply: createQuickReply()
+      };
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3502,8 +3509,11 @@ async function handleEvent(event, baseUrl) {
             replyMessage = taskListText.trim();
             
             // 生成 Flex Message 顯示更新後的任務列表
-            const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
-            flexMessage.quickReply = createQuickReply();
+            const baseFlexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
+            const flexMessage = {
+              ...baseFlexMessage,
+              quickReply: createQuickReply()
+            };
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
@@ -3565,8 +3575,11 @@ async function handleEvent(event, baseUrl) {
         const todayTasks = await getTodayTasks(userId);
         
         // 只發送累積任務列表訊息（包含 QUICK REPLY）
-        const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
-        cumulativeTasksMessage.quickReply = createQuickReply();
+        const baseCumulativeMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
+        const cumulativeTasksMessage = {
+          ...baseCumulativeMessage,
+          quickReply: createQuickReply()
+        };
         
         console.log('🔍 任務創建訊息結構:', JSON.stringify(cumulativeTasksMessage, null, 2));
         
