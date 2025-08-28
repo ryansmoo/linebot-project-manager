@@ -612,17 +612,17 @@ async function handleEvent(event) {
             {
               type: 'action',
               action: {
-                type: 'message',
-                label: '✅ 成功',
-                text: '✅ Quick Reply 成功！'
+                type: 'uri',
+                label: '✅ 全部任務',
+                uri: `${baseUrl}/liff/tasks`
               }
             },
             {
               type: 'action', 
               action: {
-                type: 'message',
-                label: '❌ 失敗',
-                text: '❌ Quick Reply 失敗'
+                type: 'uri',
+                label: '👤 個人帳戶',
+                uri: `${baseUrl}/liff/profile`
               }
             },
             {
