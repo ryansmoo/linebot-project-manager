@@ -41,29 +41,6 @@ const lineBindings = new Map(); // lineUserId -> memberId
 const memberSessions = new Map(); // sessionId -> memberData
 
 // 會員資料結構
-// 創建統一的 Quick Reply 按鈕 - 全部使用 LIFF 應用程式
-function createStandardQuickReply(baseUrl, userId) {
-  return {
-    items: [
-      {
-        type: 'action',
-        action: {
-          type: 'message',
-          label: '全部紀錄',
-          text: '全部紀錄'
-        }
-      },
-      {
-        type: 'action',
-        action: {
-          type: 'message',
-          label: '個人帳戶',
-          text: '個人帳戶'
-        }
-      }
-    ]
-  };
-}
 
 function createMember(email, name, lineUserId = null) {
   const memberId = 'member_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -3297,8 +3274,7 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: replyMessage,
-        quickReply: createStandardQuickReply(baseUrl, userId)
+        text: replyMessage
       });
       
     } else if (userMessage === '任務') {
@@ -3310,15 +3286,6 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, flexMessage);
       
-    } else if (userMessage === 'testquick' || userMessage === 'TESTQUICK') {
-      // 測試 QUICK REPLY 按鈕的純文字訊息
-      const testMessage = {
-        type: 'text',
-        text: '📱 測試 QUICK REPLY 按鈕',
-        quickReply: createStandardQuickReply(baseUrl, userId)
-      };
-      
-      return client.replyMessage(event.replyToken, testMessage);
       
     } else if (userMessage === '清除對話' || userMessage === '清除記憶' || userMessage === '重新開始') {
       // 清除對話記憶功能
@@ -3329,8 +3296,7 @@ async function handleEvent(event, baseUrl) {
       
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: replyMessage,
-        quickReply: createStandardQuickReply(baseUrl, userId)
+        text: replyMessage
       });
       
     } else if (userMessage === '對話記錄' || userMessage === '聊天記錄') {
@@ -3370,9 +3336,6 @@ async function handleEvent(event, baseUrl) {
       }
       
       const flexMessage = createTaskListFlexMessage(taskCount, todayTasks, userId, baseUrl);
-      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
-      
-      console.log('📱 FLEX MESSAGE with quickReply:', JSON.stringify(flexMessage, null, 2));
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3389,13 +3352,11 @@ async function handleEvent(event, baseUrl) {
         
         return client.replyMessage(event.replyToken, {
           type: 'text',
-          text: replyMessage,
-          quickReply: createStandardQuickReply(baseUrl, userId)
+          text: replyMessage
         });
       }
       
       const flexMessage = createAllTasksFlexMessage(taskCount, allTasks, userId, baseUrl);
-      flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
       
       return client.replyMessage(event.replyToken, flexMessage);
       
@@ -3505,7 +3466,6 @@ async function handleEvent(event, baseUrl) {
             
             // 生成 Flex Message 顯示更新後的任務列表
             const flexMessage = createTaskListFlexMessage(updatedTasks.length, updatedTasks, userId, baseUrl);
-            flexMessage.quickReply = createStandardQuickReply(baseUrl, userId);
             
             return client.replyMessage(event.replyToken, flexMessage);
           }
@@ -3528,12 +3488,7 @@ async function handleEvent(event, baseUrl) {
                     userMessage.includes('去') || 
                     userMessage.includes('做') || 
                     userMessage.includes('完成') ||
-                    (userMessage.length > 3 && 
-                     !userMessage.includes('TESTQUICK') && 
-                     !userMessage.includes('testquick') &&
-                     !userMessage.includes('今日任務') &&
-                     !userMessage.includes('全部紀錄') &&
-                     !userMessage.includes('個人帳戶')); // 排除特殊關鍵字
+                    userMessage.length > 3; // 簡單判斷：長度大於3可能是任務
       
       if (isTask && !userMessage.includes('？') && !userMessage.includes('?') && !userMessage.includes('什麼') && !userMessage.includes('如何')) {
         intentDetected = 'task_create';
@@ -3572,7 +3527,6 @@ async function handleEvent(event, baseUrl) {
         
         // 創建累積任務列表訊息
         const cumulativeTasksMessage = createCumulativeTasksFlexMessage(todayTasks, userId, baseUrl);
-        cumulativeTasksMessage.quickReply = createStandardQuickReply(baseUrl, userId);
         
         // 發送兩則訊息：1.任務記錄確認（含日曆按鈕） 2.累積任務列表
         try {
