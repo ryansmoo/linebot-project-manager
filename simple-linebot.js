@@ -801,27 +801,8 @@ async function handleEvent(event) {
       }
     ];
 
-    // 建立 Quick Reply 按鈕
-    const quickReply = {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📋 全部',
-            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '👤 帳戶',
-            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
-          }
-        }
-      ]
-    };
+    // 使用統一的 Quick Reply 函數
+    const quickReply = createQuickReply();
 
 
     // 建立任務列表內容 - todolist樣式
@@ -1120,27 +1101,8 @@ async function handleCompleteTask(event, userId, messageText) {
       }
     };
     
-    // 建立 Quick Reply 按鈕
-    const quickReply = {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📋 全部',
-            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '👤 帳戶',
-            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
-          }
-        }
-      ]
-    };
+    // 使用統一的 Quick Reply 函數
+    const quickReply = createQuickReply();
     
     replyMessage.quickReply = quickReply;
     
@@ -1424,24 +1386,24 @@ function createTaskManagementFlex() {
   };
 }
 
-// 建立 Quick Reply
+// 建立 Quick Reply - 修正版本（統一使用 message 類型）
 function createQuickReply() {
   return {
     items: [
       {
         type: 'action',
         action: {
-          type: 'uri',
-          label: '📝 任務',
-          uri: `${BASE_URL}/liff/tasks.html`
+          type: 'message',
+          label: '📅 今日任務',
+          text: '今天任務'
         }
       },
       {
         type: 'action',
         action: {
-          type: 'uri',
-          label: '👤 帳戶',
-          uri: `${BASE_URL}/liff/profile.html`
+          type: 'message',
+          label: '📝 新增任務',
+          text: '新增任務'
         }
       },
       {
@@ -1798,27 +1760,8 @@ async function handleAudioMessage(event) {
       }
     };
 
-    // 建立 Quick Reply 按鈕
-    const quickReply = {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '📋 全部',
-            uri: `${BASE_URL}/liff/all-tasks.html?userId=${encodeURIComponent(userId)}`
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'uri',
-            label: '👤 帳戶',
-            uri: `${BASE_URL}/liff/profile.html?userId=${encodeURIComponent(userId)}`
-          }
-        }
-      ]
-    };
+    // 使用統一的 Quick Reply 函數
+    const quickReply = createQuickReply();
 
     // 將 Quick Reply 添加到第二則訊息
     taskListMessage.quickReply = quickReply;
