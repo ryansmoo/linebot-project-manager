@@ -705,7 +705,7 @@ async function handleEvent(event) {
               action: {
                 type: 'message',
                 label: '✅ 全部任務',
-                text: '📋 全部紀錄'
+                text: '全部紀錄'
               }
             },
             {
@@ -713,7 +713,7 @@ async function handleEvent(event) {
               action: {
                 type: 'message',
                 label: '👤 個人帳戶',
-                text: '👤 個人帳號'
+                text: '個人帳號'
               }
             },
             {
@@ -735,7 +735,7 @@ async function handleEvent(event) {
     }
 
     // 處理「全部紀錄」按鈕訊息
-    if (messageText === '📋 全部紀錄') {
+    if (messageText === '全部紀錄') {
       console.log('📋 處理全部紀錄請求');
       
       const allTasks = [];
@@ -756,7 +756,7 @@ async function handleEvent(event) {
         });
       }
       
-      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
+      let recordMessage = `全部紀錄 (共 ${allTasks.length} 項)\n\n`;
       
       // 按日期分組顯示
       const tasksByDate = {};
@@ -784,7 +784,7 @@ async function handleEvent(event) {
     }
 
     // 處理「個人帳號」按鈕訊息  
-    if (messageText === '👤 個人帳號') {
+    if (messageText === '個人帳號') {
       console.log('👤 處理個人帳號請求');
       
       let userTasksCount = 0;
@@ -798,7 +798,7 @@ async function handleEvent(event) {
         }
       }
       
-      const accountInfo = `👤 個人帳號資訊\n\n` +
+      const accountInfo = `個人帳號資訊\n\n` +
                          `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
                          `🔸 總任務數：${userTasksCount} 項\n` +
                          `🔸 已完成：${completedTasksCount} 項\n` +
@@ -1161,8 +1161,8 @@ async function handleEvent(event) {
                   height: "sm",
                   action: {
                     type: "message",
-                    label: "📋 全部紀錄",
-                    text: "📋 全部紀錄"
+                    label: "全部紀錄",
+                    text: "全部紀錄"
                   },
                   flex: 1
                 },
@@ -1172,8 +1172,8 @@ async function handleEvent(event) {
                   height: "sm",
                   action: {
                     type: "message",
-                    label: "👤 個人帳號",
-                    text: "👤 個人帳號"
+                    label: "個人帳號",
+                    text: "個人帳號"
                   },
                   flex: 1
                 }
@@ -2332,8 +2332,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   height: "sm",
                   action: {
                     type: "message",
-                    label: "📋 全部紀錄",
-                    text: "📋 全部紀錄"
+                    label: "全部紀錄",
+                    text: "全部紀錄"
                   },
                   flex: 1
                 },
@@ -2343,8 +2343,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   height: "sm",
                   action: {
                     type: "message",
-                    label: "👤 個人帳號",
-                    text: "👤 個人帳號"
+                    label: "個人帳號",
+                    text: "個人帳號"
                   },
                   flex: 1
                 }
@@ -2438,7 +2438,7 @@ async function handlePostbackEvent(event) {
         });
       }
       
-      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
+      let recordMessage = `全部紀錄 (共 ${allTasks.length} 項)\n\n`;
       
       // 按日期分組顯示
       const tasksByDate = {};
@@ -2477,7 +2477,7 @@ async function handlePostbackEvent(event) {
         }
       }
       
-      const accountInfo = `👤 個人帳號資訊\n\n` +
+      const accountInfo = `個人帳號資訊\n\n` +
                          `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
                          `🔸 總任務數：${userTasksCount} 項\n` +
                          `🔸 已完成：${completedTasksCount} 項\n` +
