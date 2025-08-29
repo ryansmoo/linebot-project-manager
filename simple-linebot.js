@@ -1166,7 +1166,7 @@ async function handleEvent(event) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `https://ryansmoo.github.io/linebot-project-manager/?userId=${encodeURIComponent(userId)}`
+                    uri: `https://ryansmoo.github.io/linebot-project-manager/tasks.html?userId=${encodeURIComponent(userId)}`
                   },
                   flex: 1
                 },
@@ -2337,7 +2337,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `https://ryansmoo.github.io/linebot-project-manager/?userId=${encodeURIComponent(userId)}`
+                    uri: `https://ryansmoo.github.io/linebot-project-manager/tasks.html?userId=${encodeURIComponent(userId)}`
                   },
                   flex: 1
                 },

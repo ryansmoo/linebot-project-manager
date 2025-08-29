@@ -1,0 +1,20 @@
+title: LINE Bot 專案管理系統
+description: 任務記錄和管理工具
+theme: minima
+
+# GitHub Pages 設置
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# 包含的文件
+include:
+  - tasks.html
+
+# 排除的文件
+exclude:
+  - node_modules/
+  - package*.json
+  - simple-linebot.js
+  - .gitignore
+  - README.md

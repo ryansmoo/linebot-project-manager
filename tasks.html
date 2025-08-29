@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務記錄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #DDA267, #D4935D);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .header .summary {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .task-list {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .date-group {
+            background: #f8f9fa;
+            padding: 16px 24px;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .task-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: flex-start;
+            transition: background-color 0.2s;
+        }
+        
+        .task-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-number {
+            background: #DDA267;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .task-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .task-text {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.5;
+            max-width: 85%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .task-status {
+            font-size: 28px;
+            margin-left: 16px;
+            flex-shrink: 0;
+        }
+        
+        .completed .task-number {
+            background: #28a745;
+        }
+        
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #6c757d;
+            opacity: 0.7;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .footer {
+            padding: 20px 24px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        
+        .refresh-btn {
+            background: #DDA267;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 120px;
+        }
+        
+        .refresh-btn:hover {
+            background: #D4935D;
+        }
+        
+        .refresh-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #DDA267;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .task-item {
+                padding: 16px 20px;
+            }
+            
+            .task-number {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+                margin-right: 16px;
+            }
+            
+            .task-text {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 任務記錄</h1>
+            <div id="taskSummary" class="summary">載入中...</div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            <div>載入任務中...</div>
+        </div>
+
+        <div id="taskContainer" class="task-list" style="display: none;">
+            <!-- 動態生成任務列表 -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="icon">📝</div>
+            <h3>目前沒有任務記錄</h3>
+            <p>開始在LINE中輸入訊息來建立任務！</p>
+        </div>
+
+        <div class="footer">
+            <button class="refresh-btn" onclick="loadTasks()">🔄 重新載入</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        
+        // 從URL參數獲取用戶ID
+        function getUserIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('userId');
+        }
+        
+        // 示例任務數據
+        const sampleTasks = [
+            { 
+                id: '1', 
+                text: '學習 LINE Bot 開發技術', 
+                completed: false, 
+                createdAt: new Date().toISOString(),
+                category: 'work'
+            },
+            { 
+                id: '2', 
+                text: '完成專案部署到 GitHub Pages', 
+                completed: true, 
+                createdAt: new Date(Date.now() - 86400000).toISOString(),
+                category: 'work' 
+            },
+            { 
+                id: '3', 
+                text: '測試 LINE Bot 回應功能', 
+                completed: false, 
+                createdAt: new Date(Date.now() - 3600000).toISOString(),
+                category: 'personal'
+            },
+            { 
+                id: '4', 
+                text: '優化用戶體驗和介面設計', 
+                completed: false, 
+                createdAt: new Date().toISOString(),
+                category: 'design'
+            }
+        ];
+
+        async function loadTasks() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const taskContainer = document.getElementById('taskContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            // 顯示載入狀態
+            loadingIndicator.style.display = 'block';
+            taskContainer.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                currentUserId = getUserIdFromUrl();
+                
+                if (currentUserId) {
+                    // 嘗試從API載入真實數據
+                    const response = await fetch(`https://gold-clubs-fetch.loca.lt/api/tasks/${currentUserId}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.tasks && data.tasks.length > 0) {
+                            displayTasks(data.tasks);
+                            return;
+                        }
+                    }
+                }
+                
+                // 載入失敗或無數據時顯示示例
+                displayTasks(sampleTasks);
+                
+            } catch (error) {
+                console.log('載入失敗，顯示示例數據:', error);
+                displayTasks(sampleTasks);
+            }
+        }
+
+        function displayTasks(tasks) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const taskContainer = document.getElementById('taskContainer');
+            const emptyState = document.getElementById('emptyState');
+            const taskSummary = document.getElementById('taskSummary');
+            
+            loadingIndicator.style.display = 'none';
+            
+            if (!tasks || tasks.length === 0) {
+                emptyState.style.display = 'block';
+                taskSummary.textContent = '共 0 個任務';
+                return;
+            }
+
+            // 顯示摘要
+            const completedCount = tasks.filter(task => task.completed).length;
+            const totalCount = tasks.length;
+            taskSummary.textContent = `共 ${totalCount} 個任務 (已完成 ${completedCount} 個)`;
+
+            // 按日期分組
+            const tasksByDate = {};
+            tasks.forEach(task => {
+                const date = new Date(task.createdAt).toLocaleDateString('zh-TW', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                if (!tasksByDate[date]) {
+                    tasksByDate[date] = [];
+                }
+                tasksByDate[date].push(task);
+            });
+
+            // 生成HTML
+            let taskListHTML = '';
+            let taskIndex = 1;
+            
+            // 按日期排序
+            const sortedDates = Object.keys(tasksByDate).sort((a, b) => {
+                return new Date(b) - new Date(a);
+            });
+            
+            sortedDates.forEach(date => {
+                taskListHTML += `<div class="date-group">📅 ${date}</div>`;
+                
+                tasksByDate[date].forEach(task => {
+                    const status = task.completed ? '✅' : '⭕';
+                    const completedClass = task.completed ? 'completed' : '';
+                    
+                    taskListHTML += `
+                        <div class="task-item ${completedClass}">
+                            <div class="task-number">${taskIndex}</div>
+                            <div class="task-content">
+                                <div class="task-text">${escapeHtml(task.text)}</div>
+                                <div class="task-status">${status}</div>
+                            </div>
+                        </div>
+                    `;
+                    taskIndex++;
+                });
+            });
+
+            taskContainer.innerHTML = taskListHTML;
+            taskContainer.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 頁面載入時執行
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+        });
+    </script>
+</body>
+</html>
