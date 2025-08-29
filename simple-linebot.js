@@ -760,7 +760,17 @@ async function handleEvent(event) {
         });
       }
       
-      // 按日期分組顯示
+      // 創建美觀的 Flex Message 顯示所有任務
+      const flexMessage = {
+        type: "flex",
+        altText: `📋 全部紀錄 (共 ${allTasks.length} 項)`,
+        contents: {
+          type: "carousel",
+          contents: []
+        }
+      };
+
+      // 將任務按日期分組，每個日期一個bubble
       const tasksByDate = {};
       allTasks.forEach(task => {
         const dateKey = new Date(task.createdAt).toLocaleDateString('zh-TW');
@@ -769,27 +779,104 @@ async function handleEvent(event) {
         }
         tasksByDate[dateKey].push(task);
       });
-      
-      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
-      let taskIndex = 1;
-      
-      // 按日期排序並顯示
+
       const sortedDates = Object.keys(tasksByDate).sort((a, b) => new Date(b) - new Date(a));
       
       sortedDates.forEach(date => {
-        recordMessage += `📅 ${date}\n`;
-        tasksByDate[date].forEach(task => {
-          const status = task.completed ? '✅' : '⭕';
-          recordMessage += `${taskIndex}. ${task.text} ${status}\n`;
-          taskIndex++;
-        });
-        recordMessage += '\n';
+        const dateTasks = tasksByDate[date];
+        const completedCount = dateTasks.filter(t => t.completed).length;
+        
+        const bubble = {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            backgroundColor: "#4a90e2",
+            paddingAll: "16px",
+            contents: [
+              {
+                type: "text",
+                text: `📅 ${date}`,
+                weight: "bold",
+                size: "lg",
+                color: "#FFFFFF",
+                align: "center"
+              },
+              {
+                type: "text",
+                text: `${dateTasks.length} 個任務 (完成 ${completedCount} 個)`,
+                size: "sm",
+                color: "#FFFFFF",
+                align: "center",
+                margin: "sm"
+              }
+            ]
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: dateTasks.slice(0, 8).map((task, index) => ({
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: `${index + 1}.`,
+                  size: "sm",
+                  color: "#4a90e2",
+                  weight: "bold",
+                  flex: 1
+                },
+                {
+                  type: "text",
+                  text: task.text,
+                  size: "sm",
+                  wrap: true,
+                  color: task.completed ? "#999999" : "#333333",
+                  decoration: task.completed ? "line-through" : "none",
+                  flex: 8
+                },
+                {
+                  type: "text",
+                  text: task.completed ? "✅" : "⭕",
+                  size: "sm",
+                  flex: 1,
+                  align: "end"
+                }
+              ],
+              spacing: "sm",
+              margin: index === 0 ? "none" : "xs"
+            })),
+            spacing: "xs",
+            paddingAll: "16px"
+          }
+        };
+        
+        // 如果任務太多，添加footer顯示省略信息
+        if (dateTasks.length > 8) {
+          bubble.footer = {
+            type: "box",
+            layout: "vertical",
+            contents: [{
+              type: "text",
+              text: `... 還有 ${dateTasks.length - 8} 個任務`,
+              size: "xs",
+              color: "#999999",
+              align: "center"
+            }],
+            paddingAll: "12px"
+          };
+        }
+        
+        flexMessage.contents.contents.push(bubble);
       });
-      
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: recordMessage
-      });
+
+      // 如果只有一個日期，轉換為單個bubble而不是carousel
+      if (flexMessage.contents.contents.length === 1) {
+        flexMessage.contents = flexMessage.contents.contents[0];
+      }
+
+      return client.replyMessage(event.replyToken, flexMessage);
     }
 
     // 處理「個人帳號」按鈕訊息  
@@ -1169,9 +1256,9 @@ async function handleEvent(event) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "全部紀錄",
-                    uri: `${BASE_URL}/tasks.html?userId=${encodeURIComponent(userId)}`
+                    text: "全部紀錄"
                   },
                   flex: 1
                 },
@@ -2340,9 +2427,9 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "全部紀錄",
-                    uri: `${BASE_URL}/tasks.html?userId=${encodeURIComponent(userId)}`
+                    text: "全部紀錄"
                   },
                   flex: 1
                 },
