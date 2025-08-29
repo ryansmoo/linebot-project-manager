@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務記錄 - LINE Bot 項目管理</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #DDA267, #D4935D);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .header .summary {
+            margin-top: 8px;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .task-list {
+            padding: 0;
+        }
+        
+        .task-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .task-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-number {
+            background: #DDA267;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .task-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .task-text {
+            font-size: 16px;
+            color: #333;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .task-status {
+            font-size: 24px;
+            margin-left: 12px;
+        }
+        
+        .completed .task-number {
+            background: #28a745;
+        }
+        
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #6c757d;
+            opacity: 0.7;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .refresh-btn {
+            background: #DDA267;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px;
+            width: calc(100% - 40px);
+            transition: background-color 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #D4935D;
+        }
+        
+        .date-group {
+            background: #f8f9fa;
+            padding: 12px 24px;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 任務記錄</h1>
+            <div id="taskSummary" class="summary">載入中...</div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">
+            <div>🔄 載入任務中...</div>
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;">
+            <div>❌ 載入失敗，請重試</div>
+        </div>
+
+        <div id="taskContainer" class="task-list" style="display: none;">
+            <!-- 任務列表會在這裡動態生成 -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="icon">📝</div>
+            <div>目前沒有任何任務記錄</div>
+            <div style="font-size: 14px; margin-top: 8px; opacity: 0.7;">開始在LINE中輸入訊息來建立任務！</div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadTasks()">🔄 重新整理</button>
+    </div>
+
+    <script>
+        let userId = null;
+        let taskData = [];
+        
+        // 從URL參數獲取用戶ID（用於直接訪問）
+        function getUserIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('userId');
+        }
+        
+        // 模擬任務數據 - 當API不可用時的備用方案
+        const sampleTasks = [
+            { 
+                id: '1', 
+                text: '學習 LINE Bot 開發', 
+                completed: false, 
+                createdAt: new Date().toISOString(),
+                category: 'work'
+            },
+            { 
+                id: '2', 
+                text: '部署到 GitHub Pages', 
+                completed: true, 
+                createdAt: new Date(Date.now() - 86400000).toISOString(),
+                category: 'work' 
+            },
+            { 
+                id: '3', 
+                text: '測試 LIFF 功能', 
+                completed: false, 
+                createdAt: new Date().toISOString(),
+                category: 'personal'
+            }
+        ];
+        
+        async function initLiff() {
+            try {
+                // 嘗試從URL獲取用戶ID
+                userId = getUserIdFromUrl();
+                
+                if (!userId) {
+                    // 如果沒有URL參數，嘗試LIFF初始化
+                    await liff.init({ liffId: "2003671781-kNpYLPKd" });
+                    
+                    if (liff.isLoggedIn()) {
+                        const profile = await liff.getProfile();
+                        userId = profile.userId;
+                        console.log('LIFF User ID:', userId);
+                    } else {
+                        console.log('用戶未登入，使用示例數據');
+                    }
+                }
+                
+                // 載入任務
+                await loadTasks();
+                
+            } catch (error) {
+                console.log('LIFF初始化失敗，使用示例數據:', error);
+                // 使用示例數據作為備用方案
+                displayTasks(sampleTasks);
+            }
+        }
+
+        async function loadTasks() {
+            if (!userId) {
+                console.log('沒有用戶ID，顯示示例數據');
+                displayTasks(sampleTasks);
+                return;
+            }
+
+            try {
+                // 嘗試從API載入真實數據
+                const response = await fetch(`https://gold-clubs-fetch.loca.lt/api/tasks/${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.tasks) {
+                    taskData = data.tasks;
+                    displayTasks(taskData);
+                } else {
+                    throw new Error('API響應錯誤');
+                }
+            } catch (error) {
+                console.log('載入真實任務失敗，使用示例數據:', error);
+                // API失敗時使用示例數據
+                displayTasks(sampleTasks);
+            }
+        }
+
+        function displayTasks(tasks) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const taskContainer = document.getElementById('taskContainer');
+            const emptyState = document.getElementById('emptyState');
+            const taskSummary = document.getElementById('taskSummary');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            loadingIndicator.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            if (!tasks || tasks.length === 0) {
+                emptyState.style.display = 'block';
+                taskContainer.style.display = 'none';
+                taskSummary.textContent = '共 0 個任務';
+                return;
+            }
+
+            // 顯示任務摘要
+            const completedCount = tasks.filter(task => task.completed).length;
+            const totalCount = tasks.length;
+            taskSummary.textContent = `共 ${totalCount} 個任務 (已完成 ${completedCount} 個)`;
+
+            // 按日期分組
+            const tasksByDate = {};
+            tasks.forEach(task => {
+                const date = new Date(task.createdAt).toLocaleDateString('zh-TW');
+                if (!tasksByDate[date]) {
+                    tasksByDate[date] = [];
+                }
+                tasksByDate[date].push(task);
+            });
+
+            // 生成任務列表HTML
+            let taskListHTML = '';
+            let taskIndex = 1;
+            
+            // 按日期排序（最新的在前）
+            const sortedDates = Object.keys(tasksByDate).sort((a, b) => {
+                return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-'));
+            });
+            
+            sortedDates.forEach(date => {
+                taskListHTML += `<div class="date-group">📅 ${date}</div>`;
+                
+                tasksByDate[date].forEach(task => {
+                    const status = task.completed ? '✅' : '⭕';
+                    const completedClass = task.completed ? 'completed' : '';
+                    
+                    taskListHTML += `
+                        <div class="task-item ${completedClass}">
+                            <div class="task-number">${taskIndex}</div>
+                            <div class="task-content">
+                                <div class="task-text">${escapeHtml(task.text)}</div>
+                                <div class="task-status">${status}</div>
+                            </div>
+                        </div>
+                    `;
+                    taskIndex++;
+                });
+            });
+
+            taskContainer.innerHTML = taskListHTML;
+            taskContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function showError(message) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            loadingIndicator.style.display = 'none';
+            errorMessage.querySelector('div').textContent = `❌ ${message}`;
+            errorMessage.style.display = 'block';
+        }
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initLiff();
+        });
+    </script>
+</body>
+</html>
