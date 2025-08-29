@@ -2577,6 +2577,26 @@ function createTaskKeywordFlexMessage() {
               label: '🔗 前往 Ryan 的 Threads',
               uri: 'https://www.threads.com/@ryan_ryan_lin?hl=zh-tw'
             }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'sm',
+            action: {
+              type: 'postback',
+              label: '📋 全部紀錄',
+              data: 'action=all_records'
+            }
+          },
+          {
+            type: 'button',
+            style: 'secondary',
+            height: 'sm',
+            action: {
+              type: 'postback',
+              label: '👤 個人帳號',
+              data: 'action=personal_account'
+            }
           }
         ]
       }
@@ -3218,6 +3238,62 @@ async function handlePostbackEvent(event, baseUrl) {
           });
         }
       }
+    } else if (postbackData.action === 'all_records') {
+      // 處理「全部紀錄」按鈕
+      const allTasks = userTasks.get(userId) || [];
+      
+      if (allTasks.length === 0) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '📋 目前沒有任何紀錄。\n\n請開始新增任務來建立您的專案紀錄！'
+        });
+      }
+      
+      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
+      
+      // 按日期分組顯示
+      const tasksByDate = {};
+      allTasks.forEach((task, index) => {
+        const dateKey = new Date(task.timestamp).toLocaleDateString('zh-TW');
+        if (!tasksByDate[dateKey]) {
+          tasksByDate[dateKey] = [];
+        }
+        tasksByDate[dateKey].push({ ...task, originalIndex: index });
+      });
+      
+      Object.keys(tasksByDate).sort().reverse().forEach(date => {
+        recordMessage += `📅 ${date}\n`;
+        tasksByDate[date].forEach(task => {
+          const status = task.completed ? '✅' : '⏳';
+          recordMessage += `${status} ${task.text}\n`;
+        });
+        recordMessage += '\n';
+      });
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: recordMessage
+      });
+      
+    } else if (postbackData.action === 'personal_account') {
+      // 處理「個人帳號」按鈕
+      const userTasksCount = (userTasks.get(userId) || []).length;
+      const completedTasksCount = (userTasks.get(userId) || []).filter(task => task.completed).length;
+      
+      const accountInfo = `👤 個人帳號資訊\n\n` +
+                         `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
+                         `🔸 總任務數：${userTasksCount} 項\n` +
+                         `🔸 已完成：${completedTasksCount} 項\n` +
+                         `🔸 進行中：${userTasksCount - completedTasksCount} 項\n\n` +
+                         `📱 您可以輸入以下指令：\n` +
+                         `• "任務清單" - 查看今日任務\n` +
+                         `• "清除對話" - 重新開始對話\n` +
+                         `• "對話記錄" - 查看聊天記錄`;
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: accountInfo
+      });
     }
     
     return Promise.resolve(null);
