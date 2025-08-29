@@ -79,9 +79,14 @@ const BASE_URL = process.env.BASE_URL ||
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
     : `http://localhost:${PORT}`);
 
-// 靜態檔案服務 - 提供 LIFF APP
+// 靜態檔案服務 - 提供 LIFF APP 和任務頁面
 app.use('/liff', express.static(path.join(__dirname, 'liff-simple')));
 app.use('/static', express.static(path.join(__dirname, 'public')));
+
+// 提供任務頁面
+app.get('/tasks.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'tasks.html'));
+});
 
 // Webhook 驗證端點 - 在 middleware 之前
 app.get('/webhook', (req, res) => {
@@ -1166,7 +1171,7 @@ async function handleEvent(event) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `https://ryansmoo.github.io/linebot-project-manager/tasks.html?userId=${encodeURIComponent(userId)}`
+                    uri: `${BASE_URL}/tasks.html?userId=${encodeURIComponent(userId)}`
                   },
                   flex: 1
                 },
@@ -2337,7 +2342,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `https://ryansmoo.github.io/linebot-project-manager/tasks.html?userId=${encodeURIComponent(userId)}`
+                    uri: `${BASE_URL}/tasks.html?userId=${encodeURIComponent(userId)}`
                   },
                   flex: 1
                 },

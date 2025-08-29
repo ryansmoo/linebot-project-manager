@@ -308,7 +308,7 @@
                 
                 if (currentUserId) {
                     // 嘗試從API載入真實數據
-                    const response = await fetch(`https://gold-clubs-fetch.loca.lt/api/tasks/${currentUserId}`);
+                    const response = await fetch(`/api/tasks/${currentUserId}`);
                     
                     if (response.ok) {
                         const data = await response.json();

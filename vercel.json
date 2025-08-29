@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/tasks.html"
+    },
+    {
+      "source": "/tasks",
+      "destination": "/tasks.html"
+    }
+  ]
+}
