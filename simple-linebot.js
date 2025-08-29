@@ -443,6 +443,41 @@ app.post('/api/test-reminder/:taskId', async (req, res) => {
 // 任務儲存（記憶體，按用戶ID和日期分組）
 const userTasks = new Map(); // userId -> { date -> [tasks] }
 
+// 添加測試數據來驗證同步功能
+function initializeTestData() {
+  const testUserId = 'U1c47ead2ba4b1ce4a7fc516b7e25efde';
+  const today = getTaiwanDate(); // 2025-08-29
+  
+  if (!userTasks.has(testUserId)) {
+    userTasks.set(testUserId, new Map());
+  }
+  
+  const userDates = userTasks.get(testUserId);
+  if (!userDates.has(today)) {
+    userDates.set(today, []);
+  }
+  
+  const todayTasks = userDates.get(today);
+  
+  // 添加5個測試任務
+  const testTasks = [
+    { id: Date.now(), text: '嗨', completed: false, timestamp: Date.now() },
+    { id: Date.now() + 1, text: 'C9', completed: false, timestamp: Date.now() + 1 },
+    { id: Date.now() + 2, text: 'C9 C9', completed: false, timestamp: Date.now() + 2 },
+    { id: Date.now() + 3, text: '餔餔', completed: false, timestamp: Date.now() + 3 },
+    { id: Date.now() + 4, text: '測試同步功能', completed: false, timestamp: Date.now() + 4 }
+  ];
+  
+  testTasks.forEach(task => todayTasks.push(task));
+  
+  console.log('✅ 已添加測試任務數據:', testTasks.length, '個任務');
+  console.log('📅 測試日期:', today);
+  console.log('👤 測試用戶ID:', testUserId.substring(0, 15) + '...');
+}
+
+// 初始化測試數據
+initializeTestData();
+
 // 格式化任務顯示文字
 function formatTaskDisplayText(task) {
   let displayText = task.text;
