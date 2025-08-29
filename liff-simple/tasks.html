@@ -207,22 +207,89 @@
             border-radius: 10px;
             border: 1px dashed #dee2e6;
         }
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+            gap: 0;
+        }
+        .mode-button {
+            padding: 10px 24px;
+            background: #4A90A4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        .mode-button:first-child {
+            border-radius: 25px 0 0 25px;
+        }
+        .mode-button:last-child {
+            border-radius: 0 25px 25px 0;
+        }
+        .mode-button.active {
+            background: #00B900;
+            transform: scale(1.05);
+        }
+        .mode-button:hover:not(.active) {
+            background: #5BA0B4;
+        }
+        .month-view {
+            display: none;
+            padding: 20px;
+            text-align: center;
+        }
+        .month-calendar {
+            background: #4A90A4;
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .date-selector {
+            margin: 20px 0;
+        }
+        .date-selector h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .task-preview {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .task-preview h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📋 全部紀錄</h1>
-            <div class="subtitle">5天任務時間軸</div>
+            <div class="subtitle" id="modeSubtitle">7天任務時間軸</div>
         </div>
         
-        <div class="description">
-            每次打開頁面最上面都是以今天日期為基準，自動顯示前2天、後2天，總共5天記錄
+        <div class="mode-selector">
+            <button class="mode-button active" id="weekBtn" onclick="switchMode('week')">週</button>
+            <button class="mode-button" id="monthBtn" onclick="switchMode('month')">月</button>
+        </div>
+        
+        <div class="description" id="weekDescription">
+            每次打開頁面最上面都是以今天日期為基準，自動顯示前3天、後3天，總共7天記錄
         </div>
         
         <div id="loading" class="loading">
             <div class="loading-spinner"></div>
-            <p>正在載入5天任務記錄...</p>
+            <p id="loadingText">正在載入7天任務記錄...</p>
         </div>
         
         <div id="timelineContent" class="timeline-container" style="display: none;">
@@ -236,16 +303,32 @@
                 <!-- 任務內容將動態生成 -->
             </div>
         </div>
+        
+        <div id="monthView" class="month-view">
+            <div class="month-calendar" id="monthCalendar">
+                日曆
+            </div>
+            <div class="date-selector">
+                <h3>選擇指定日期後</h3>
+                <div class="task-preview">
+                    <h4>下面會跳出當天任務</h4>
+                    <div id="selectedDateTasks">
+                        <!-- 選中日期的任務將顯示在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         let userId = null;
         let timelineData = {};
         let currentDate = new Date();
+        let currentMode = 'week'; // 'week' 或 'month'
         
         // 頁面載入完成後初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📋 5天任務時間軸頁面載入開始');
+            console.log('📋 7天任務時間軸頁面載入開始');
             
             // 從 URL 參數取得用戶資訊
             const urlParams = new URLSearchParams(window.location.search);
@@ -255,24 +338,59 @@
             
             // 模擬載入過程
             setTimeout(() => {
-                load5DaysTasks();
+                loadWeekTasks();
             }, 1000);
         });
 
-        // 載入5天的任務數據
-        async function load5DaysTasks() {
-            try {
-                console.log('🔄 開始載入5天任務數據...');
+        // 切換模式
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // 更新按鈕狀態
+            document.getElementById('weekBtn').classList.toggle('active', mode === 'week');
+            document.getElementById('monthBtn').classList.toggle('active', mode === 'month');
+            
+            if (mode === 'week') {
+                // 顯示週視圖
+                document.getElementById('weekDescription').style.display = 'block';
+                document.getElementById('timelineContent').style.display = 'flex';
+                document.getElementById('monthView').style.display = 'none';
+                document.getElementById('modeSubtitle').textContent = '7天任務時間軸';
+                document.getElementById('loadingText').textContent = '正在載入7天任務記錄...';
                 
-                // 計算5天的日期範圍
-                const dates = generate5Days();
+                // 載入7天數據
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('timelineContent').style.display = 'none';
+                setTimeout(() => {
+                    loadWeekTasks();
+                }, 500);
+            } else {
+                // 顯示月視圖
+                document.getElementById('weekDescription').style.display = 'none';
+                document.getElementById('timelineContent').style.display = 'none';
+                document.getElementById('monthView').style.display = 'block';
+                document.getElementById('modeSubtitle').textContent = '月份任務檢視';
+                document.getElementById('loading').style.display = 'none';
+                
+                // 載入月視圖
+                loadMonthView();
+            }
+        }
+
+        // 載入7天的任務數據
+        async function loadWeekTasks() {
+            try {
+                console.log('🔄 開始載入7天任務數據...');
+                
+                // 計算7天的日期範圍
+                const dates = generate7Days();
                 
                 if (!userId) {
                     console.log('⚠️ 沒有用戶 ID，使用模擬數據');
-                    timelineData = generateMock5DaysData(dates);
+                    timelineData = generateMock7DaysData(dates);
                 } else {
-                    // 調用真實的 API 載入5天數據
-                    console.log('🌐 正在從 API 載入5天任務...');
+                    // 調用真實的 API 載入7天數據
+                    console.log('🌐 正在從 API 載入7天任務...');
                     timelineData = await fetchTimelineData(dates);
                 }
                 
@@ -282,14 +400,14 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('timelineContent').style.display = 'flex';
                 
-                console.log('✅ 5天任務時間軸顯示完成');
+                console.log('✅ 7天任務時間軸顯示完成');
             } catch (error) {
-                console.error('❌ 載入5天任務失敗:', error);
+                console.error('❌ 載入7天任務失敗:', error);
                 
                 // 發生錯誤時使用模擬數據作為備案
                 console.log('🔄 使用模擬數據作為備案');
-                const dates = generate5Days();
-                timelineData = generateMock5DaysData(dates);
+                const dates = generate7Days();
+                timelineData = generateMock7DaysData(dates);
                 displayTimeline(dates);
                 
                 document.getElementById('loading').style.display = 'none';
@@ -297,10 +415,10 @@
             }
         }
 
-        // 生成5天日期陣列（前2天 + 今天 + 後2天）
-        function generate5Days() {
+        // 生成7天日期陣列（前3天 + 今天 + 後3天）
+        function generate7Days() {
             const dates = [];
-            for (let i = -2; i <= 2; i++) {
+            for (let i = -3; i <= 3; i++) {
                 const date = new Date(currentDate);
                 date.setDate(currentDate.getDate() + i);
                 dates.push(date);
@@ -341,8 +459,8 @@
             return data;
         }
 
-        // 生成模擬5天數據
-        function generateMock5DaysData(dates) {
+        // 生成模擬7天數據
+        function generateMock7DaysData(dates) {
             const data = {};
             const mockTasks = [
                 '去日本玩', '去垃圾', '買菜', '讀書', '運動',
@@ -397,9 +515,9 @@
             const monthDay = `${date.getMonth() + 1}/${date.getDate()}`;
             
             let className = 'date-node ';
-            if (index < 2) {
+            if (index < 3) {
                 className += 'past';
-            } else if (index === 2) {
+            } else if (index === 3) {
                 className += 'today';
             } else {
                 className += 'future';
@@ -489,11 +607,42 @@
                    String(date.getDate()).padStart(2, '0');
         }
 
+        // 載入月視圖
+        function loadMonthView() {
+            const now = new Date();
+            const monthStr = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+            document.getElementById('monthCalendar').textContent = monthStr;
+            
+            // 模擬選中日期的任務顯示
+            const today = formatDate(now);
+            const todayTasks = timelineData[today] || [];
+            
+            let tasksHtml = '';
+            if (todayTasks.length === 0) {
+                tasksHtml = '<p style="color: #999; font-style: italic;">今天沒有任務</p>';
+            } else {
+                tasksHtml = todayTasks.map(task => `
+                    <div style="display: flex; align-items: center; margin: 8px 0; padding: 8px; background: white; border-radius: 5px; border: 1px solid #e0e0e0;">
+                        <div style="width: 16px; height: 16px; border: 2px solid #28a745; border-radius: 3px; margin-right: 10px; display: flex; align-items: center; justify-content: center; ${task.completed ? 'background: #28a745;' : ''}">
+                            ${task.completed ? '<span style="color: white; font-size: 10px;">✓</span>' : ''}
+                        </div>
+                        <span style="font-size: 14px; ${task.completed ? 'text-decoration: line-through; color: #666;' : 'color: #333;'}">${task.text}</span>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('selectedDateTasks').innerHTML = tasksHtml;
+        }
+        
         // 頁面可見性變化處理
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 console.log('📋 頁面重新獲得焦點，重新整理時間軸');
-                load5DaysTasks();
+                if (currentMode === 'week') {
+                    loadWeekTasks();
+                } else {
+                    loadMonthView();
+                }
             }
         });
 
