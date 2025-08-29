@@ -79,8 +79,7 @@ const BASE_URL = process.env.BASE_URL ||
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
     : `http://localhost:${PORT}`);
 
-// 靜態檔案服務 - 提供 LIFF APP
-app.use('/liff', express.static(path.join(__dirname, 'liff-simple')));
+// 靜態檔案服務
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // Webhook 驗證端點 - 在 middleware 之前
@@ -704,17 +703,17 @@ async function handleEvent(event) {
             {
               type: 'action',
               action: {
-                type: 'uri',
+                type: 'message',
                 label: '✅ 全部任務',
-                uri: `${baseUrl}/liff/tasks`
+                text: '📋 全部紀錄'
               }
             },
             {
               type: 'action', 
               action: {
-                type: 'uri',
+                type: 'message',
                 label: '👤 個人帳戶',
-                uri: `${baseUrl}/liff/profile`
+                text: '👤 個人帳號'
               }
             },
             {
@@ -733,6 +732,87 @@ async function handleEvent(event) {
       console.log('🔍 Quick Reply 結構:', JSON.stringify(simpleQuickReplyMessage.quick_reply, null, 2));
       
       return client.replyMessage(event.replyToken, simpleQuickReplyMessage);
+    }
+
+    // 處理「全部紀錄」按鈕訊息
+    if (messageText === '📋 全部紀錄') {
+      console.log('📋 處理全部紀錄請求');
+      
+      const allTasks = [];
+      const userTaskMap = userTasks.get(userId);
+      
+      if (userTaskMap) {
+        for (const [date, tasks] of userTaskMap) {
+          for (const task of tasks) {
+            allTasks.push({ ...task, date });
+          }
+        }
+      }
+      
+      if (allTasks.length === 0) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '📋 目前沒有任何紀錄。\n\n請開始新增任務來建立您的專案紀錄！'
+        });
+      }
+      
+      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
+      
+      // 按日期分組顯示
+      const tasksByDate = {};
+      allTasks.forEach(task => {
+        const dateKey = new Date(task.createdAt).toLocaleDateString('zh-TW');
+        if (!tasksByDate[dateKey]) {
+          tasksByDate[dateKey] = [];
+        }
+        tasksByDate[dateKey].push(task);
+      });
+      
+      Object.keys(tasksByDate).forEach(date => {
+        recordMessage += `📅 ${date}\n`;
+        tasksByDate[date].forEach((task, index) => {
+          const statusIcon = task.completed ? '✅' : '⭕';
+          recordMessage += `  ${statusIcon} ${task.text}\n`;
+        });
+        recordMessage += '\n';
+      });
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: recordMessage
+      });
+    }
+
+    // 處理「個人帳號」按鈕訊息  
+    if (messageText === '👤 個人帳號') {
+      console.log('👤 處理個人帳號請求');
+      
+      let userTasksCount = 0;
+      let completedTasksCount = 0;
+      
+      const userTaskMap = userTasks.get(userId);
+      if (userTaskMap) {
+        for (const [date, tasks] of userTaskMap) {
+          userTasksCount += tasks.length;
+          completedTasksCount += tasks.filter(task => task.completed).length;
+        }
+      }
+      
+      const accountInfo = `👤 個人帳號資訊\n\n` +
+                         `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
+                         `🔸 總任務數：${userTasksCount} 項\n` +
+                         `🔸 已完成：${completedTasksCount} 項\n` +
+                         `🔸 進行中：${userTasksCount - completedTasksCount} 項\n\n` +
+                         `📱 您可以輸入以下指令：\n` +
+                         `• 輸入任何文字：新增任務\n` +
+                         `• 傳送語音：語音轉任務\n` +
+                         `• 完成 [任務編號]：標記完成\n` +
+                         `• 刪除 [任務編號]：刪除任務`;
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: accountInfo
+      });
     }
 
     // 檢查是否為測試提醒指令
@@ -1080,9 +1160,9 @@ async function handleEvent(event) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "📋 全部紀錄",
-                    uri: `${BASE_URL}/liff/tasks.html`
+                    text: "📋 全部紀錄"
                   },
                   flex: 1
                 },
@@ -1091,9 +1171,9 @@ async function handleEvent(event) {
                   style: "link", 
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "👤 個人帳號",
-                    uri: `${BASE_URL}/liff/profile.html`
+                    text: "👤 個人帳號"
                   },
                   flex: 1
                 }
@@ -2251,9 +2331,9 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "📋 全部紀錄",
-                    uri: `${BASE_URL}/liff/tasks.html`
+                    text: "📋 全部紀錄"
                   },
                   flex: 1
                 },
@@ -2262,9 +2342,9 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   style: "link", 
                   height: "sm",
                   action: {
-                    type: "uri",
+                    type: "message",
                     label: "👤 個人帳號",
-                    uri: `${BASE_URL}/liff/profile.html`
+                    text: "👤 個人帳號"
                   },
                   flex: 1
                 }
@@ -2554,8 +2634,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 精簡版 LINE Bot 啟動成功！');
   console.log(`📡 服務運行於: ${BASE_URL}`);
   console.log(`🔗 Webhook URL: ${BASE_URL}/webhook`);
-  console.log(`📱 LIFF 任務頁面: ${BASE_URL}/liff/tasks.html`);
-  console.log(`👤 LIFF 個人頁面: ${BASE_URL}/liff/profile.html`);
   console.log('📝 請將 Webhook URL 設定到 LINE Developer Console');
   console.log('🎤 語音識別功能已啟用 (使用 OpenAI Whisper)');
   console.log('⚡ 準備接收 LINE 訊息...');
