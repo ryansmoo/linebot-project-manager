@@ -1116,7 +1116,7 @@ async function handleEvent(event) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `${BASE_URL}/liff/records.html`
+                    uri: `${BASE_URL}/liff/simple-records.html`
                   },
                   flex: 1
                 },
@@ -2287,7 +2287,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   action: {
                     type: "uri",
                     label: "全部紀錄",
-                    uri: `${BASE_URL}/liff/records.html`
+                    uri: `${BASE_URL}/liff/simple-records.html`
                   },
                   flex: 1
                 },
