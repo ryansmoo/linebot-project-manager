@@ -1061,7 +1061,7 @@ async function handleEvent(event) {
               contents: [
                 {
                   type: "button",
-                  style: "secondary",
+                  style: "link",
                   height: "sm",
                   action: {
                     type: "message",
@@ -1072,7 +1072,7 @@ async function handleEvent(event) {
                 },
                 {
                   type: "button",
-                  style: "secondary", 
+                  style: "link", 
                   height: "sm",
                   action: {
                     type: "message",
@@ -2222,7 +2222,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
               contents: [
                 {
                   type: "button",
-                  style: "secondary",
+                  style: "link",
                   height: "sm",
                   action: {
                     type: "message",
@@ -2233,7 +2233,7 @@ async function handleTodoToggle(event, userId, action, taskId) {
                 },
                 {
                   type: "button",
-                  style: "secondary", 
+                  style: "link", 
                   height: "sm",
                   action: {
                     type: "message",
