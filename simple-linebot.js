@@ -208,6 +208,11 @@ app.put('/api/task/:taskId', (req, res) => {
           cancelReminder(taskId);
         }
         
+        // 自動提交到 GitHub
+        setTimeout(() => {
+          autoGitCommit(`更新任務: ${tasks[taskIndex].text.substring(0, 50)}`);
+        }, 2000);
+        
         return res.json({ success: true, task: tasks[taskIndex] });
       }
     }
@@ -227,7 +232,14 @@ app.delete('/api/task/:taskId', (req, res) => {
     for (const [date, tasks] of userDates) {
       const taskIndex = tasks.findIndex(t => t.id === taskId);
       if (taskIndex !== -1) {
+        const deletedTask = tasks[taskIndex];
         tasks.splice(taskIndex, 1);
+        
+        // 自動提交到 GitHub
+        setTimeout(() => {
+          autoGitCommit(`刪除任務: ${deletedTask.text.substring(0, 50)}`);
+        }, 2000);
+        
         return res.json({ success: true, message: '任務已刪除' });
       }
     }
@@ -263,6 +275,12 @@ app.patch('/api/tasks/:userId/:taskId/toggle', (req, res) => {
   // 切換任務完成狀態
   dayTasks[taskIndex].completed = !dayTasks[taskIndex].completed;
   dayTasks[taskIndex].completedAt = dayTasks[taskIndex].completed ? new Date().toISOString() : null;
+  
+  // 自動提交到 GitHub
+  const statusText = dayTasks[taskIndex].completed ? '完成' : '取消完成';
+  setTimeout(() => {
+    autoGitCommit(`${statusText}任務: ${dayTasks[taskIndex].text.substring(0, 50)}`);
+  }, 2000);
   
   res.json({
     success: true,
