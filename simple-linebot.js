@@ -677,7 +677,12 @@ async function handleEvent(event) {
 
 
     // 一般任務新增
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    // 使用台灣時區 (UTC+8) 取得今天日期，預設 2025 年
+    const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+    const today = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    console.log('🕐 台灣時間:', taiwanTime.toISOString());
+    console.log('📅 今天日期:', today);
     const taskId = Date.now().toString();
     
     // 確保用戶的任務結構存在
@@ -2318,6 +2323,128 @@ async function handlePostbackEvent(event) {
     });
   }
 }
+
+// 調試端點：手動添加任務（繞過簽名驗證）
+app.post('/debug/add-task', express.json(), (req, res) => {
+  const { userId, text, date } = req.body;
+  
+  console.log('🧪 調試：手動添加任務');
+  console.log('👤 用戶ID:', userId);
+  console.log('📝 任務內容:', text);
+  console.log('📅 日期:', date || '今天');
+  
+  // 使用與 LINE 訊息處理相同的日期邏輯
+  let taskDate;
+  if (date) {
+    taskDate = date;
+  } else {
+    // 使用台灣時區 (UTC+8) 取得今天日期，預設 2025 年
+    const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+    taskDate = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+  
+  const taskId = Date.now().toString();
+  
+  // 確保用戶的任務結構存在
+  if (!userTasks.has(userId)) {
+    userTasks.set(userId, new Map());
+  }
+  if (!userTasks.get(userId).has(taskDate)) {
+    userTasks.get(userId).set(taskDate, []);
+  }
+  
+  // 添加新任務
+  const newTask = {
+    id: taskId,
+    text: text,
+    createdAt: new Date().toISOString(),
+    date: taskDate,
+    userId: userId,
+    completed: false
+  };
+  
+  userTasks.get(userId).get(taskDate).push(newTask);
+  
+  console.log('✅ 任務已手動添加:', newTask);
+  
+  res.json({ 
+    success: true, 
+    task: newTask,
+    message: '任務添加成功'
+  });
+});
+
+// 調試端點：模擬 LINE 訊息處理
+app.post('/debug/simulate-line-message', express.json(), (req, res) => {
+  const { userId, messageText } = req.body;
+  
+  console.log('🎭 調試：模擬 LINE 訊息處理');
+  console.log('👤 用戶ID:', userId);
+  console.log('💬 訊息內容:', messageText);
+  
+  // 使用與真實 LINE 訊息處理完全相同的邏輯
+  const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+  const today = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+  const taskId = Date.now().toString();
+  
+  // 確保用戶的任務結構存在
+  if (!userTasks.has(userId)) {
+    userTasks.set(userId, new Map());
+  }
+  if (!userTasks.get(userId).has(today)) {
+    userTasks.get(userId).set(today, []);
+  }
+  
+  // 添加新任務（使用與 LINE 訊息處理相同的結構）
+  const newTask = {
+    id: taskId,
+    text: messageText,
+    createdAt: new Date().toISOString(),
+    date: today,
+    userId: userId,
+    taskTime: null,
+    category: 'work',
+    customCategory: '',
+    completed: false,
+    notes: '',
+    reminderEnabled: false,
+    reminderTime: 30,
+    reminderSent: false
+  };
+  
+  userTasks.get(userId).get(today).push(newTask);
+  
+  console.log('✅ 模擬 LINE 任務已添加:', newTask);
+  console.log('📅 存儲日期:', today);
+  
+  res.json({ 
+    success: true, 
+    task: newTask,
+    message: 'LINE 訊息模擬處理成功',
+    simulatedDate: today
+  });
+});
+
+// 調試端點：查看所有用戶的任務
+app.get('/debug/all-tasks', (req, res) => {
+  const allTasks = {};
+  
+  for (const [userId, userDates] of userTasks) {
+    allTasks[userId] = {};
+    for (const [date, tasks] of userDates) {
+      allTasks[userId][date] = tasks;
+    }
+  }
+  
+  console.log('🔍 調試：查看所有任務');
+  console.log('用戶數量:', userTasks.size);
+  
+  res.json({
+    success: true,
+    userCount: userTasks.size,
+    tasks: allTasks
+  });
+});
 
 // 啟動服務器
 app.listen(PORT, '0.0.0.0', () => {

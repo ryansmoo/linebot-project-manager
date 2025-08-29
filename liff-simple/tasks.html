@@ -535,19 +535,44 @@
         let lastTaskCount = 0; // 記錄上次的任務總数
         
         // 頁面載入完成後初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('📋 7天任務時間軸頁面載入開始');
             
-            // 從 URL 參數取得用戶資訊
-            const urlParams = new URLSearchParams(window.location.search);
-            userId = urlParams.get('userId');
-            
-            console.log('用戶 ID:', userId);
-            
-            // 模擬載入過程
-            setTimeout(() => {
-                loadWeekTasks();
-            }, 1000);
+            try {
+                // 初始化 LIFF
+                console.log('🔧 初始化 LIFF...');
+                await liff.init({ liffId: "2003671781-kNpYLPKd" });
+                
+                if (liff.isLoggedIn()) {
+                    // 取得用戶資料
+                    const profile = await liff.getProfile();
+                    userId = profile.userId;
+                    console.log('✅ 已取得 LINE 用戶 ID:', userId);
+                    
+                    // 載入任務
+                    setTimeout(() => {
+                        loadWeekTasks();
+                    }, 1000);
+                } else {
+                    console.log('❌ 用戶未登入，重導向到登入頁面');
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('❌ LIFF 初始化失敗:', error);
+                
+                // 回退方案：從 URL 參數取得用戶資訊
+                const urlParams = new URLSearchParams(window.location.search);
+                userId = urlParams.get('userId');
+                console.log('🔄 回退方案 - 用戶 ID:', userId);
+                
+                if (userId) {
+                    setTimeout(() => {
+                        loadWeekTasks();
+                    }, 1000);
+                } else {
+                    console.error('❌ 無法取得用戶 ID');
+                }
+            }
         });
 
         // 切換模式
