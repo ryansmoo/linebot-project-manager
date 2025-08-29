@@ -6,6 +6,12 @@ const fs = require('fs');
 const FormData = require('form-data');
 const { OpenAI } = require('openai');
 
+// 統一的台灣時區日期函數
+function getTaiwanDate() {
+  const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+  return taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
 // LINE Bot 設定
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'CnT5EpvP2ATp1hWRMB69uDRk9AzmO5+34Pd1QkrcxFe6NTDloT2olr5sNKbX5vJjVUxav5EPSMagBHYt328GPCLK6KE1ZL70JFX2vswFSiTdlCd3VP5GEwQ3xTyKJhfuW3Qt3gT27zPsihcGBCLevQdB04t89/1O/w1cDnyilFU=',
@@ -253,7 +259,7 @@ app.get('/api/tasks/:userId', (req, res) => {
     });
   } else {
     // 獲取今天的任務
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTaiwanDate();
     const todayTasks = userTasks.get(userId)?.get(today) || [];
     
     res.json({ 
@@ -677,11 +683,9 @@ async function handleEvent(event) {
 
 
     // 一般任務新增
-    // 使用台灣時區 (UTC+8) 取得今天日期，預設 2025 年
-    const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
-    const today = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    // 使用台灣時區取得今天日期
+    const today = getTaiwanDate();
     
-    console.log('🕐 台灣時間:', taiwanTime.toISOString());
     console.log('📅 今天日期:', today);
     const taskId = Date.now().toString();
     
@@ -1075,7 +1079,7 @@ async function handleTestReminder(event, userId, messageText) {
 // 處理完成/刪除任務
 async function handleCompleteTask(event, userId, messageText) {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTaiwanDate();
     
     // 確保用戶的任務結構存在
     if (!userTasks.has(userId) || !userTasks.get(userId).has(today)) {
@@ -1739,7 +1743,7 @@ async function handleAudioMessage(event) {
     };
     
     // 建立任務（重用現有邏輯）
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTaiwanDate();
     const taskId = Date.now().toString();
     
     // 確保用戶的任務結構存在
@@ -2001,7 +2005,7 @@ async function downloadAudioFile(messageId) {
 // 處理todolist樣式的任務切換
 async function handleTodoToggle(event, userId, action, taskId) {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTaiwanDate();
     
     if (!userTasks.has(userId) || !userTasks.get(userId).has(today)) {
       return client.replyMessage(event.replyToken, {
@@ -2338,9 +2342,8 @@ app.post('/debug/add-task', express.json(), (req, res) => {
   if (date) {
     taskDate = date;
   } else {
-    // 使用台灣時區 (UTC+8) 取得今天日期，預設 2025 年
-    const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
-    taskDate = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    // 使用台灣時區取得今天日期
+    taskDate = getTaiwanDate();
   }
   
   const taskId = Date.now().toString();
@@ -2383,8 +2386,7 @@ app.post('/debug/simulate-line-message', express.json(), (req, res) => {
   console.log('💬 訊息內容:', messageText);
   
   // 使用與真實 LINE 訊息處理完全相同的邏輯
-  const taiwanTime = new Date(new Date().getTime() + (8 * 60 * 60 * 1000)); // UTC+8
-  const today = taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = getTaiwanDate();
   const taskId = Date.now().toString();
   
   // 確保用戶的任務結構存在
