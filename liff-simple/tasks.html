@@ -1106,13 +1106,13 @@
             }
         }
         
-        // 定期自動刷新（每10秒）
+        // 定期自動刷新（每3秒）
         setInterval(() => {
             if (!document.hidden && userId) {
                 console.log('🔄 自動刷新任務數據...');
                 refreshCurrentView();
             }
-        }, 10000);
+        }, 3000);
         
         // 手動刷新功能（點擊標題）
         document.addEventListener('DOMContentLoaded', function() {
