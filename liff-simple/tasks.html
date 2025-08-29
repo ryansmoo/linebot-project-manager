@@ -198,6 +198,14 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .header h1 {
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
         .empty-day {
             color: #999;
             font-style: italic;
@@ -524,6 +532,7 @@
         let currentMode = 'week'; // 'week' 或 'month'
         let calendarDate = new Date(); // 日曆顯示的月份
         let selectedDate = null; // 選中的日期
+        let lastTaskCount = 0; // 記錄上次的任務總数
         
         // 頁面載入完成後初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -827,12 +836,18 @@
         // 載入月視圖
         function loadMonthView() {
             // 初始化日曆日期為當前月份
-            calendarDate = new Date();
-            generateCalendar();
+            if (!selectedDate) {
+                calendarDate = new Date();
+            }
             
-            // 預設選中今天
-            const today = new Date();
-            selectDate(today);
+            // 先載入當月數據
+            loadCurrentMonthData().then(() => {
+                generateCalendar();
+                
+                // 預設選中今天或上次選中的日期
+                const dateToSelect = selectedDate || new Date();
+                selectDate(dateToSelect);
+            });
         }
         
         // 生成日曆
@@ -1033,6 +1048,14 @@
             const pendingTasks = totalTasks - completedTasks;
             const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
+            // 檢查是否有新任務
+            if (totalTasks > lastTaskCount) {
+                console.log(`🎆 發現新任務！從 ${lastTaskCount} 增加到 ${totalTasks}`);
+                // 顯示新任務提示
+                showNewTaskNotification();
+            }
+            lastTaskCount = totalTasks;
+            
             // 更新統計顯示
             document.getElementById('totalWeekTasks').textContent = totalTasks;
             document.getElementById('completedWeekTasks').textContent = completedTasks;
@@ -1051,15 +1074,63 @@
             console.log(`統計結果: 總任務 ${totalTasks}, 已完成 ${completedTasks}, 未完成 ${pendingTasks}, 完成率 ${completionRate}%`);
         }
         
+        // 顯示新任務提示
+        function showNewTaskNotification() {
+            const header = document.querySelector('.header h1');
+            if (header) {
+                const originalColor = header.style.color;
+                header.style.color = '#FF6B35';
+                header.style.animation = 'pulse 0.5s ease-in-out 3';
+                
+                setTimeout(() => {
+                    header.style.color = originalColor;
+                    header.style.animation = '';
+                }, 1500);
+            }
+        }
+        
         // 頁面可見性變化處理
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 console.log('📋 頁面重新獲得焦點，重新整理時間軸');
-                if (currentMode === 'week') {
-                    loadWeekTasks();
-                } else {
-                    loadMonthView();
-                }
+                refreshCurrentView();
+            }
+        });
+        
+        // 刷新當前視圖
+        function refreshCurrentView() {
+            if (currentMode === 'week') {
+                loadWeekTasks();
+            } else {
+                loadMonthView();
+            }
+        }
+        
+        // 定期自動刷新（每10秒）
+        setInterval(() => {
+            if (!document.hidden && userId) {
+                console.log('🔄 自動刷新任務數據...');
+                refreshCurrentView();
+            }
+        }, 10000);
+        
+        // 手動刷新功能（點擊標題）
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header h1');
+            if (header) {
+                header.style.cursor = 'pointer';
+                header.title = '點擊刷新任務';
+                header.addEventListener('click', function() {
+                    console.log('📱 手動刷新任務...');
+                    refreshCurrentView();
+                    
+                    // 顯示刷新回饋
+                    const originalText = header.textContent;
+                    header.textContent = '🔄 刷新中...';
+                    setTimeout(() => {
+                        header.textContent = originalText;
+                    }, 1000);
+                });
             }
         });
 
