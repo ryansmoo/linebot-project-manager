@@ -964,9 +964,9 @@ async function handleEvent(event) {
                 type: "button",
                 style: "primary",
                 action: {
-                  type: "uri",
-                  label: "查看細節",
-                  uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
+                  type: "message",
+                  label: "查看細節", 
+                  text: `編輯任務 ${taskId}`
                 },
                 color: "#DDA267",
                 height: "sm",
@@ -1073,8 +1073,8 @@ async function handleEvent(event) {
             align: "center",
             gravity: "center",
             action: {
-              type: "uri",
-              uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(userId)}`
+              type: "message",
+              text: `編輯任務 ${task.id}`
             }
           },
           {
@@ -1458,9 +1458,9 @@ function createCurrentTaskFlex(task) {
           type: "button",
           style: "primary",
           action: {
-            type: "uri",
+            type: "message",
             label: "編輯任務",
-            uri: `${BASE_URL}/liff/edit-task.html?taskId=${task.id}&userId=${encodeURIComponent(task.userId || '')}`
+            text: `編輯任務 ${task.id}`
           },
           color: "#DDA267",
           height: "sm",
@@ -2031,9 +2031,9 @@ async function handleAudioMessage(event) {
               type: "button",
               style: "primary",
               action: {
-                type: "uri",
+                type: "message",
                 label: "編輯任務",
-                uri: `${BASE_URL}/liff/edit-task.html?taskId=${taskId}&userId=${encodeURIComponent(userId)}`
+                text: `編輯任務 ${taskId}`
               },
               color: "#DDA267",
               height: "sm",
@@ -2089,9 +2089,9 @@ async function handleAudioMessage(event) {
               type: "button",
               style: "primary",
               action: {
-                type: "uri",
+                type: "message",
                 label: "新增",
-                uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
+                text: "新增任務"
               },
               color: "#DDA267",
               height: "sm",
@@ -2101,9 +2101,9 @@ async function handleAudioMessage(event) {
               type: "button",
               style: "primary",
               action: {
-                type: "uri",
+                type: "message",
                 label: "刪除",
-                uri: `${BASE_URL}/liff/edit-task.html?userId=${encodeURIComponent(userId)}`
+                text: "刪除任務"
               },
               color: "#DDA267",
               height: "sm",
@@ -2244,8 +2244,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
             align: "center",
             gravity: "center",
             action: {
-              type: "uri",
-              uri: `${BASE_URL}/liff/edit-task.html?taskId=${t.id}&userId=${encodeURIComponent(userId)}`
+              type: "message",
+              text: `編輯任務 ${t.id}`
             }
           },
           {
