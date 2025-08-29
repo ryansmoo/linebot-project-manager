@@ -735,54 +735,7 @@ async function handleEvent(event) {
       return client.replyMessage(event.replyToken, simpleQuickReplyMessage);
     }
 
-    // 處理「全部紀錄」按鈕訊息
-    if (messageText === '全部紀錄') {
-      console.log('📋 處理全部紀錄請求');
-      
-      const allTasks = [];
-      const userTaskMap = userTasks.get(userId);
-      
-      if (userTaskMap) {
-        for (const [date, tasks] of userTaskMap) {
-          for (const task of tasks) {
-            allTasks.push({ ...task, date });
-          }
-        }
-      }
-      
-      if (allTasks.length === 0) {
-        return client.replyMessage(event.replyToken, {
-          type: 'text',
-          text: '📋 目前沒有任何紀錄。\n\n請開始新增任務來建立您的專案紀錄！'
-        });
-      }
-      
-      let recordMessage = `全部紀錄 (共 ${allTasks.length} 項)\n\n`;
-      
-      // 按日期分組顯示
-      const tasksByDate = {};
-      allTasks.forEach(task => {
-        const dateKey = new Date(task.createdAt).toLocaleDateString('zh-TW');
-        if (!tasksByDate[dateKey]) {
-          tasksByDate[dateKey] = [];
-        }
-        tasksByDate[dateKey].push(task);
-      });
-      
-      Object.keys(tasksByDate).forEach(date => {
-        recordMessage += `📅 ${date}\n`;
-        tasksByDate[date].forEach((task, index) => {
-          const statusIcon = task.completed ? '✅' : '⭕';
-          recordMessage += `  ${statusIcon} ${task.text}\n`;
-        });
-        recordMessage += '\n';
-      });
-      
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: recordMessage
-      });
-    }
+    // 「全部紀錄」功能現在通過 LIFF APP 提供
 
     // 處理「個人帳號」按鈕訊息  
     if (messageText === '個人帳號') {
