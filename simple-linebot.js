@@ -675,85 +675,6 @@ async function handleEvent(event) {
       return client.replyMessage(event.replyToken, flexMessage);
     }
 
-    // 處理「全部紀錄」按鈕
-    if (messageText === '全部紀錄') {
-      console.log('📋 處理全部紀錄請求');
-      
-      const allTasks = [];
-      const userTaskMap = userTasks.get(userId);
-      
-      if (userTaskMap) {
-        for (const [date, tasks] of userTaskMap) {
-          for (const task of tasks) {
-            allTasks.push({ ...task, date });
-          }
-        }
-      }
-      
-      if (allTasks.length === 0) {
-        return client.replyMessage(event.replyToken, {
-          type: 'text',
-          text: '📋 目前沒有任何紀錄。\n\n請開始新增任務來建立您的專案紀錄！'
-        });
-      }
-      
-      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
-      
-      // 按日期分組顯示
-      const tasksByDate = {};
-      allTasks.forEach(task => {
-        const dateKey = new Date(task.createdAt).toLocaleDateString('zh-TW');
-        if (!tasksByDate[dateKey]) {
-          tasksByDate[dateKey] = [];
-        }
-        tasksByDate[dateKey].push(task);
-      });
-      
-      Object.keys(tasksByDate).sort().reverse().forEach(date => {
-        recordMessage += `📅 ${date}\n`;
-        tasksByDate[date].forEach(task => {
-          const status = task.completed ? '✅' : '⏳';
-          recordMessage += `${status} ${task.text}\n`;
-        });
-        recordMessage += '\n';
-      });
-      
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: recordMessage
-      });
-    }
-
-    // 處理「個人帳號」按鈕
-    if (messageText === '個人帳號') {
-      console.log('👤 處理個人帳號請求');
-      
-      let userTasksCount = 0;
-      let completedTasksCount = 0;
-      
-      const userTaskMap = userTasks.get(userId);
-      if (userTaskMap) {
-        for (const [date, tasks] of userTaskMap) {
-          userTasksCount += tasks.length;
-          completedTasksCount += tasks.filter(task => task.completed).length;
-        }
-      }
-      
-      const accountInfo = `👤 個人帳號資訊\n\n` +
-                         `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
-                         `🔸 總任務數：${userTasksCount} 項\n` +
-                         `🔸 已完成：${completedTasksCount} 項\n` +
-                         `🔸 進行中：${userTasksCount - completedTasksCount} 項\n\n` +
-                         `📱 您可以輸入以下指令：\n` +
-                         `• "任務" - 顯示任務功能\n` +
-                         `• "測試qr" - 測試快速回覆\n` +
-                         `• 直接輸入文字新增任務`;
-      
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: accountInfo
-      });
-    }
 
     // 一般任務新增
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -1064,9 +985,9 @@ async function handleEvent(event) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "message",
+                    type: "uri",
                     label: "📋 全部紀錄",
-                    text: "全部紀錄"
+                    uri: `${BASE_URL}/liff/tasks.html`
                   },
                   flex: 1
                 },
@@ -1075,9 +996,9 @@ async function handleEvent(event) {
                   style: "link", 
                   height: "sm",
                   action: {
-                    type: "message",
+                    type: "uri",
                     label: "👤 個人帳號",
-                    text: "個人帳號"
+                    uri: `${BASE_URL}/liff/profile.html`
                   },
                   flex: 1
                 }
@@ -2225,9 +2146,9 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   style: "link",
                   height: "sm",
                   action: {
-                    type: "message",
+                    type: "uri",
                     label: "📋 全部紀錄",
-                    text: "全部紀錄"
+                    uri: `${BASE_URL}/liff/tasks.html`
                   },
                   flex: 1
                 },
@@ -2236,9 +2157,9 @@ async function handleTodoToggle(event, userId, action, taskId) {
                   style: "link", 
                   height: "sm",
                   action: {
-                    type: "message",
+                    type: "uri",
                     label: "👤 個人帳號",
-                    text: "個人帳號"
+                    uri: `${BASE_URL}/liff/profile.html`
                   },
                   flex: 1
                 }
