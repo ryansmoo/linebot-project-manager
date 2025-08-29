@@ -685,34 +685,17 @@
             return data;
         }
 
-        // 生成模擬7天數據
+        // 生成空數據（只顯示真實LINE訊息任務）
         function generateMock7DaysData(dates) {
             const data = {};
-            const mockTasks = [
-                '去日本玩', '去垃圾', '買菜', '讀書', '運動',
-                '開會', '寫程式', '打掃', '洗衣服', '看電影'
-            ];
             
+            // 為每個日期創建空任務陣列
             dates.forEach((date, index) => {
                 const dateStr = formatDate(date);
-                const taskCount = Math.floor(Math.random() * 8) + 2; // 2-9個任務
-                const tasks = [];
-                
-                for (let i = 0; i < taskCount; i++) {
-                    const taskText = mockTasks[Math.floor(Math.random() * mockTasks.length)];
-                    const completed = Math.random() > 0.6; // 40%機率完成
-                    
-                    tasks.push({
-                        id: `${dateStr}-${i}`,
-                        text: taskText,
-                        completed: completed,
-                        createdAt: date.toISOString()
-                    });
-                }
-                
-                data[dateStr] = tasks;
+                data[dateStr] = []; // 空陣列，不預填任何模擬任務
             });
             
+            console.log('📋 已清空所有模擬任務，只顯示真實LINE訊息任務');
             return data;
         }
 
