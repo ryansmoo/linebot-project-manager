@@ -2579,24 +2579,33 @@ function createTaskKeywordFlexMessage() {
             }
           },
           {
-            type: 'button',
-            style: 'secondary',
-            height: 'sm',
-            action: {
-              type: 'postback',
-              label: '📋 全部紀錄',
-              data: 'action=all_records'
-            }
-          },
-          {
-            type: 'button',
-            style: 'secondary',
-            height: 'sm',
-            action: {
-              type: 'postback',
-              label: '👤 個人帳號',
-              data: 'action=personal_account'
-            }
+            type: 'box',
+            layout: 'horizontal',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'button',
+                style: 'secondary',
+                height: 'sm',
+                action: {
+                  type: 'postback',
+                  label: '📋 全部紀錄',
+                  data: 'action=all_records'
+                },
+                flex: 1
+              },
+              {
+                type: 'button',
+                style: 'secondary', 
+                height: 'sm',
+                action: {
+                  type: 'postback',
+                  label: '👤 個人帳號',
+                  data: 'action=personal_account'
+                },
+                flex: 1
+              }
+            ]
           }
         ]
       }

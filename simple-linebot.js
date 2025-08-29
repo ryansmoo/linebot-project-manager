@@ -578,6 +578,11 @@ async function handleEvent(event) {
   try {
     console.log('🔄 處理事件:', event.type);
     
+    // 處理 postback 事件（按鈕點擊）
+    if (event.type === 'postback') {
+      return handlePostbackEvent(event);
+    }
+
     if (event.type !== 'message') {
       console.log('⏭️ 跳過非訊息事件');
       return null;
@@ -659,6 +664,15 @@ async function handleEvent(event) {
     
     if (isCompleteCommand) {
       return handleCompleteTask(event, userId, messageText);
+    }
+
+    // 特殊「任務」關鍵字處理 - 回傳 FLEX Message
+    if (messageText === '任務') {
+      console.log('🎯 觸發任務關鍵字 - 發送 Flex Message');
+      
+      const flexMessage = createTaskKeywordFlexMessage();
+      
+      return client.replyMessage(event.replyToken, flexMessage);
     }
 
     // 一般任務新增
@@ -1429,6 +1443,90 @@ function createTaskManagementFlex() {
   };
 }
 
+// 特殊「任務」關鍵字 Flex Message
+function createTaskKeywordFlexMessage() {
+  return {
+    type: 'flex',
+    altText: '任務收到！',
+    contents: {
+      type: 'bubble',
+      hero: {
+        type: 'image',
+        url: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        size: 'full',
+        aspectRatio: '20:13',
+        aspectMode: 'cover'
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: '✅ 任務收到！',
+            weight: 'bold',
+            size: 'xl',
+            color: '#2196F3'
+          },
+          {
+            type: 'text',
+            text: '您的任務已經成功接收，點擊下方按鈕查看更多資訊！',
+            wrap: true,
+            color: '#666666',
+            margin: 'md'
+          }
+        ]
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            height: 'sm',
+            action: {
+              type: 'uri',
+              label: '🔗 前往 Ryan 的 Threads',
+              uri: 'https://www.threads.com/@ryan_ryan_lin?hl=zh-tw'
+            }
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'button',
+                style: 'secondary',
+                height: 'sm',
+                action: {
+                  type: 'postback',
+                  label: '📋 全部紀錄',
+                  data: 'action=all_records'
+                },
+                flex: 1
+              },
+              {
+                type: 'button',
+                style: 'secondary', 
+                height: 'sm',
+                action: {
+                  type: 'postback',
+                  label: '👤 個人帳號',
+                  data: 'action=personal_account'
+                },
+                flex: 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  };
+}
+
 // 建立 Quick Reply - 修正版本（統一使用 message 類型）
 function createQuickReply() {
   return {
@@ -2055,6 +2153,100 @@ async function transcribeAudio(audioBuffer) {
     }
     
     throw new Error(`語音轉文字失敗: ${error.message}`);
+  }
+}
+
+// 處理 postback 事件（按鈕點擊）
+async function handlePostbackEvent(event) {
+  const userId = event.source.userId || 'default-user';
+  
+  try {
+    const postbackData = JSON.parse(event.postback.data);
+    console.log('🔘 處理 Postback 事件:', postbackData);
+    
+    if (postbackData.action === 'all_records') {
+      // 處理「全部紀錄」按鈕
+      const allTasks = [];
+      const userTaskMap = userTasks.get(userId);
+      
+      if (userTaskMap) {
+        for (const [date, tasks] of userTaskMap) {
+          for (const task of tasks) {
+            allTasks.push({ ...task, date });
+          }
+        }
+      }
+      
+      if (allTasks.length === 0) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '📋 目前沒有任何紀錄。\n\n請開始新增任務來建立您的專案紀錄！'
+        });
+      }
+      
+      let recordMessage = `📋 全部紀錄 (共 ${allTasks.length} 項)\n\n`;
+      
+      // 按日期分組顯示
+      const tasksByDate = {};
+      allTasks.forEach(task => {
+        const dateKey = new Date(task.createdAt).toLocaleDateString('zh-TW');
+        if (!tasksByDate[dateKey]) {
+          tasksByDate[dateKey] = [];
+        }
+        tasksByDate[dateKey].push(task);
+      });
+      
+      Object.keys(tasksByDate).sort().reverse().forEach(date => {
+        recordMessage += `📅 ${date}\n`;
+        tasksByDate[date].forEach(task => {
+          const status = task.completed ? '✅' : '⏳';
+          recordMessage += `${status} ${task.text}\n`;
+        });
+        recordMessage += '\n';
+      });
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: recordMessage
+      });
+      
+    } else if (postbackData.action === 'personal_account') {
+      // 處理「個人帳號」按鈕
+      let userTasksCount = 0;
+      let completedTasksCount = 0;
+      
+      const userTaskMap = userTasks.get(userId);
+      if (userTaskMap) {
+        for (const [date, tasks] of userTaskMap) {
+          userTasksCount += tasks.length;
+          completedTasksCount += tasks.filter(task => task.completed).length;
+        }
+      }
+      
+      const accountInfo = `👤 個人帳號資訊\n\n` +
+                         `🔸 用戶ID：${userId.substring(0, 8)}...\n` +
+                         `🔸 總任務數：${userTasksCount} 項\n` +
+                         `🔸 已完成：${completedTasksCount} 項\n` +
+                         `🔸 進行中：${userTasksCount - completedTasksCount} 項\n\n` +
+                         `📱 您可以輸入以下指令：\n` +
+                         `• "任務" - 顯示任務功能\n` +
+                         `• "測試qr" - 測試快速回覆\n` +
+                         `• 直接輸入文字新增任務`;
+      
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: accountInfo
+      });
+    }
+    
+    return Promise.resolve(null);
+  } catch (error) {
+    console.error('❌ Postback 處理錯誤:', error);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '❌ 處理請求時發生錯誤，請稍後再試。'
+    });
   }
 }
 
