@@ -79,7 +79,8 @@ const BASE_URL = process.env.BASE_URL ||
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
     : `http://localhost:${PORT}`);
 
-// 靜態檔案服務
+// 靜態檔案服務 - 提供 LIFF APP
+app.use('/liff', express.static(path.join(__dirname, 'liff-simple')));
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // Webhook 驗證端點 - 在 middleware 之前
