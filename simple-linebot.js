@@ -968,6 +968,40 @@ async function handleEvent(event) {
               color: "#666666",
               align: "center",
               margin: "xs"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              spacing: "sm",
+              margin: "md",
+              contents: [
+                {
+                  type: "button",
+                  style: "secondary",
+                  height: "sm",
+                  action: {
+                    type: "postback",
+                    label: "📋 全部紀錄",
+                    data: "action=all_records"
+                  },
+                  flex: 1
+                },
+                {
+                  type: "button",
+                  style: "secondary", 
+                  height: "sm",
+                  action: {
+                    type: "postback",
+                    label: "👤 個人帳號",
+                    data: "action=personal_account"
+                  },
+                  flex: 1
+                }
+              ]
             }
           ],
           paddingAll: "20px"
@@ -2095,6 +2129,40 @@ async function handleTodoToggle(event, userId, action, taskId) {
               color: "#666666",
               align: "center",
               margin: "xs"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              spacing: "sm",
+              margin: "md",
+              contents: [
+                {
+                  type: "button",
+                  style: "secondary",
+                  height: "sm",
+                  action: {
+                    type: "postback",
+                    label: "📋 全部紀錄",
+                    data: "action=all_records"
+                  },
+                  flex: 1
+                },
+                {
+                  type: "button",
+                  style: "secondary", 
+                  height: "sm",
+                  action: {
+                    type: "postback",
+                    label: "👤 個人帳號",
+                    data: "action=personal_account"
+                  },
+                  flex: 1
+                }
+              ]
             }
           ],
           paddingAll: "20px"
