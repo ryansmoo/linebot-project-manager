@@ -2629,11 +2629,23 @@ app.get('/debug/all-tasks', (req, res) => {
   });
 });
 
+// 測試端點
+app.get('/health', (req, res) => {
+  console.log('🩺 收到健康檢查請求');
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT 
+  });
+});
+
 // 啟動服務器
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 精簡版 LINE Bot 啟動成功！');
   console.log(`📡 服務運行於: ${BASE_URL}`);
   console.log(`🔗 Webhook URL: ${BASE_URL}/webhook`);
+  console.log(`🔗 本地測試: http://localhost:${PORT}/webhook`);
+  console.log(`🩺 健康檢查: http://localhost:${PORT}/health`);
   console.log('📝 請將 Webhook URL 設定到 LINE Developer Console');
   console.log('🎤 語音識別功能已啟用 (使用 OpenAI Whisper)');
   console.log('⚡ 準備接收 LINE 訊息...');
@@ -2643,4 +2655,16 @@ app.listen(PORT, '0.0.0.0', () => {
     restoreReminders();
     startReminderChecker();
   }, 5000); // 5秒後開始恢復提醒
+});
+
+server.on('error', (err) => {
+  console.error('❌ 服務器啟動錯誤:', err);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ 端口 ${PORT} 已被占用，嘗試終止占用進程...`);
+    process.exit(1);
+  }
+});
+
+server.on('listening', () => {
+  console.log(`✅ HTTP 服務器成功監聽端口: ${server.address().port}`);
 });
