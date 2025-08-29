@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今天的任務 - To-Do List</title>
+    <title>全部紀錄 - 5天任務時間軸</title>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {
@@ -13,7 +13,7 @@
         }
         body {
             font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #00B900 0%, #06C755 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             padding: 10px;
         }
@@ -22,7 +22,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             overflow: hidden;
             min-height: 90vh;
         }
@@ -34,31 +34,152 @@
         }
         .header h1 {
             font-size: 22px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        .stats {
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .timeline-container {
+            padding: 20px;
             display: flex;
-            justify-content: space-around;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 15px;
+            gap: 20px;
         }
-        .stat-item {
-            text-align: center;
+        .description {
+            font-size: 12px;
+            color: #666;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-left: 3px solid #00B900;
+            margin: 0 20px 20px 20px;
+            line-height: 1.5;
+        }
+        .timeline-left {
+            flex: 0 0 80px;
+            position: relative;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e0e0;
+        }
+        .date-node {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .date-node:hover {
+            transform: scale(1.05);
+        }
+        .date-node.past {
+            background: #4A90A4;
+        }
+        .date-node.today {
+            background: #FF6B35;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+        }
+        .date-node.future {
+            background: #4A90A4;
+        }
+        .timeline-right {
             flex: 1;
+            padding-left: 10px;
         }
-        .stat-number {
-            font-size: 18px;
+        .day-content {
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+        }
+        .task-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        .task-summary:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        .task-count {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .expand-icon {
+            font-size: 14px;
+            color: #666;
+            transition: transform 0.2s ease;
+        }
+        .task-details {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        .task-details.expanded {
+            display: block;
+        }
+        .task-details .expand-icon {
+            transform: rotate(180deg);
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #28a745;
+            border-radius: 3px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .task-checkbox.completed {
+            background: #28a745;
+        }
+        .task-checkbox.completed::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
             font-weight: bold;
         }
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-top: 2px;
+        .task-text {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
         }
-        .content {
-            padding: 20px;
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #666;
         }
         .loading {
             text-align: center;
@@ -77,410 +198,311 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .todo-list {
-            margin-top: 10px;
-        }
-        .todo-item {
-            display: flex;
-            align-items: center;
+        .empty-day {
+            color: #999;
+            font-style: italic;
             padding: 15px;
+            text-align: center;
             background: #f8f9fa;
             border-radius: 10px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-            border-left: 4px solid #00B900;
-        }
-        .todo-item.completed {
-            opacity: 0.6;
-            background: #e8f5e8;
-            border-left-color: #28a745;
-        }
-        .todo-item.removing {
-            animation: slideOut 0.3s ease-out forwards;
-        }
-        @keyframes slideOut {
-            0% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-        .checkbox {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #00B900;
-            border-radius: 50%;
-            margin-right: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-        .checkbox:hover {
-            transform: scale(1.1);
-        }
-        .checkbox.checked {
-            background: #28a745;
-            border-color: #28a745;
-        }
-        .checkbox.checked::after {
-            content: '✓';
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .task-text {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-            line-height: 1.4;
-        }
-        .task-text.completed {
-            text-decoration: line-through;
-            color: #666;
-        }
-        .task-time {
-            font-size: 12px;
-            color: #666;
-            margin-left: 10px;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        .empty-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .empty-text {
-            line-height: 1.6;
-        }
-        .debug-info {
-            background: #f0f0f0;
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 5px;
-            font-size: 12px;
-            color: #666;
-            max-height: 100px;
-            overflow-y: auto;
+            border: 1px dashed #dee2e6;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📝 To-Do List</h1>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number" id="totalTasks">0</div>
-                    <div class="stat-label">總任務</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="completedTasks">0</div>
-                    <div class="stat-label">已完成</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="pendingTasks">0</div>
-                    <div class="stat-label">待完成</div>
-                </div>
-            </div>
+            <h1>📋 全部紀錄</h1>
+            <div class="subtitle">5天任務時間軸</div>
         </div>
         
-        <div class="content">
-            <div id="loading" class="loading">
-                <div class="loading-spinner"></div>
-                <p>正在載入今天的任務...</p>
+        <div class="description">
+            每次打開頁面最上面都是以今天日期為基準，自動顯示前2天、後2天，總共5天記錄
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>正在載入5天任務記錄...</p>
+        </div>
+        
+        <div id="timelineContent" class="timeline-container" style="display: none;">
+            <div class="timeline-left">
+                <div class="timeline-line"></div>
+                <div id="dateNodes">
+                    <!-- 日期節點將動態生成 -->
+                </div>
             </div>
-            
-            <div id="app" style="display: none;">
-                <div class="todo-list" id="todoList">
-                    <!-- 任務列表將在這裡動態生成 -->
-                </div>
-                
-                <div id="emptyState" class="empty-state" style="display: none;">
-                    <div class="empty-icon">🎉</div>
-                    <div class="empty-title">今天沒有任務</div>
-                    <div class="empty-text">傳送訊息給 LINE Bot<br>開始記錄您的任務！</div>
-                </div>
-                
-                <div class="debug-info" id="debugInfo">
-                    <strong>系統狀態：</strong><br>
-                    頁面載入時間: <span id="loadTime"></span><br>
-                    用戶 ID: <span id="userId">取得中...</span><br>
-                    任務載入狀態: <span id="loadStatus">載入中...</span>
-                </div>
+            <div class="timeline-right" id="taskContent">
+                <!-- 任務內容將動態生成 -->
             </div>
         </div>
     </div>
 
     <script>
         let userId = null;
-        let tasks = [];
-        let completedCount = 0;
-
-        // 記錄載入時間
-        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString('zh-TW');
-
+        let timelineData = {};
+        let currentDate = new Date();
+        
         // 頁面載入完成後初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📱 To-Do List 頁面載入開始');
+            console.log('📋 5天任務時間軸頁面載入開始');
             
             // 從 URL 參數取得用戶資訊
             const urlParams = new URLSearchParams(window.location.search);
             userId = urlParams.get('userId');
             
             console.log('用戶 ID:', userId);
-            document.getElementById('userId').textContent = userId ? userId.substring(0, 15) + '...' : '未提供';
             
             // 模擬載入過程
             setTimeout(() => {
-                loadTodayTasks();
+                load5DaysTasks();
             }, 1000);
         });
 
-        // 載入今天的任務
-        async function loadTodayTasks() {
+        // 載入5天的任務數據
+        async function load5DaysTasks() {
             try {
-                document.getElementById('loadStatus').textContent = '連接伺服器...';
+                console.log('🔄 開始載入5天任務數據...');
+                
+                // 計算5天的日期範圍
+                const dates = generate5Days();
                 
                 if (!userId) {
                     console.log('⚠️ 沒有用戶 ID，使用模擬數據');
-                    const mockTasks = generateMockTasks();
-                    tasks = mockTasks;
+                    timelineData = generateMock5DaysData(dates);
                 } else {
-                    // 調用真實的 API
-                    console.log('🌐 正在從 API 載入任務...');
-                    const response = await fetch(`/api/tasks/${encodeURIComponent(userId)}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    
-                    const result = await response.json();
-                    console.log('📋 API 回應:', result);
-                    
-                    if (result.success) {
-                        // 將 API 格式轉換為前端需要的格式
-                        tasks = result.tasks.map(task => ({
-                            id: task.id,
-                            text: task.text,
-                            completed: false, // 前端管理完成狀態
-                            createdAt: task.createdAt
-                        }));
-                        console.log('✅ 成功載入', tasks.length, '項任務');
-                    } else {
-                        console.log('⚠️ API 調用失敗，使用空陣列');
-                        tasks = [];
-                    }
+                    // 調用真實的 API 載入5天數據
+                    console.log('🌐 正在從 API 載入5天任務...');
+                    timelineData = await fetchTimelineData(dates);
                 }
                 
-                displayTasks();
-                updateStats();
+                // 顯示時間軸
+                displayTimeline(dates);
                 
-                document.getElementById('loadStatus').textContent = '載入完成 ✅';
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('app').style.display = 'block';
+                document.getElementById('timelineContent').style.display = 'flex';
                 
-                console.log('✅ 任務顯示完成，共', tasks.length, '項任務');
+                console.log('✅ 5天任務時間軸顯示完成');
             } catch (error) {
-                console.error('❌ 載入任務失敗:', error);
-                document.getElementById('loadStatus').textContent = '載入失敗: ' + error.message;
+                console.error('❌ 載入5天任務失敗:', error);
                 
                 // 發生錯誤時使用模擬數據作為備案
                 console.log('🔄 使用模擬數據作為備案');
-                const mockTasks = generateMockTasks();
-                tasks = mockTasks;
-                displayTasks();
-                updateStats();
+                const dates = generate5Days();
+                timelineData = generateMock5DaysData(dates);
+                displayTimeline(dates);
                 
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('app').style.display = 'block';
+                document.getElementById('timelineContent').style.display = 'flex';
             }
         }
 
-        // 生成模擬數據
-        function generateMockTasks() {
-            // 如果沒有 userId，返回空陣列，會顯示空狀態
-            if (!userId) return [];
-            
-            // 模擬數據用於展示功能（當 API 無法使用時）
-            return [
-                {
-                    id: 'demo-1',
-                    text: '📋 這是演示模式的任務',
-                    completed: false,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'demo-2', 
-                    text: '✅ 實際任務會從 LINE Bot 載入',
-                    completed: false,
-                    createdAt: new Date().toISOString()
-                }
-            ];
-        }
-
-        // 顯示任務列表
-        function displayTasks() {
-            const todoList = document.getElementById('todoList');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (tasks.length === 0) {
-                showEmptyState();
-                return;
+        // 生成5天日期陣列（前2天 + 今天 + 後2天）
+        function generate5Days() {
+            const dates = [];
+            for (let i = -2; i <= 2; i++) {
+                const date = new Date(currentDate);
+                date.setDate(currentDate.getDate() + i);
+                dates.push(date);
             }
-            
-            emptyState.style.display = 'none';
-            todoList.innerHTML = '';
-            
-            tasks.forEach((task, index) => {
-                const taskElement = createTaskElement(task, index);
-                todoList.appendChild(taskElement);
-            });
+            return dates;
         }
 
-        // 建立任務元素
-        function createTaskElement(task, index) {
-            const taskDiv = document.createElement('div');
-            taskDiv.className = `todo-item ${task.completed ? 'completed' : ''}`;
-            taskDiv.setAttribute('data-task-id', task.id);
+        // 調用API獲取時間軸數據
+        async function fetchTimelineData(dates) {
+            const data = {};
             
-            const createdTime = new Date(task.createdAt).toLocaleTimeString('zh-TW', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            
-            taskDiv.innerHTML = `
-                <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask('${task.id}')"></div>
-                <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
-                <div class="task-time">${createdTime}</div>
-            `;
-            
-            return taskDiv;
-        }
-
-        // 切換任務完成狀態
-        async function toggleTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-            
-            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-            const checkbox = taskElement.querySelector('.checkbox');
-            const taskText = taskElement.querySelector('.task-text');
-            
-            if (!task.completed) {
-                // 標記為完成
-                task.completed = true;
-                taskElement.classList.add('completed');
-                checkbox.classList.add('checked');
-                taskText.classList.add('completed');
-                completedCount++;
-                
-                console.log('✅ 任務已完成:', task.text);
-                
+            for (const date of dates) {
+                const dateStr = formatDate(date);
                 try {
-                    // 調用後端 API 完成任務
-                    console.log('🌐 通知後端完成任務...');
-                    const response = await fetch(`/api/task/${taskId}/complete`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    const response = await fetch(`/api/tasks/${encodeURIComponent(userId)}?date=${dateStr}`);
                     
                     if (response.ok) {
                         const result = await response.json();
-                        console.log('✅ 後端確認任務完成:', result);
+                        if (result.success) {
+                            data[dateStr] = result.tasks.map(task => ({
+                                id: task.id,
+                                text: task.text,
+                                completed: task.completed || false,
+                                createdAt: task.createdAt
+                            }));
+                        } else {
+                            data[dateStr] = [];
+                        }
                     } else {
-                        console.warn('⚠️ 後端 API 調用失敗，但前端繼續處理');
+                        data[dateStr] = [];
                     }
                 } catch (error) {
-                    console.error('❌ 調用完成任務 API 失敗:', error);
-                    // 即使 API 失敗，前端還是繼續處理
+                    console.error(`❌ 載入 ${dateStr} 任務失敗:`, error);
+                    data[dateStr] = [];
                 }
-                
-                // 延遲移除任務
-                setTimeout(() => {
-                    taskElement.classList.add('removing');
-                    setTimeout(() => {
-                        tasks = tasks.filter(t => t.id !== taskId);
-                        displayTasks();
-                        updateStats();
-                    }, 300);
-                }, 800);
-                
-            } else {
-                // 取消完成狀態（暫時不與後端同步，因為任務已經從後端移除）
-                task.completed = false;
-                taskElement.classList.remove('completed');
-                checkbox.classList.remove('checked');
-                taskText.classList.remove('completed');
-                if (completedCount > 0) completedCount--;
-                
-                console.log('↩️ 任務取消完成:', task.text);
             }
             
-            updateStats();
+            return data;
         }
 
-        // 更新統計數據
-        function updateStats() {
-            const total = tasks.length;
-            const completed = tasks.filter(t => t.completed).length;
-            const pending = total - completed;
+        // 生成模擬5天數據
+        function generateMock5DaysData(dates) {
+            const data = {};
+            const mockTasks = [
+                '去日本玩', '去垃圾', '買菜', '讀書', '運動',
+                '開會', '寫程式', '打掃', '洗衣服', '看電影'
+            ];
             
-            document.getElementById('totalTasks').textContent = total + completedCount;
-            document.getElementById('completedTasks').textContent = completed + completedCount;
-            document.getElementById('pendingTasks').textContent = pending;
+            dates.forEach((date, index) => {
+                const dateStr = formatDate(date);
+                const taskCount = Math.floor(Math.random() * 8) + 2; // 2-9個任務
+                const tasks = [];
+                
+                for (let i = 0; i < taskCount; i++) {
+                    const taskText = mockTasks[Math.floor(Math.random() * mockTasks.length)];
+                    const completed = Math.random() > 0.6; // 40%機率完成
+                    
+                    tasks.push({
+                        id: `${dateStr}-${i}`,
+                        text: taskText,
+                        completed: completed,
+                        createdAt: date.toISOString()
+                    });
+                }
+                
+                data[dateStr] = tasks;
+            });
+            
+            return data;
         }
 
-        // 顯示空狀態
-        function showEmptyState() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('todoList').innerHTML = '';
+        // 顯示時間軸
+        function displayTimeline(dates) {
+            const dateNodes = document.getElementById('dateNodes');
+            const taskContent = document.getElementById('taskContent');
+            
+            dateNodes.innerHTML = '';
+            taskContent.innerHTML = '';
+            
+            dates.forEach((date, index) => {
+                // 創建日期節點
+                const dateNode = createDateNode(date, index);
+                dateNodes.appendChild(dateNode);
+                
+                // 創建任務內容
+                const dayContent = createDayContent(date, index);
+                taskContent.appendChild(dayContent);
+            });
+        }
+
+        // 創建日期節點
+        function createDateNode(date, index) {
+            const node = document.createElement('div');
+            const monthDay = `${date.getMonth() + 1}/${date.getDate()}`;
+            
+            let className = 'date-node ';
+            if (index < 2) {
+                className += 'past';
+            } else if (index === 2) {
+                className += 'today';
+            } else {
+                className += 'future';
+            }
+            
+            node.className = className;
+            node.textContent = monthDay;
+            node.onclick = () => scrollToDay(index);
+            
+            return node;
+        }
+
+        // 創建日期內容
+        function createDayContent(date, index) {
+            const dateStr = formatDate(date);
+            const tasks = timelineData[dateStr] || [];
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.completed).length;
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-content';
+            dayDiv.id = `day-${index}`;
+            
+            if (totalTasks === 0) {
+                dayDiv.innerHTML = `
+                    <div class="empty-day">
+                        這天沒有任務記錄
+                    </div>
+                `;
+            } else {
+                const taskSummary = document.createElement('div');
+                taskSummary.className = 'task-summary';
+                taskSummary.onclick = () => toggleTaskDetails(index);
+                
+                taskSummary.innerHTML = `
+                    <div class="task-count">
+                        ${totalTasks}件事要做，做完${completedTasks}項
+                        <span class="expand-icon" id="expand-${index}">▼</span>
+                    </div>
+                    <div class="task-details" id="details-${index}">
+                        ${createTaskList(tasks)}
+                    </div>
+                `;
+                
+                dayDiv.appendChild(taskSummary);
+            }
+            
+            return dayDiv;
+        }
+
+        // 創建任務列表
+        function createTaskList(tasks) {
+            return tasks.map(task => `
+                <div class="task-item">
+                    <div class="task-checkbox ${task.completed ? 'completed' : ''}"></div>
+                    <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                </div>
+            `).join('');
+        }
+
+        // 切換任務詳情顯示
+        function toggleTaskDetails(index) {
+            const details = document.getElementById(`details-${index}`);
+            const expandIcon = document.getElementById(`expand-${index}`);
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                expandIcon.style.transform = 'rotate(0deg)';
+            } else {
+                details.classList.add('expanded');
+                expandIcon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // 滾動到指定天數
+        function scrollToDay(index) {
+            const dayElement = document.getElementById(`day-${index}`);
+            if (dayElement) {
+                dayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // 格式化日期為 YYYY-MM-DD
+        function formatDate(date) {
+            return date.getFullYear() + '-' + 
+                   String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(date.getDate()).padStart(2, '0');
         }
 
         // 頁面可見性變化處理
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
-                console.log('📱 頁面重新獲得焦點，重新整理任務');
-                // 重新載入任務以獲取最新數據
-                loadTodayTasks();
+                console.log('📋 頁面重新獲得焦點，重新整理時間軸');
+                load5DaysTasks();
             }
         });
-
-        // 定期自動刷新任務（每30秒）
-        setInterval(() => {
-            if (!document.hidden) {
-                console.log('🔄 自動刷新任務...');
-                loadTodayTasks();
-            }
-        }, 30000);
 
         // 錯誤處理
         window.addEventListener('error', function(e) {
             console.error('❌ 頁面錯誤:', e.error);
-            const debugInfo = document.getElementById('debugInfo');
-            if (debugInfo) {
-                debugInfo.innerHTML += '<br>❌ 錯誤: ' + e.message;
-            }
         });
 
-        console.log('📝 To-Do List 頁面初始化完成');
+        console.log('📋 5天任務時間軸頁面初始化完成');
     </script>
 </body>
 </html>
