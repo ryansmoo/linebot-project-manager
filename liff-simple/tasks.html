@@ -355,6 +355,83 @@
             font-weight: bold;
             color: #4A90A4;
         }
+        .week-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .week-summary h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card.total .stat-number {
+            color: #4A90A4;
+        }
+        .stat-card.completed .stat-number {
+            color: #28a745;
+        }
+        .stat-card.pending .stat-number {
+            color: #ffc107;
+        }
+        .stat-card.rate .stat-number {
+            color: #00B900;
+        }
+        .progress-bar-container {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #28a745, #00B900);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -387,6 +464,33 @@
             </div>
             <div class="timeline-right" id="taskContent">
                 <!-- 任務內容將動態生成 -->
+            </div>
+        </div>
+        
+        <div id="weekSummary" class="week-summary" style="display: none;">
+            <h3>📈 週任務統計</h3>
+            <div class="stats-grid">
+                <div class="stat-card total">
+                    <div class="stat-number" id="totalWeekTasks">0</div>
+                    <div class="stat-label">總任務</div>
+                </div>
+                <div class="stat-card completed">
+                    <div class="stat-number" id="completedWeekTasks">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-card pending">
+                    <div class="stat-number" id="pendingWeekTasks">0</div>
+                    <div class="stat-label">未完成</div>
+                </div>
+                <div class="stat-card rate">
+                    <div class="stat-number" id="completionRate">0%</div>
+                    <div class="stat-label">完成率</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%;">
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
             </div>
         </div>
         
@@ -449,6 +553,7 @@
                 // 顯示週視圖
                 document.getElementById('weekDescription').style.display = 'block';
                 document.getElementById('timelineContent').style.display = 'flex';
+                document.getElementById('weekSummary').style.display = 'block';
                 document.getElementById('monthView').style.display = 'none';
                 document.getElementById('modeSubtitle').textContent = '7天任務時間軸';
                 document.getElementById('loadingText').textContent = '正在載入7天任務記錄...';
@@ -456,6 +561,7 @@
                 // 載入7天數據
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('timelineContent').style.display = 'none';
+                document.getElementById('weekSummary').style.display = 'none';
                 setTimeout(() => {
                     loadWeekTasks();
                 }, 500);
@@ -463,6 +569,7 @@
                 // 顯示月視圖
                 document.getElementById('weekDescription').style.display = 'none';
                 document.getElementById('timelineContent').style.display = 'none';
+                document.getElementById('weekSummary').style.display = 'none';
                 document.getElementById('monthView').style.display = 'block';
                 document.getElementById('modeSubtitle').textContent = '月份任務檢視';
                 document.getElementById('loading').style.display = 'none';
@@ -499,8 +606,12 @@
                 // 顯示時間軸
                 displayTimeline(dates);
                 
+                // 計算和顯示統計
+                calculateAndDisplayWeekStats(dates);
+                
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('timelineContent').style.display = 'flex';
+                document.getElementById('weekSummary').style.display = 'block';
                 
                 console.log('✅ 7天任務時間軸顯示完成');
             } catch (error) {
@@ -512,8 +623,12 @@
                 timelineData = generateMock7DaysData(dates);
                 displayTimeline(dates);
                 
+                // 計算和顯示統計
+                calculateAndDisplayWeekStats(dates);
+                
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('timelineContent').style.display = 'flex';
+                document.getElementById('weekSummary').style.display = 'block';
             }
         }
 
@@ -900,6 +1015,40 @@
                 const mockData = generateMock7DaysData(dates);
                 Object.assign(timelineData, mockData);
             }
+        }
+        
+        // 計算和顯示週統計
+        function calculateAndDisplayWeekStats(dates) {
+            let totalTasks = 0;
+            let completedTasks = 0;
+            
+            // 計算7天的總任務數量
+            dates.forEach(date => {
+                const dateStr = formatDate(date);
+                const tasks = timelineData[dateStr] || [];
+                totalTasks += tasks.length;
+                completedTasks += tasks.filter(task => task.completed).length;
+            });
+            
+            const pendingTasks = totalTasks - completedTasks;
+            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            // 更新統計顯示
+            document.getElementById('totalWeekTasks').textContent = totalTasks;
+            document.getElementById('completedWeekTasks').textContent = completedTasks;
+            document.getElementById('pendingWeekTasks').textContent = pendingTasks;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            
+            // 更新進度條
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            setTimeout(() => {
+                progressBar.style.width = completionRate + '%';
+                progressText.textContent = completionRate + '%';
+            }, 300); // 延遲動畫效果
+            
+            console.log(`統計結果: 總任務 ${totalTasks}, 已完成 ${completedTasks}, 未完成 ${pendingTasks}, 完成率 ${completionRate}%`);
         }
         
         // 頁面可見性變化處理
