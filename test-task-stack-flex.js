@@ -13,7 +13,7 @@ async function simulateTaskAddition() {
         message: {
           type: 'text',
           id: Date.now().toString(),
-          text: '測試簡化版任務堆疊功能'
+          text: '最終測試確認功能運作'
         },
         timestamp: Date.now(),
         source: {
