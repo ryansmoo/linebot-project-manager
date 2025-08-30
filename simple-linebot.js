@@ -1279,8 +1279,8 @@ async function handleEvent(event) {
       }
     };
 
-    // 只發送任務列表 FLEX MESSAGE
-    const result = await client.replyMessage(event.replyToken, secondMessage);
+    // 發送兩則 FLEX MESSAGE：任務確認 + 任務列表
+    const result = await client.replyMessage(event.replyToken, replyMessages);
     
     return result;
   } catch (error) {
@@ -2135,6 +2135,9 @@ async function handleAudioMessage(event) {
       }
     };
     
+    // 建立語音處理的兩則訊息陣列
+    const voiceReplyMessages = [audioResultMessage];
+    
     // 第二則：今天所有任務清單
     const taskListMessage = {
       type: 'flex',
@@ -2208,12 +2211,14 @@ async function handleAudioMessage(event) {
     // 使用統一的 Quick Reply 函數
     const quickReply = createQuickReply();
 
-    // 將 Quick Reply 添加到第二則訊息
-    taskListMessage.quick_reply = quickReply;
+    // 將第二則訊息加入陣列
+    voiceReplyMessages.push(taskListMessage);
     
-    // 改用 replyMessage 發送帶 Quick Reply 的訊息
-    // 只發送任務清單，語音結果合併到一個訊息中
-    await client.replyMessage(event.replyToken, taskListMessage);
+    // 將 Quick Reply 添加到最後一則訊息
+    voiceReplyMessages[voiceReplyMessages.length - 1].quick_reply = quickReply;
+    
+    // 發送語音處理的兩則 Flex Message
+    await client.replyMessage(event.replyToken, voiceReplyMessages);
     
     console.log('✅ 語音任務處理完成');
     
