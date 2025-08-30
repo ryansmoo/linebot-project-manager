@@ -12,32 +12,20 @@ function getTaiwanDate() {
   return taiwanTime.toISOString().split('T')[0]; // YYYY-MM-DD
 }
 
-// 自動 Git 提交和推送功能
-function autoGitCommit(message) {
-  const { exec } = require('child_process');
-  
-  console.log('🔄 自動提交到 GitHub:', message);
-  
-  const commands = [
-    'git add -A',
-    `git commit -m "${message}
+// 引入增強版 Git 自動提交功能
+const {
+  commitNewTask,
+  commitUpdateTask,
+  commitCompleteTask,
+  commitDeleteTask,
+  commitVoiceTask,
+  autoGitCommit,
+  getStats: getGitStats
+} = require('./enhanced-auto-git');
 
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"`,
-    'git push origin main'
-  ].join(' && ');
-  
-  exec(commands, { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      console.log('❌ Git 提交失敗:', error.message);
-      return;
-    }
-    if (stderr) {
-      console.log('⚠️ Git 警告:', stderr);
-    }
-    console.log('✅ 成功提交到 GitHub:', stdout);
-  });
+// 原有的自動提交函數（向後兼容）
+function autoGitCommit_legacy(message) {
+  autoGitCommit(message);
 }
 
 // LINE Bot 設定
@@ -127,6 +115,24 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Git 統計端點
+app.get('/api/git-stats', (req, res) => {
+  try {
+    const stats = getGitStats();
+    res.json({
+      success: true,
+      gitStats: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get Git stats',
+      message: error.message
+    });
+  }
+});
+
 // API 端點：取得任務資料
 app.get('/api/task/:taskId', (req, res) => {
   const { taskId } = req.params;
@@ -213,10 +219,8 @@ app.put('/api/task/:taskId', (req, res) => {
           cancelReminder(taskId);
         }
         
-        // 自動提交到 GitHub
-        setTimeout(() => {
-          autoGitCommit(`更新任務: ${tasks[taskIndex].text.substring(0, 50)}`);
-        }, 2000);
+        // 自動提交到 GitHub - 使用增強版
+        commitUpdateTask(tasks[taskIndex].text, userId, tasks[taskIndex].id);
         
         return res.json({ success: true, task: tasks[taskIndex] });
       }
@@ -240,10 +244,8 @@ app.delete('/api/task/:taskId', (req, res) => {
         const deletedTask = tasks[taskIndex];
         tasks.splice(taskIndex, 1);
         
-        // 自動提交到 GitHub
-        setTimeout(() => {
-          autoGitCommit(`刪除任務: ${deletedTask.text.substring(0, 50)}`);
-        }, 2000);
+        // 自動提交到 GitHub - 使用增強版
+        commitDeleteTask(deletedTask.text, userId, deletedTask.id);
         
         return res.json({ success: true, message: '任務已刪除' });
       }
@@ -281,11 +283,9 @@ app.patch('/api/tasks/:userId/:taskId/toggle', (req, res) => {
   dayTasks[taskIndex].completed = !dayTasks[taskIndex].completed;
   dayTasks[taskIndex].completedAt = dayTasks[taskIndex].completed ? new Date().toISOString() : null;
   
-  // 自動提交到 GitHub
-  const statusText = dayTasks[taskIndex].completed ? '完成' : '取消完成';
-  setTimeout(() => {
-    autoGitCommit(`${statusText}任務: ${dayTasks[taskIndex].text.substring(0, 50)}`);
-  }, 2000);
+  // 自動提交到 GitHub - 使用增強版
+  const isCompleting = dayTasks[taskIndex].completed;
+  commitCompleteTask(dayTasks[taskIndex].text, userId, dayTasks[taskIndex].id, isCompleting);
   
   res.json({
     success: true,
@@ -975,10 +975,8 @@ async function handleEvent(event) {
     
     console.log('📝 任務已儲存:', newTask);
     
-    // 自動提交到 GitHub
-    setTimeout(() => {
-      autoGitCommit(`新增任務: ${messageText.substring(0, 50)}`);
-    }, 2000); // 2秒後提交，避免頻繁提交
+    // 自動提交到 GitHub - 使用增強版
+    commitNewTask(messageText, userId, taskId);
 
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
@@ -2036,10 +2034,8 @@ async function handleAudioMessage(event) {
     userTasks.get(userId).get(today).push(newTask);
     console.log('📝 語音任務已儲存:', newTask);
     
-    // 自動提交到 GitHub
-    setTimeout(() => {
-      autoGitCommit(`新增語音任務: ${extractedText.substring(0, 50)}`);
-    }, 2000);
+    // 自動提交到 GitHub - 使用增強版
+    commitVoiceTask(extractedText, userId, taskId);
     
     // 取得今天所有任務來顯示
     const todayTasks = userTasks.get(userId).get(today);
@@ -2300,10 +2296,8 @@ async function handleTodoToggle(event, userId, action, taskId) {
     
     console.log(`${isCompleting ? '✅' : '◯'} 任務狀態已更新: ${task.text} - ${isCompleting ? '已完成' : '未完成'}`);
     
-    // 自動提交到 GitHub
-    setTimeout(() => {
-      autoGitCommit(`${isCompleting ? '完成' : '取消完成'}任務: ${task.text.substring(0, 50)}`);
-    }, 2000);
+    // 自動提交到 GitHub - 使用增強版
+    commitCompleteTask(task.text, task.userId, task.id, isCompleting);
     
     // 重新生成更新後的任務列表
     const completedCount = todayTasks.filter(t => t.completed).length;
@@ -2691,10 +2685,8 @@ app.post('/debug/simulate-line-message', express.json(), (req, res) => {
   console.log('✅ 模擬 LINE 任務已添加:', newTask);
   console.log('📅 存儲日期:', today);
   
-  // 自動提交到 GitHub
-  setTimeout(() => {
-    autoGitCommit(`[模擬] 新增任務: ${messageText.substring(0, 30)}`);
-  }, 2000);
+  // 自動提交到 GitHub - 使用增強版
+  commitNewTask(`[模擬] ${messageText}`, userId, taskId);
   
   res.json({ 
     success: true, 

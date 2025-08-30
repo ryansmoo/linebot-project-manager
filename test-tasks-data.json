@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "id": "task-1756550132502-1",
+      "text": "測試任務：完成自動 Git 提交功能（已更新）",
+      "userId": "user1",
+      "createdAt": "2025-08-30T10:35:32.502Z",
+      "completed": false
+    },
+    {
+      "id": "task-1756550132502-2",
+      "text": "測試任務：優化批次提交邏輯",
+      "userId": "user1",
+      "createdAt": "2025-08-30T10:35:33.505Z",
+      "completed": false,
+      "completedAt": null
+    }
+  ],
+  "lastUpdate": "2025-08-30T10:35:38.505Z"
+}
