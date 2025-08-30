@@ -13,7 +13,7 @@ async function simulateTaskAddition() {
         message: {
           type: 'text',
           id: Date.now().toString(),
-          text: '完成任務堆疊 Flex Message 功能測試'
+          text: '測試簡化版任務堆疊功能'
         },
         timestamp: Date.now(),
         source: {
